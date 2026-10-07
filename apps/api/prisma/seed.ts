@@ -116,12 +116,13 @@ async function main() {
 
   // S5 · verified demo parent (London) with an upcoming and a past booking.
   const demo = { name: "Emma Clarke", email: "demo.parent@example.com" };
-  const upcoming = await openSlots(LDN, addDays(localDate(realNow, LDN), 3));
-  if (upcoming.length) await book(upcoming[Math.floor(upcoming.length / 2)].startUtc, LDN, demo, "Freddie");
-  clock.set(new Date(realNow.getTime() - 4 * 86_400_000));
+  // Past first: from "4 days ago" the later upcoming trial would count as the one active trial.
+  clock.set(zonedTime(addDays(localDate(realNow, LDN), -4), 6 * 60, LDN).toJSDate()); // 06:00 London, 4 days ago
   const past = await openSlots(LDN, localDate(clock.now(), LDN));
   if (past.length) await book(past.at(-1)!.startUtc, LDN, demo, "Freddie");
   clock.set(realNow);
+  const upcoming = await openSlots(LDN, addDays(localDate(realNow, LDN), 3));
+  if (upcoming.length) await book(upcoming[Math.floor(upcoming.length / 2)].startUtc, LDN, demo, "Freddie");
   await db.parent.update({
     where: { email: demo.email },
     data: { passwordHash: await hashPassword("Parent123!"), emailVerifiedAt: realNow, phone: "+44 7700 900123" }
