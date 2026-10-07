@@ -1,9 +1,12 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { Skeleton } from "./ui/card";
+import { AdminContentSkeleton, Busy, ListSkeleton, PageHeaderSkeleton } from "./skeletons";
 
 function Loading() {
-  return <div className="mx-auto mt-24 flex max-w-[400px] flex-col gap-3 px-4"><Skeleton className="h-8 w-1/2" /><Skeleton className="h-40" /></div>;
+  return <Busy label="Checking your session"><div className="mx-auto flex max-w-[720px] flex-col gap-6 px-4 pt-[92px]"><PageHeaderSkeleton action /><ListSkeleton /></div></Busy>;
+}
+function AdminLoading() {
+  return <Busy label="Checking your session"><div className="m-2 rounded-xl border border-border bg-background md:ml-[256px]"><AdminContentSkeleton /></div></Busy>;
 }
 
 export function RequireParent({ children }: { children: React.ReactNode }) {
@@ -18,7 +21,7 @@ export function RequireParent({ children }: { children: React.ReactNode }) {
 export function RequireAdmin() {
   const { admin, isLoading, isFetching } = useAuth();
   const loc = useLocation();
-  if (isLoading || (!admin && isFetching)) return <Loading />;
+  if (isLoading || (!admin && isFetching)) return <AdminLoading />;
   if (!admin) return <Navigate to={`/admin/login?next=${encodeURIComponent(loc.pathname)}`} replace />;
   return <Outlet />;
 }

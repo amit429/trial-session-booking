@@ -1,21 +1,38 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { PublicLayout } from "./components/SiteHeader";
-import { EmptyState } from "./components/ui/empty";
-import { Button } from "./components/ui/button";
-import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
-import { BookPage } from "./features/booking/BookPage";
-import { BookingPage } from "./features/booking-view/BookingPage";
-import { LoginPage } from "./features/account/LoginPage";
-import { MyBookingsPage } from "./features/account/MyBookingsPage";
-import { ForgotPasswordPage, ResetPasswordPage } from "./features/account/PasswordPages";
-import { SignupPage } from "./features/account/SignupPage";
-import { VerifyEmailPage } from "./features/account/VerifyEmailPage";
-import { DevOutboxPage } from "./features/dev/DevOutboxPage";
+import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
+import { createBrowserRouter, Link, Navigate } from "react-router-dom";
 import { RequireAdmin, RequireParent } from "./components/Guards";
-import { AdminLayout } from "./features/admin/AdminLayout";
-import { AdminBookingPage } from "./features/admin/BookingDetail";
-import { AdminLoginPage, BookingsPage, DashboardPage, MentorDetailPage, MentorsPage, OutboxPage, ParentDetailPage, ParentsPage } from "./features/admin/pages";
+import { PublicLayout } from "./components/SiteHeader";
+import { FormCardSkeleton, PublicPageSkeleton } from "./components/skeletons";
+import { Button } from "./components/ui/button";
+import { EmptyState } from "./components/ui/empty";
+
+/** Route-level code splitting: each page loads on demand behind a page-shaped skeleton. */
+const page = <M,>(load: () => Promise<M>, name: keyof M) =>
+  lazy(() => load().then(m => ({ default: m[name] as unknown as ComponentType })));
+
+const BookPage = page(() => import("./features/booking/BookPage"), "BookPage");
+const BookingPage = page(() => import("./features/booking-view/BookingPage"), "BookingPage");
+const SignupPage = page(() => import("./features/account/SignupPage"), "SignupPage");
+const LoginPage = page(() => import("./features/account/LoginPage"), "LoginPage");
+const VerifyEmailPage = page(() => import("./features/account/VerifyEmailPage"), "VerifyEmailPage");
+const ForgotPasswordPage = page(() => import("./features/account/PasswordPages"), "ForgotPasswordPage");
+const ResetPasswordPage = page(() => import("./features/account/PasswordPages"), "ResetPasswordPage");
+const MyBookingsPage = page(() => import("./features/account/MyBookingsPage"), "MyBookingsPage");
+const DevOutboxPage = page(() => import("./features/dev/DevOutboxPage"), "DevOutboxPage");
+const AdminLayout = page(() => import("./features/admin/AdminLayout"), "AdminLayout");
+const AdminLoginPage = page(() => import("./features/admin/pages"), "AdminLoginPage");
+const DashboardPage = page(() => import("./features/admin/pages"), "DashboardPage");
+const BookingsPage = page(() => import("./features/admin/pages"), "BookingsPage");
+const ParentsPage = page(() => import("./features/admin/pages"), "ParentsPage");
+const ParentDetailPage = page(() => import("./features/admin/pages"), "ParentDetailPage");
+const MentorsPage = page(() => import("./features/admin/pages"), "MentorsPage");
+const MentorDetailPage = page(() => import("./features/admin/pages"), "MentorDetailPage");
+const OutboxPage = page(() => import("./features/admin/pages"), "OutboxPage");
+const AdminBookingPage = page(() => import("./features/admin/BookingDetail"), "AdminBookingPage");
+
+const pub = (node: ReactNode) => <Suspense fallback={<PublicPageSkeleton />}>{node}</Suspense>;
+const form = (node: ReactNode) => <Suspense fallback={<PublicLayout narrow><FormCardSkeleton /></PublicLayout>}>{node}</Suspense>;
 
 function NotFound() {
   return (
@@ -29,21 +46,21 @@ function NotFound() {
 
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/book" replace /> },
-  { path: "/book", element: <BookPage /> },
-  { path: "/booking/:reference", element: <BookingPage /> },
-  { path: "/signup", element: <SignupPage /> },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/verify-email", element: <VerifyEmailPage /> },
-  { path: "/forgot-password", element: <ForgotPasswordPage /> },
-  { path: "/reset-password", element: <ResetPasswordPage /> },
-  { path: "/my-bookings", element: <RequireParent><MyBookingsPage /></RequireParent> },
-  { path: "/dev/outbox", element: <DevOutboxPage /> },
-  { path: "/admin/login", element: <AdminLoginPage /> },
+  { path: "/book", element: pub(<BookPage />) },
+  { path: "/booking/:reference", element: pub(<BookingPage />) },
+  { path: "/signup", element: form(<SignupPage />) },
+  { path: "/login", element: form(<LoginPage />) },
+  { path: "/verify-email", element: form(<VerifyEmailPage />) },
+  { path: "/forgot-password", element: form(<ForgotPasswordPage />) },
+  { path: "/reset-password", element: form(<ResetPasswordPage />) },
+  { path: "/my-bookings", element: <RequireParent>{pub(<MyBookingsPage />)}</RequireParent> },
+  { path: "/dev/outbox", element: pub(<DevOutboxPage />) },
+  { path: "/admin/login", element: form(<AdminLoginPage />) },
   {
     path: "/admin",
     element: <RequireAdmin />,
     children: [{
-      element: <AdminLayout />,
+      element: pub(<AdminLayout />),
       children: [
         { index: true, element: <DashboardPage /> },
         { path: "bookings", element: <BookingsPage /> },

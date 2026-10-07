@@ -7,4 +7,4 @@ export const CardTitle = ({ className, ...p }: HTMLAttributes<HTMLHeadingElement
 export const CardDescription = ({ className, ...p }: HTMLAttributes<HTMLParagraphElement>) => <p className={cn("text-[13px] text-muted-foreground", className)} {...p} />;
 export const CardContent = ({ className, ...p }: HTMLAttributes<HTMLDivElement>) => <div className={cn("px-[22px] py-5", className)} {...p} />;
 export const Separator = ({ className }: { className?: string }) => <hr className={cn("h-px border-0 bg-border", className)} />;
-export const Skeleton = ({ className }: { className?: string }) => <div className={cn("animate-pulse rounded-md bg-muted", className)} />;
+export const Skeleton = ({ className, ...p }: HTMLAttributes<HTMLDivElement>) => <div className={cn("animate-pulse rounded-md bg-muted", className)} {...p} />;

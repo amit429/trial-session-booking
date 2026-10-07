@@ -3,12 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth, useLogout } from "@/lib/auth";
 import { Avatar } from "./ui/avatar";
+import { Skeleton } from "./ui/card";
 import { Button } from "./ui/button";
 import { DropdownContent, DropdownItem, DropdownLabel, DropdownMenu, DropdownSeparator, DropdownTrigger } from "./ui/dropdown";
 import { Logo } from "./Logo";
 
 export function SiteHeader() {
-  const { parent } = useAuth();
+  const { parent, isLoading } = useAuth();
   const logout = useLogout("parent");
   const navigate = useNavigate();
   return (
@@ -17,7 +18,9 @@ export function SiteHeader() {
         <Logo />
         <nav aria-label="Main" className="ml-auto flex items-center gap-1">
           <Button asChild variant="ghost" size="sm"><Link to="/my-bookings">My bookings</Link></Button>
-          {parent ? (
+          {isLoading ? (
+            <Skeleton className="size-8 rounded-full" aria-label="Checking your session" />
+          ) : parent ? (
             <DropdownMenu>
               <DropdownTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Account menu"><Avatar name={parent.name} size="sm" /></Button>

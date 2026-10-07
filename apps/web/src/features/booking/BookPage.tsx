@@ -173,7 +173,17 @@ export function BookPage() {
   return (
     <PublicLayout>
       {!slotsQ.data || !date || !month || !day ? (
-        shell("min-[961px]:grid-cols-[300px_minmax(0,1fr)_284px]", <>{info}<div className="p-6"><Skeleton className="h-[360px]" /></div><div className="flex flex-col gap-2 p-6">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-[42px]" />)}</div></>)
+        shell("min-[961px]:grid-cols-[300px_minmax(0,1fr)_284px]", <>
+          {info}
+          <div className="flex flex-col gap-4 p-6" aria-busy="true" aria-label="Loading class times">
+            <div className="flex justify-between"><Skeleton className="h-5 w-32" /><Skeleton className="h-8 w-[72px]" /></div>
+            <div className="grid grid-cols-7 gap-1.5">{Array.from({ length: 35 }, (_, i) => <Skeleton key={i} className="aspect-square max-h-[58px] rounded-[9px]" />)}</div>
+          </div>
+          <div className="flex flex-col gap-2 p-6">
+            <div className="mb-2 flex justify-between"><Skeleton className="h-5 w-20" /><Skeleton className="h-8 w-24" /></div>
+            {Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-[42px] rounded-[9px]" />)}
+          </div>
+        </>)
       ) : noneOpen ? (
         shell("min-[961px]:grid-cols-[300px_minmax(0,1fr)]", <>{info}<div className="p-6"><Suggestions tz={tz} data={{ strategy: "NONE", requested: { date, time: "09:00", timezone: tz }, suggestions: [], notes: [] }} onPick={pickSlot} /></div></>)
       ) : (

@@ -1,8 +1,10 @@
 import { CalendarDays, ChevronRight, GraduationCap, Inbox, LayoutDashboard, LogOut, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { AdminContentSkeleton } from "@/components/skeletons";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth, useLogout } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -39,14 +41,14 @@ export function AdminLayout() {
           </div>
         ))}
         <div className="ml-auto flex items-center gap-2.5 rounded-lg px-2 py-2 md:ml-0 md:mt-auto">
-          <Avatar name={admin?.name ?? "Admin"} size="sm" />
+          {admin ? <Avatar name={admin.name} size="sm" /> : <Skeleton className="size-7 rounded-full" />}
           <div className="hidden min-w-0 flex-col md:flex"><span className="text-[13px] font-semibold">{admin?.name}</span><span className="truncate text-xs text-muted-foreground">{admin?.email}</span></div>
           <Button variant="ghost" size="icon-sm" aria-label="Sign out" title="Sign out" className="md:ml-auto"
             onClick={() => logout.mutate(undefined, { onSuccess: () => { toast.success("Signed out"); navigate("/admin/login"); } })}><LogOut /></Button>
         </div>
       </aside>
       <section className="m-2 flex min-w-0 flex-col rounded-xl border border-border bg-background shadow-xs md:ml-0">
-        <Outlet />
+        <Suspense fallback={<AdminContentSkeleton />}><Outlet /></Suspense>
       </section>
     </div>
   );

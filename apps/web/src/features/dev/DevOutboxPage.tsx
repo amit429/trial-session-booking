@@ -3,7 +3,7 @@ import type { OutboxDto } from "@trial/shared";
 import { PublicLayout } from "@/components/SiteHeader";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/card";
+import { Busy, MessagesSkeleton } from "@/components/skeletons";
 import { api } from "@/lib/api";
 import { OutboxList } from "./OutboxList";
 
@@ -18,7 +18,7 @@ export function DevOutboxPage() {
         <p className="text-muted-foreground">This app doesn't send real email. Messages land here so you can open verification, reset and manage links.</p>
       </div>
       {q.isError ? <Alert variant="warning" title="The dev outbox is turned off">Set DEV_OUTBOX_ENABLED=true in .env and restart the API.</Alert>
-        : q.data ? <OutboxList items={q.data} /> : <div className="flex flex-col gap-2"><Skeleton className="h-28" /><Skeleton className="h-28" /></div>}
+        : q.data ? <OutboxList items={q.data} /> : <Busy><MessagesSkeleton /></Busy>}
     </PublicLayout>
   );
 }

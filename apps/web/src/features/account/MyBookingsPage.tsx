@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { PublicLayout } from "@/components/SiteHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, Skeleton } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Busy, ListSkeleton } from "@/components/skeletons";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty";
 import { Tabs } from "@/components/ui/tabs";
@@ -64,7 +65,7 @@ export function MyBookingsPage() {
           { value: "past", label: <>Past and cancelled <span className="text-muted-foreground">{past.length}</span></> }
         ]} />
         <Card>
-          {q.isLoading ? <div className="flex flex-col gap-3 p-5"><Skeleton className="h-14" /><Skeleton className="h-14" /></div>
+          {q.isLoading ? <Busy label="Loading your bookings"><ListSkeleton rows={2} /></Busy>
             : !list.length ? (
               <EmptyState icon={<CalendarDays />} title={tab === "upcoming" ? "No upcoming trials" : "No past trials"}>
                 {tab === "upcoming" && <><p className="text-[13px] text-muted-foreground">Book a free class and it will show up here.</p><Button asChild size="sm" variant="brand"><Link to="/book">Book a trial</Link></Button></>}

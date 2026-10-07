@@ -12,17 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } from "@/components/ui/card";
 import { Field, Input, NativeSelect } from "@/components/ui/input";
 import { OutboxList } from "@/features/dev/OutboxList";
+import { Busy, CardGridSkeleton, ChartSkeleton, MessagesSkeleton, StatsSkeleton } from "@/components/skeletons";
 import { ApiError, api } from "@/lib/api";
 import { setSession } from "@/lib/auth";
 import type { AdminDto } from "@trial/shared";
 import { cn } from "@/lib/utils";
 import { AdminPage, PageTitle } from "./AdminLayout";
-import { AccountBadge, BookingsTable } from "./BookingsTable";
+import { AccountBadge, BookingsTable, TableSkeleton } from "./BookingsTable";
 import { CapacityChart } from "./CapacityChart";
 import { WEEKDAYS, to12, type Dashboard, type MentorRow, type MentorSchedule, type Paged, type ParentDetail, type ParentRow } from "./types";
 
 const IST = "Asia/Kolkata";
-const Loading = () => <div className="flex flex-col gap-3"><Skeleton className="h-24" /><Skeleton className="h-64" /></div>;
 
 export function AdminLoginPage() {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ export function DashboardPage() {
         <PageTitle title="Dashboard">Dates are India dates: the 2-per-day limit counts on the mentor's calendar.</PageTitle>
         <Button asChild variant="outline" size="sm"><Link to="/admin/bookings"><CalendarDays />All bookings</Link></Button>
       </div>
-      {!d.data ? <Loading /> : (
+      {!d.data ? <Busy><div className="flex flex-col gap-5"><StatsSkeleton /><ChartSkeleton /></div></Busy> : (
         <>
           <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
             <Stat label="Trials today" value={d.data.todayCount} foot={formatDayLong(zonedTime(d.data.today, 720, IST).toJSDate(), IST)} badge={<Badge>India</Badge>} />
@@ -98,7 +98,7 @@ export function DashboardPage() {
         </>
       )}
       <h2 className="text-base font-semibold">Up next</h2>
-      {next.data ? <BookingsTable rows={next.data.items} /> : <Loading />}
+      {next.data ? <BookingsTable rows={next.data.items} /> : <TableSkeleton rows={4} />}
     </AdminPage>
   );
 }
@@ -126,9 +126,9 @@ export function BookingsPage() {
         <NativeSelect aria-label="When" className={sel} value={scope} onChange={e => setScope(e.target.value)}><option value="upcoming">Upcoming</option><option value="past">Past</option><option value="all">All dates</option></NativeSelect>
         <NativeSelect aria-label="Status" className={sel} value={status} onChange={e => setStatus(e.target.value)}><option value="">Any status</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option></NativeSelect>
         <NativeSelect aria-label="Mentor" className={sel} value={mentorId} onChange={e => setMentorId(e.target.value)}><option value="">All mentors</option>{mentors.data?.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</NativeSelect>
-        <span className="ml-auto text-[13px] text-muted-foreground">{list.data ? `${list.data.total} result${list.data.total === 1 ? "" : "s"}` : ""}</span>
+        <span className="ml-auto text-[13px] text-muted-foreground">{list.data ? `${list.data.total} result${list.data.total === 1 ? "" : "s"}` : <Skeleton className="h-4 w-16" />}</span>
       </div>
-      {list.data ? <BookingsTable rows={list.data.items} /> : <Loading />}
+      {list.data ? <BookingsTable rows={list.data.items} fetching={list.isFetching && list.isPlaceholderData} /> : <TableSkeleton rows={8} />}
     </AdminPage>
   );
 }
@@ -143,8 +143,8 @@ export function ParentsPage() {
         <div className="relative min-w-[220px] max-w-[340px] flex-1"><Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" /><Input aria-label="Search parents" placeholder="Search name or email…" className="pl-8" value={q} onChange={e => setQ(e.target.value)} /></div>
         <span className="ml-auto text-[13px] text-muted-foreground">{list.data?.total ?? ""} parents</span>
       </div>
-      {!list.data ? <Loading /> : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      {!list.data ? <TableSkeleton rows={8} cols={["Parent", "Account", "Bookings", "Upcoming", "Time zone"]} /> : (
+        <div aria-busy={list.isFetching && list.isPlaceholderData} className={cn("overflow-x-auto rounded-xl border border-border bg-card transition-opacity", list.isFetching && list.isPlaceholderData && "opacity-60")}>
           <table className="w-full text-[13.5px] tabular-nums">
             <thead><tr className="[&_th]:h-10 [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:text-left [&_th]:font-medium [&_th]:text-muted-foreground"><th>Parent</th><th>Account</th><th>Bookings</th><th>Upcoming</th><th>Time zone</th></tr></thead>
             <tbody>
@@ -169,7 +169,12 @@ export function ParentDetailPage() {
   const p = d.data?.parent;
   return (
     <AdminPage crumbs={[{ label: "Parents", to: "/admin/parents" }, { label: p?.name ?? "Parent" }]}>
-      {!d.data || !p ? <Loading /> : (
+      {!d.data || !p ? (
+        <Busy><div className="flex flex-col gap-5">
+          <Card><CardContent className="flex items-center gap-3.5"><Skeleton className="size-12 rounded-full" /><div className="flex flex-col gap-2"><Skeleton className="h-5 w-40" /><Skeleton className="h-3.5 w-56" /><Skeleton className="h-3.5 w-44" /></div></CardContent></Card>
+          <Skeleton className="h-5 w-28" /><TableSkeleton rows={3} />
+        </div></Busy>
+      ) : (
         <>
           <Card><CardContent className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3.5"><Avatar name={p.name} size="lg" /><div className="flex flex-col"><h1 className="text-xl font-semibold">{p.name}</h1><span className="text-[13px] text-muted-foreground">{p.email}{p.phone ? ` · ${p.phone}` : ""}</span><span className="text-[13px] text-muted-foreground">{formatZoneLabel(p.timezone === "UTC" ? "Etc/UTC" : p.timezone, new Date())}</span></div></div>
@@ -194,7 +199,7 @@ export function MentorsPage() {
   return (
     <AdminPage crumbs={[{ label: "Mentors" }]}>
       <PageTitle title="Mentors">Today in India: {formatDayLong(new Date(), IST)}. Each mentor takes up to 2 trials per India date.</PageTitle>
-      {!list.data ? <Loading /> : (
+      {!list.data ? <Busy><CardGridSkeleton count={9} /></Busy> : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3.5">
           {list.data.map(m => {
             const daysOff = [1, 2, 3, 4, 5, 6, 7].filter(d => !m.weeklyShift.some(s => s.weekday === d)).map(d => WEEKDAYS[d]).join(", ");
@@ -223,7 +228,13 @@ export function MentorDetailPage() {
   const m = s.data?.mentor;
   return (
     <AdminPage crumbs={[{ label: "Mentors", to: "/admin/mentors" }, { label: m?.name ?? "Mentor" }]}>
-      {!s.data || !m ? <Loading /> : (
+      {!s.data || !m ? (
+        <Busy><div className="flex flex-col gap-5">
+          <Card><CardContent className="flex items-center gap-3.5"><Skeleton className="size-12 rounded-full" /><div className="flex flex-col gap-2"><Skeleton className="h-5 w-40" /><Skeleton className="h-3.5 w-72 max-w-full" /></div></CardContent></Card>
+          <Card><CardContent className="flex flex-col gap-4"><Skeleton className="h-5 w-32" /><div className="grid grid-cols-7 gap-2">{Array.from({ length: 7 }, (_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div></CardContent></Card>
+          <Card><CardContent className="flex flex-col gap-4">{[0, 1, 2, 3].map(i => <div key={i} className="grid grid-cols-[170px_minmax(0,1fr)] gap-4"><div className="flex flex-col gap-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-1.5 w-full rounded-full" /></div><Skeleton className="h-12" /></div>)}</CardContent></Card>
+        </div></Busy>
+      ) : (
         <>
           <Card><CardContent className="flex flex-wrap items-center gap-3.5"><Avatar name={m.name} size="lg" /><div className="flex min-w-0 flex-col"><h1 className="text-xl font-semibold">{m.name}</h1><span className="text-[13px] text-muted-foreground">{m.bio}</span></div><Badge variant="brand" className="ml-auto">{m.shiftLabel}</Badge></CardContent></Card>
           <Card>
@@ -270,7 +281,7 @@ export function OutboxPage() {
   return (
     <AdminPage crumbs={[{ label: "Outbox" }]}>
       <PageTitle title="Outbox">Every email the system would send: confirmations, cancellations and account emails.</PageTitle>
-      {q.data ? <OutboxList items={q.data.items} /> : <Loading />}
+      {q.data ? <OutboxList items={q.data.items} /> : <Busy><MessagesSkeleton count={5} /></Busy>}
     </AdminPage>
   );
 }

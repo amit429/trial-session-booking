@@ -23,7 +23,7 @@ Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a 
 
 **Admin**
 - Dashboard: booked vs capacity per India date.
-- Bookings: search, filter, detail sheet, cancel.
+- Bookings: search, filter, quick-look sheet, a full booking page at `/admin/bookings/:reference`, cancel. Admins who open a parent's `/booking/...` URL are sent to the admin view.
 - Parents: account status and history.
 - Mentors: weekly shift and 14-day schedule with `n / 2` load.
 - Outbox.
