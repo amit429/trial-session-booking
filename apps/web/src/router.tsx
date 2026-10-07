@@ -12,7 +12,9 @@ import { ForgotPasswordPage, ResetPasswordPage } from "./features/account/Passwo
 import { SignupPage } from "./features/account/SignupPage";
 import { VerifyEmailPage } from "./features/account/VerifyEmailPage";
 import { DevOutboxPage } from "./features/dev/DevOutboxPage";
-import { RequireParent } from "./components/Guards";
+import { RequireAdmin, RequireParent } from "./components/Guards";
+import { AdminLayout } from "./features/admin/AdminLayout";
+import { AdminLoginPage, BookingsPage, DashboardPage, MentorDetailPage, MentorsPage, OutboxPage, ParentDetailPage, ParentsPage } from "./features/admin/pages";
 
 function NotFound() {
   return (
@@ -35,5 +37,22 @@ export const router = createBrowserRouter([
   { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/my-bookings", element: <RequireParent><MyBookingsPage /></RequireParent> },
   { path: "/dev/outbox", element: <DevOutboxPage /> },
+  { path: "/admin/login", element: <AdminLoginPage /> },
+  {
+    path: "/admin",
+    element: <RequireAdmin />,
+    children: [{
+      element: <AdminLayout />,
+      children: [
+        { index: true, element: <DashboardPage /> },
+        { path: "bookings", element: <BookingsPage /> },
+        { path: "parents", element: <ParentsPage /> },
+        { path: "parents/:id", element: <ParentDetailPage /> },
+        { path: "mentors", element: <MentorsPage /> },
+        { path: "mentors/:id", element: <MentorDetailPage /> },
+        { path: "outbox", element: <OutboxPage /> }
+      ]
+    }]
+  },
   { path: "*", element: <NotFound /> }
 ]);
