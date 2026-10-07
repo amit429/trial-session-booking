@@ -1,0 +1,1211 @@
+<title>TrialDesk Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky prototype bar on top; public app = centered 1120px column (booking = calendar | side panel, stacks < 900px);
+   admin app = 232px sidebar + fluid content (sidebar becomes a top nav < 820px). */
+:root{
+  --bg:#F7F6FB; --surface:#FFFFFF; --surface-2:#F1EFF8; --ink:#1B1530; --ink-2:#5E5874; --line:#E3E0EE;
+  --primary:#6D28D9; --primary-ink:#FFFFFF; --primary-soft:#EFE7FD; --primary-text:#5B21B6;
+  --accent:#FACC15; --accent-soft:#FEF6D2; --accent-text:#854D0E;
+  --success:#15803D; --success-soft:#E3F6EA; --warning:#B45309; --warning-soft:#FDF0DC; --danger:#DC2626; --danger-soft:#FDE6E6;
+  --full-bg:#F1F0F5; --full-ink:#8C88A0; --focus:#7C3AED;
+  --proto-bg:#16121F; --proto-ink:#ECE8F6; --proto-ink-2:#A39CB8; --proto-line:#2D2740; --proto-hi:#FACC15;
+  --font-sans:"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r:12px; --r-sm:8px; --shadow:0 1px 2px rgba(27,21,48,.06), 0 4px 16px rgba(27,21,48,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#100E17; --surface:#191624; --surface-2:#221E31; --ink:#EEEAF7; --ink-2:#A9A3BD; --line:#302A45;
+    --primary:#A78BFA; --primary-ink:#1A1030; --primary-soft:#2A2145; --primary-text:#C4B5FD;
+    --accent:#FACC15; --accent-soft:#3A3114; --accent-text:#FDE68A;
+    --success:#4ADE80; --success-soft:#13301F; --warning:#FBBF24; --warning-soft:#36280D; --danger:#F87171; --danger-soft:#3B1818;
+    --full-bg:#1E1B29; --full-ink:#6F6986; --focus:#C4B5FD; --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#100E17; --surface:#191624; --surface-2:#221E31; --ink:#EEEAF7; --ink-2:#A9A3BD; --line:#302A45;
+  --primary:#A78BFA; --primary-ink:#1A1030; --primary-soft:#2A2145; --primary-text:#C4B5FD;
+  --accent:#FACC15; --accent-soft:#3A3114; --accent-text:#FDE68A;
+  --success:#4ADE80; --success-soft:#13301F; --warning:#FBBF24; --warning-soft:#36280D; --danger:#F87171; --danger-soft:#3B1818;
+  --full-bg:#1E1B29; --full-ink:#6F6986; --focus:#C4B5FD; --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:15px;line-height:1.55}
+h1,h2,h3{line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
+h3{font-size:16px;font-weight:700}
+p{margin:0}
+a{color:var(--primary-text)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-size:.92em}
+.muted{color:var(--ink-2)}
+.small{font-size:13px}
+.tnum{font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack-lg{display:flex;flex-direction:column;gap:24px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+
+/* ---------- prototype bar ---------- */
+.protobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--proto-bg);color:var(--proto-ink);border-bottom:1px solid var(--proto-line);padding-inline:16px;padding-block:8px;font-size:13px}
+.protobar .inner{max-width:1280px;margin-inline:auto;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.protobar .tag{background:var(--proto-hi);color:#1B1530;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
+.protobar label{display:flex;gap:6px;align-items:center;color:var(--proto-ink-2)}
+.protobar select{background:#221C30;color:var(--proto-ink);border:1px solid var(--proto-line);border-radius:6px;padding:4px 6px;font-size:13px}
+.protobar .pbtn{background:#221C30;color:var(--proto-ink);border:1px solid var(--proto-line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px;text-decoration:none;display:inline-flex;gap:6px;align-items:center}
+.protobar .pbtn:hover{border-color:var(--proto-ink-2)}
+.protobar .pbtn.on{background:var(--proto-hi);color:#1B1530;border-color:var(--proto-hi);font-weight:700}
+.protobar .grow{flex:1}
+.protobar .count{background:var(--proto-hi);color:#1B1530;border-radius:99px;padding:0 6px;font-weight:800;font-size:11px}
+.protobar input[type=checkbox]{accent-color:var(--proto-hi)}
+
+/* ---------- public shell ---------- */
+.site-head{border-bottom:1px solid var(--line);background:var(--surface);padding-inline:16px}
+.site-head .inner{max-width:1120px;margin-inline:auto;display:flex;align-items:center;gap:16px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;text-decoration:none;color:var(--ink)}
+.brand .mark{width:30px;height:30px;border-radius:9px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:14px;font-weight:800}
+.site-head nav{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.main{max-width:1120px;margin-inline:auto;padding-inline:16px;padding-block:28px 64px}
+
+/* ---------- buttons, fields, chips ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:10px 16px;font-weight:700;border:1px solid transparent;cursor:pointer;text-decoration:none;font-size:14px;line-height:1.2;white-space:nowrap}
+.btn-primary{background:var(--primary);color:var(--primary-ink)}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn-secondary:hover{border-color:var(--ink-2)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-sm{padding:6px 10px;font-size:13px;border-radius:8px}
+.btn[disabled]{opacity:.6;cursor:not-allowed}
+.btn-link{background:none;border:none;padding:0;color:var(--primary-text);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:14px}
+.field .hint{font-size:12px;color:var(--ink-2)}
+.input,.select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.input:focus,.select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px var(--primary-soft)}
+.input[readonly]{background:var(--surface-2);color:var(--ink-2)}
+.field.has-error .input,.field.has-error .select{border-color:var(--danger)}
+.err{color:var(--danger);font-size:13px;font-weight:600}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.grid-2{grid-template-columns:1fr}}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:none;background:transparent;padding:7px 14px;border-radius:8px;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--shadow);color:var(--primary-text)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.chip-open{background:var(--success-soft);color:var(--success)}
+.chip-few{background:var(--accent-soft);color:var(--accent-text)}
+.chip-full{background:var(--danger-soft);color:var(--danger)}
+.chip-closed{background:var(--surface-2);color:var(--ink-2)}
+.chip-pending{background:var(--warning-soft);color:var(--warning)}
+.chip-info{background:var(--primary-soft);color:var(--primary-text)}
+.dot{width:8px;height:8px;border-radius:99px;background:currentColor;display:inline-block}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card-raised{box-shadow:var(--shadow)}
+.callout{border-radius:var(--r);padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
+.callout-warn{background:var(--warning-soft);color:var(--ink)}
+.callout-warn strong{color:var(--warning)}
+.callout-info{background:var(--primary-soft)}
+.callout-danger{background:var(--danger-soft)}
+.callout-success{background:var(--success-soft)}
+.callout .ic{flex:none;width:22px;height:22px;border-radius:99px;display:grid;place-items:center;font-weight:800;font-size:13px}
+.callout-warn .ic{background:var(--warning);color:#fff}
+.callout-info .ic{background:var(--primary);color:var(--primary-ink)}
+.callout-danger .ic{background:var(--danger);color:#fff}
+.callout-success .ic{background:var(--success);color:#fff}
+
+/* prototype annotations */
+.anno{display:none;font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--warning);background:var(--warning-soft);border:1px dashed var(--warning);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;white-space:nowrap}
+body.annos .anno{display:inline-block}
+.proto-note{display:none;border:1px dashed var(--warning);background:var(--warning-soft);border-radius:10px;padding:10px 12px;font-size:13px}
+body.annos .proto-note{display:block}
+
+/* ---------- booking ---------- */
+.stepper{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;font-weight:600;color:var(--ink-2)}
+.stepper .s{display:flex;align-items:center;gap:8px}
+.stepper .n{width:22px;height:22px;border-radius:99px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px}
+.stepper .s.cur{color:var(--ink)}
+.stepper .s.cur .n{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.stepper .s.done .n{background:var(--success);border-color:var(--success);color:#fff}
+.stepper .sep{width:24px;height:1.5px;background:var(--line)}
+.tzbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px}
+.tzbar .globe{width:32px;height:32px;border-radius:99px;background:var(--primary-soft);color:var(--primary-text);display:grid;place-items:center;font-weight:800}
+.tzpicker{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow)}
+.tzlist{max-height:260px;overflow:auto;display:flex;flex-direction:column;margin-top:8px}
+.tzlist button{border:none;background:none;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:12px}
+.tzlist button:hover,.tzlist button[aria-selected="true"]{background:var(--primary-soft)}
+.tzlist .grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding:8px 10px 4px}
+.daystrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.daypill{flex:none;scroll-snap-align:start;width:92px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.daypill .wd{font-size:12px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em}
+.daypill .dn{font-size:20px;font-weight:800}
+.daypill .mo{font-size:12px;color:var(--ink-2)}
+.daypill[aria-pressed="true"]{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);background:var(--primary-soft)}
+.daypill .chip{font-size:10.5px;padding:2px 7px}
+.book-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+@media (max-width:900px){.book-grid{grid-template-columns:1fr}}
+.slot-group h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.slot{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700;font-variant-numeric:tabular-nums}
+.slot:hover{border-color:var(--primary)}
+.slot .sub{font-size:11px;font-weight:600;color:var(--ink-2)}
+.slot.last .sub{color:var(--accent-text)}
+.slot.full{background:var(--full-bg);color:var(--full-ink);border-style:dashed}
+.slot.full .sub{color:var(--danger)}
+.slot.sel{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.slot.sel .sub{color:var(--primary-ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px}
+.sugg-list{display:flex;flex-direction:column;gap:8px}
+.sugg{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
+.sugg:hover{border-color:var(--primary);background:var(--primary-soft)}
+.sugg .t{font-weight:700;font-variant-numeric:tabular-nums}
+.sugg .go{color:var(--primary-text);font-weight:700;font-size:13px;white-space:nowrap}
+.selected-slot{display:flex;gap:14px;align-items:center;background:var(--primary-soft);border-radius:var(--r);padding:14px 16px}
+.cal-ic{flex:none;width:52px;border-radius:10px;overflow:hidden;background:var(--surface);text-align:center;border:1px solid var(--line)}
+.cal-ic .m{background:var(--primary);color:var(--primary-ink);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 0}
+.cal-ic .d{font-size:20px;font-weight:800;padding:2px 0 4px}
+.skeleton{background:linear-gradient(90deg,var(--surface-2),var(--surface),var(--surface-2));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:10px;height:44px}
+@keyframes sk{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
+
+/* confirmation */
+.confirm-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+@media (max-width:900px){.confirm-grid{grid-template-columns:1fr}}
+.bigtime{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.mentor{display:flex;gap:14px;align-items:center}
+.avatar{flex:none;width:48px;height:48px;border-radius:99px;background:var(--accent);color:#1B1530;display:grid;place-items:center;font-weight:800}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--surface-2);border-radius:10px;padding:8px 8px 8px 12px}
+.linkbox .mono{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* auth */
+.auth-wrap{max-width:440px;margin-inline:auto}
+.center-state{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding-block:24px}
+.big-ic{width:56px;height:56px;border-radius:99px;display:grid;place-items:center;font-size:24px;font-weight:800}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:none;background:none;padding:10px 14px;font-weight:700;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--primary-text);border-color:var(--primary)}
+.bk-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+@media (max-width:600px){.bk-card{grid-template-columns:auto minmax(0,1fr)}.bk-card .acts{grid-column:1 / -1}}
+
+/* admin */
+.admin{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 48px)}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;display:flex;flex-direction:column;gap:4px}
+.side .brand{padding:0 8px 16px}
+.side a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:600}
+.side a:hover{background:var(--surface-2)}
+.side a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-text)}
+.side .foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:13px}
+.admin-main{padding-inline:24px;padding-block:24px 64px;min-width:0;display:flex;flex-direction:column;gap:20px}
+@media (max-width:820px){.admin{grid-template-columns:1fr}.side{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px}.side .brand{padding:0 8px 0 0}.side .foot{margin-top:0;border:none;padding:0;margin-left:auto}.admin-main{padding-inline:16px}}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.tile .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tile .l{font-size:13px;color:var(--ink-2);font-weight:600}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+td .sub{color:var(--ink-2);font-size:12px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.filters .field{min-width:150px}
+.meter{display:flex;gap:4px;align-items:center}
+.meter i{width:18px;height:8px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line)}
+.meter i.on{background:var(--primary);border-color:var(--primary)}
+.meter.full i.on{background:var(--danger);border-color:var(--danger)}
+.capbars{display:flex;flex-direction:column;gap:6px}
+.capbar{display:grid;grid-template-columns:96px minmax(0,1fr) 64px;gap:10px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.capbar .track{height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden;position:relative}
+.capbar .fill{height:100%;background:var(--primary);border-radius:4px}
+.capbar.full .fill{background:var(--danger)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.week div{border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;font-size:12px}
+.week .on{background:var(--primary-soft)}
+.week b{display:block;font-size:12px}
+.sched-day{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding-block:12px;border-bottom:1px solid var(--line)}
+.sched-day:last-child{border-bottom:none}
+@media (max-width:600px){.sched-day{grid-template-columns:1fr}}
+.outbox-msg{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface);display:flex;flex-direction:column;gap:6px}
+.outbox-msg .body{white-space:pre-wrap;font-size:14px;overflow-wrap:anywhere}
+
+/* flow map */
+.personas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.personas{grid-template-columns:1fr}}
+.persona{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px}
+.persona ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.persona ol a{font-weight:600}
+.edge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.edge{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.edge .id{font-family:var(--font-mono);font-size:11px;color:var(--ink-2)}
+
+/* dialog + toast */
+.scrim{position:fixed;inset:0;background:rgba(16,12,28,.5);display:grid;place-items:center;padding:16px;z-index:60}
+.dialog{background:var(--surface);border-radius:16px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#toasts{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;gap:8px;align-items:center;width:max-content;max-width:calc(100% - 32px)}
+.toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.empty{text-align:center;padding:32px 16px;color:var(--ink-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+</style>
+
+<div class="protobar" role="region" aria-label="Prototype controls">
+  <div class="inner">
+    <span class="tag">Prototype</span>
+    <a class="pbtn" href="#/">Flow map</a>
+    <label for="pb-persona">Persona
+      <select id="pb-persona">
+        <option value="guest">Guest parent</option>
+        <option value="parent">Signed-in parent (demo)</option>
+        <option value="pending">Pending parent</option>
+        <option value="admin">Admin</option>
+      </select>
+    </label>
+    <label for="pb-date">Today is
+      <select id="pb-date">
+        <option value="2026-10-08">Thu 8 Oct 2026</option>
+        <option value="2026-10-20">Tue 20 Oct 2026 (clocks change soon)</option>
+        <option value="2027-03-05">Fri 5 Mar 2027 (clocks go forward)</option>
+      </select>
+    </label>
+    <label for="pb-tz">Browser zone
+      <select id="pb-tz">
+        <option value="America/New_York">New York</option>
+        <option value="America/Chicago">Chicago</option>
+        <option value="America/Denver">Denver</option>
+        <option value="America/Phoenix">Phoenix</option>
+        <option value="America/Los_Angeles">Los Angeles</option>
+        <option value="America/Anchorage">Anchorage</option>
+        <option value="Pacific/Honolulu">Honolulu</option>
+        <option value="Europe/London">London</option>
+        <option value="Europe/Dublin">Dublin</option>
+        <option value="Asia/Calcutta">Asia/Calcutta (legacy name)</option>
+        <option value="">Not detected</option>
+      </select>
+    </label>
+    <label for="pb-race"><input type="checkbox" id="pb-race"> Next booking loses race</label>
+    <label for="pb-soon"><input type="checkbox" id="pb-soon"> Next booking is too soon</label>
+    <label for="pb-annos"><input type="checkbox" id="pb-annos" checked> PRD tags</label>
+    <span class="grow"></span>
+    <a class="pbtn" href="#/dev/outbox">Dev outbox <span class="count" id="pb-outbox-count">0</span></a>
+    <button class="pbtn" type="button" data-act="reset">Reset data</button>
+  </div>
+</div>
+<div id="app"></div>
+<div id="dialog-root"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script id="engine">
+/* ================= ENGINE: time, slots, booking, suggestions (mirrors Technical Design §7–§10) ================= */
+const IST = "Asia/Kolkata";
+const CFG = { notice: 120, duration: 60, step: 30, horizon: 14, parentStart: 8 * 60, parentEnd: 21 * 60, cap: 2 };
+const MIN = 60000, HOUR = 3600000, DAY = 86400000;
+const WD = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+const WD_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const ALIASES = { "Asia/Calcutta": "Asia/Kolkata", "US/Eastern": "America/New_York", "US/Central": "America/Chicago", "US/Mountain": "America/Denver", "US/Pacific": "America/Los_Angeles", "US/Alaska": "America/Anchorage", "US/Hawaii": "Pacific/Honolulu", "GB": "Europe/London", "Eire": "Europe/Dublin" };
+const ZONE_NAMES = { "America/New_York": "Eastern Time", "America/Chicago": "Central Time", "America/Denver": "Mountain Time", "America/Phoenix": "Arizona Time", "America/Los_Angeles": "Pacific Time", "America/Anchorage": "Alaska Time", "Pacific/Honolulu": "Hawaii Time", "Europe/London": "UK time", "Europe/Dublin": "Irish time", "Asia/Kolkata": "India Standard Time" };
+const PINNED = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu", "Europe/London", "Europe/Dublin", "Asia/Kolkata"];
+
+const _dtf = {};
+function dtf(tz) {
+  return _dtf[tz] || (_dtf[tz] = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short" }));
+}
+const _pc = new Map();
+function parts(ms, tz) {
+  const key = tz + "|" + ms;
+  const hit = _pc.get(key);
+  if (hit) return hit;
+  const r = _parts(ms, tz);
+  if (_pc.size > 200000) _pc.clear();
+  _pc.set(key, r);
+  return r;
+}
+function _parts(ms, tz) {
+  const o = {};
+  for (const p of dtf(tz).formatToParts(new Date(ms))) o[p.type] = p.value;
+  const h = +o.hour % 24;
+  return { y: +o.year, m: +o.month, d: +o.day, h, mi: +o.minute, wd: WD[o.weekday], date: `${o.year}-${o.month}-${o.day}`, min: h * 60 + +o.minute };
+}
+function normalizeZone(z) {
+  if (!z) return null;
+  const c = ALIASES[z] || z;
+  try { new Intl.DateTimeFormat("en-US", { timeZone: c }); return c; } catch { return null; }
+}
+function offsetMin(ms, tz) {
+  const p = parts(ms, tz);
+  const base = ms - (((ms % MIN) + MIN) % MIN);
+  return Math.round((Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi) - base) / MIN);
+}
+function zonedToUtc(dateStr, minutes, tz) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const guess = Date.UTC(y, m - 1, d, 0, minutes);
+  let t = guess - offsetMin(guess, tz) * MIN;
+  t = guess - offsetMin(t, tz) * MIN;
+  return t;
+}
+function addDays(dateStr, n) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
+function dayDiff(a, b) { return Math.round((Date.parse(a) - Date.parse(b)) / DAY); }
+function localDate(ms, tz) { return parts(ms, tz).date; }
+
+/* ---------- formatting (never a bare "IST") ---------- */
+function abbr(tz, ms) {
+  const off = offsetMin(ms, tz);
+  if (tz === "Europe/London") return off === 60 ? "BST" : "GMT";
+  if (tz === "Europe/Dublin") return off === 60 ? "GMT+1" : "GMT";
+  if (tz === "Asia/Kolkata") return "IST (India)";
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date(ms)).find(x => x.type === "timeZoneName");
+  return p ? p.value : tz;
+}
+function fmtOffset(off) {
+  const s = off < 0 ? "−" : "+";
+  const a = Math.abs(off);
+  return `UTC${s}${String(Math.floor(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`;
+}
+function zoneLabel(tz, ms) {
+  let name = ZONE_NAMES[tz];
+  if (!name) {
+    const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "long" }).formatToParts(new Date(ms)).find(x => x.type === "timeZoneName");
+    name = p ? p.value : tz;
+  }
+  return `${name} (${fmtOffset(offsetMin(ms, tz))})`;
+}
+function fmtTime(ms, tz) { return new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).format(new Date(ms)); }
+function fmtDay(ms, tz) {
+  const p = new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "short", day: "numeric", month: "short" }).formatToParts(new Date(ms));
+  const g = t => (p.find(x => x.type === t) || {}).value;
+  return `${g("weekday")} ${g("day")} ${g("month")}`;
+}
+function fmtDayLong(ms, tz) { return new Intl.DateTimeFormat("en-GB", { timeZone: tz, weekday: "long", day: "numeric", month: "long" }).format(new Date(ms)); }
+function fmtSlot(ms, tz) { return `${fmtDay(ms, tz)} · ${fmtTime(ms, tz)} ${abbr(tz, ms)}`; }
+function fmtMinutes(min) {
+  const h = Math.floor(min / 60), m = min % 60, ap = h >= 12 ? "PM" : "AM";
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${ap}`;
+}
+function fmtHHMM(min) { return `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`; }
+function timeGroup(ms, tz) { const m = parts(ms, tz).min; return m < 720 ? "morning" : m < 1020 ? "afternoon" : "evening"; }
+
+/* ---------- data ---------- */
+const SHIFTS = {
+  UK: { label: "UK shift", start: 13 * 60, end: 23 * 60 + 30 },
+  USE: { label: "US-East shift", start: 30, end: 7 * 60 + 30 },
+  USW: { label: "US-West shift", start: 3 * 60 + 30, end: 9 * 60 + 30 }
+};
+const MENTORS = [
+  { id: "m01", name: "Aarav Sharma", shift: "UK", off: 1, bio: "Python and game design. 6 years teaching kids aged 8 to 14." },
+  { id: "m02", name: "Priya Iyer", shift: "UK", off: 3, bio: "Maths olympiad coach who makes fractions feel like puzzles." },
+  { id: "m03", name: "Rohan Mehta", shift: "UK", off: 5, bio: "Scratch and Roblox Studio for first-time coders." },
+  { id: "m04", name: "Ananya Reddy", shift: "UK", off: 7, bio: "Web basics: HTML, CSS and the first JavaScript game." },
+  { id: "m05", name: "Vikram Nair", shift: "USE", off: 2, bio: "AP Computer Science prep and Python projects." },
+  { id: "m06", name: "Sneha Kulkarni", shift: "USE", off: 4, bio: "Singapore-method maths for grades 1 to 6." },
+  { id: "m07", name: "Arjun Desai", shift: "USE", off: 6, bio: "Robotics with micro:bit and block coding." },
+  { id: "m08", name: "Kavya Menon", shift: "USE", off: 7, bio: "Algebra and geometry with lots of visual models." },
+  { id: "m09", name: "Ishaan Gupta", shift: "USW", off: 1, bio: "App Inventor and first mobile apps." },
+  { id: "m10", name: "Meera Pillai", shift: "USW", off: 5, bio: "Mental maths and number sense for younger learners." }
+];
+const mentorById = id => MENTORS.find(m => m.id === id);
+
+const DB = { now: 0, bookings: [], parents: {}, outbox: [], tokens: {}, seq: 0 };
+let rng = mulberry(7);
+function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function newRef() { let r; do { r = "CY-" + Array.from({ length: 6 }, () => ALPH[Math.floor(rng() * ALPH.length)]).join(""); } while (DB.bookings.some(b => b.ref === r)); return r; }
+function randToken(n = 22) { const a = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from({ length: n }, () => a[Math.floor(rng() * a.length)]).join(""); }
+function manageToken(ref) { let h = 5381; for (const c of "manage:" + ref + ":secret") h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return "mt_" + h.toString(36) + ref.slice(3).toLowerCase(); }
+
+/* ---------- availability (Technical Design §8.1) ---------- */
+function staffedBy(m, s) {
+  const a = parts(s, IST), b = parts(s + CFG.duration * MIN, IST);
+  if (a.date !== b.date) return false;
+  if (a.wd === m.off) return false;
+  const sh = SHIFTS[m.shift];
+  return a.min >= sh.start && b.min <= sh.end;
+}
+const confirmed = () => DB.bookings.filter(b => b.status === "CONFIRMED");
+function overlaps(m, s) { const e = s + CFG.duration * MIN; return confirmed().some(b => b.mentorId === m.id && b.start < e && s < b.start + CFG.duration * MIN); }
+function dayCount(m, istDate) { return confirmed().filter(b => b.mentorId === m.id && b.istDate === istDate).length; }
+function availableMentors(s) { const d = localDate(s, IST); return MENTORS.filter(m => staffedBy(m, s) && !overlaps(m, s) && dayCount(m, d) < CFG.cap); }
+function inParentWindow(s, tz) {
+  const d = localDate(s, tz);
+  return s >= zonedToUtc(d, CFG.parentStart, tz) && s + CFG.duration * MIN <= zonedToUtc(d, CFG.parentEnd, tz);
+}
+
+/* ---------- slot engine (Technical Design §8.2) ---------- */
+function todayLocal(tz) { return localDate(DB.now, tz); }
+function horizonDates(tz) { const t = todayLocal(tz); return Array.from({ length: CFG.horizon }, (_, i) => addDays(t, i)); }
+function daySlots(tz, date) {
+  const ws = zonedToUtc(date, CFG.parentStart, tz), we = zonedToUtc(date, CFG.parentEnd, tz);
+  const slots = [];
+  for (let s = Math.ceil(ws / (CFG.step * MIN)) * CFG.step * MIN; s + CFG.duration * MIN <= we; s += CFG.step * MIN) {
+    if (s < DB.now + CFG.notice * MIN) continue;
+    const staffed = MENTORS.filter(m => staffedBy(m, s));
+    if (!staffed.length) continue;
+    const avail = availableMentors(s);
+    slots.push({ s, status: avail.length ? "OPEN" : "FULL", avail: avail.length, min: parts(s, tz).min });
+  }
+  const status = slots.some(x => x.status === "OPEN") ? "OPEN" : slots.length ? "FULL" : "CLOSED";
+  return { date, status, slots, open: slots.filter(x => x.status === "OPEN").length };
+}
+function allDays(tz) { return horizonDates(tz).map(d => daySlots(tz, d)); }
+function transitions(tz) {
+  const ds = horizonDates(tz), out = [];
+  for (let i = 1; i < ds.length; i++) {
+    const a = offsetMin(zonedToUtc(ds[i - 1], 720, tz), tz), b = offsetMin(zonedToUtc(ds[i], 720, tz), tz);
+    if (a !== b) out.push({ date: ds[i], at: zonedToUtc(ds[i], 720, tz), from: a, to: b, back: b < a });
+  }
+  return out;
+}
+
+/* ---------- suggestions (Technical Design §8.3) ---------- */
+function suggest(tz, D, T, excludeS) {
+  const days = allDays(tz);
+  const di = days.findIndex(x => x.date === D);
+  const openOf = d => d.slots.filter(x => x.status === "OPEN" && x.s !== excludeS);
+  const dist = x => Math.abs(x.min - T);
+  const notes = [];
+  const tr = transitions(tz)[0];
+  if (tr) {
+    const hasT = d => d.slots.some(x => x.min === T);
+    const before = days.filter(d => d.date < tr.date).some(hasT), after = days.filter(d => d.date >= tr.date).some(hasT);
+    if (before && !after) notes.push(`From ${fmtDay(tr.at, tz)}, ${fmtMinutes(T)} is outside our mentors' hours because the clocks change.`);
+    if (!before && after) notes.push(`From ${fmtDay(tr.at, tz)}, ${fmtMinutes(T)} becomes available because the clocks change.`);
+  }
+  const dayD = days[di];
+  if (dayD && openOf(dayD).length) {
+    return { strategy: "SAME_DAY", D, T, notes, items: openOf(dayD).sort((a, b) => dist(a) - dist(b) || a.s - b.s).slice(0, 4) };
+  }
+  const same = days.map((d, i) => ({ d, i, hit: openOf(d).find(x => x.min === T) })).filter(x => x.hit && x.d.date !== D)
+    .sort((a, b) => Math.abs(a.i - di) - Math.abs(b.i - di) || b.i - a.i).slice(0, 3).map(x => x.hit);
+  if (same.length) return { strategy: "SAME_TIME", D, T, notes, items: same };
+  const near = [];
+  for (const d of days) {
+    if (d.date === D) continue;
+    for (const x of openOf(d).sort((a, b) => dist(a) - dist(b)).slice(0, 2)) { if (near.length < 4) near.push(x); }
+    if (near.length >= 4) break;
+  }
+  if (near.length) return { strategy: "NEAREST", D, T, notes, items: near.sort((a, b) => a.s - b.s) };
+  return { strategy: "NONE", D, T, notes, items: [] };
+}
+
+/* ---------- booking (Technical Design §9) ---------- */
+function parentStatus(p) { return !p ? "NONE" : !p.password ? "GUEST" : p.verified ? "VERIFIED" : "PENDING"; }
+function upsertParent(email, name, phone, tz) {
+  let p = DB.parents[email];
+  if (!p) p = DB.parents[email] = { email, name, phone: phone || "", tz, password: null, verified: false, created: DB.now };
+  else if (!p.password) { p.name = name; p.phone = phone || p.phone; p.tz = tz; }
+  return p;
+}
+function outbox(kind, to, subject, body, ref) { DB.outbox.unshift({ id: ++DB.seq, kind, to, subject, body, ref, at: DB.now }); }
+function rankMentors(s, avail) {
+  const d = localDate(s, IST);
+  const openOtherCount = m => {
+    let n = 0; const start = zonedToUtc(d, 0, IST);
+    for (let t = start; t < start + DAY; t += CFG.step * MIN) if (t !== s && t > DB.now && staffedBy(m, t) && !overlaps(m, t)) n++;
+    return n;
+  };
+  return avail.map(m => ({ m, load: dayCount(m, d), other: openOtherCount(m) }))
+    .sort((a, b) => a.load - b.load || a.other - b.other || a.m.id.localeCompare(b.m.id)).map(x => x.m);
+}
+function activeTrial(email) { return confirmed().find(b => b.email === email && b.start > DB.now); }
+function createBooking(input, opts = {}) {
+  const { s, tz, email, name, phone, child, grade, subject } = input;
+  if (opts.tooSoon || s < DB.now + CFG.notice * MIN) return { error: "SLOT_TOO_SOON" };
+  if (!opts.skipChecks && (!inParentWindow(s, tz) || !MENTORS.some(m => staffedBy(m, s)))) return { error: "OUTSIDE_HOURS" };
+  const existing = activeTrial(email);
+  if (existing) return { error: "ACTIVE_TRIAL_EXISTS", booking: existing };
+  if (opts.race) {
+    for (const m of availableMentors(s)) insertBooking({ s, tz: "America/New_York", email: `ghost${++DB.seq}@example.com`, name: "Another parent", child: "Mia", grade: 3, subject: "MATH" }, m, true);
+  }
+  const avail = availableMentors(s);
+  if (!avail.length) return { error: "SLOT_UNAVAILABLE" };
+  const m = rankMentors(s, avail)[0];
+  return { booking: insertBooking(input, m, opts.quiet) };
+}
+function insertBooking(input, m, quiet) {
+  const p = upsertParent(input.email, input.name, input.phone, input.tz);
+  const ref = newRef();
+  const b = {
+    ref, start: input.s, istDate: localDate(input.s, IST), mentorId: m.id, email: p.email, parentName: p.name,
+    child: input.child, grade: input.grade, subject: input.subject, tz: input.tz, status: "CONFIRMED",
+    meet: `https://meet.example.com/trial/${ref}-${randToken(10)}`, created: DB.now, cancelledBy: null
+  };
+  DB.bookings.push(b);
+  if (!quiet) {
+    const subj = b.subject === "CODING" ? "Coding" : "Maths";
+    outbox("BOOKING_CONFIRMED_PARENT", p.email, `Your free ${subj} trial is confirmed`,
+      `Hi ${p.name}, your free ${subj} trial for ${b.child} is confirmed for ${fmtSlot(b.start, b.tz)} with ${m.name}.\nJoin: ${b.meet}\nManage your booking: #/booking/${ref}?token=${manageToken(ref)}\nWant to see all your bookings in one place? Create an account: #/signup`, ref);
+    outbox("BOOKING_CONFIRMED_MENTOR", `${m.name.split(" ")[0].toLowerCase()}@mentors.example.com`, `New trial: ${b.child}, ${fmtSlot(b.start, IST)}`,
+      `New trial: ${b.child} (Grade ${b.grade}, ${subj}) on ${fmtSlot(b.start, IST)}.\nParent's time: ${fmtSlot(b.start, b.tz)} (${p.name}).\nJoin: ${b.meet}`, ref);
+  }
+  return b;
+}
+function cancelBooking(ref, by) {
+  const b = DB.bookings.find(x => x.ref === ref);
+  if (!b) return { error: "NOT_FOUND" };
+  if (b.start <= DB.now) return { error: "ALREADY_STARTED" };
+  if (b.status === "CANCELLED") return { booking: b };
+  b.status = "CANCELLED"; b.cancelledBy = by; b.cancelledAt = DB.now;
+  const m = mentorById(b.mentorId);
+  const extra = by === "ADMIN" ? " by our team" : "";
+  outbox("BOOKING_CANCELLED_PARENT", b.email, "Your trial was cancelled", `Your trial for ${b.child} on ${fmtSlot(b.start, b.tz)} was cancelled${extra}. Book another time: #/book`, ref);
+  outbox("BOOKING_CANCELLED_MENTOR", `${m.name.split(" ")[0].toLowerCase()}@mentors.example.com`, `Trial cancelled: ${b.child}`, `The trial with ${b.child} on ${fmtSlot(b.start, IST)} was cancelled${extra}. The slot is free again.`, ref);
+  return { booking: b };
+}
+
+/* ---------- auth (Technical Design §10) ---------- */
+function issueToken(email, purpose, hours) { const t = randToken(); DB.tokens[t] = { email, purpose, exp: DB.now + hours * HOUR, used: false }; for (const k in DB.tokens) if (k !== t && DB.tokens[k].email === email && DB.tokens[k].purpose === purpose && !DB.tokens[k].used) DB.tokens[k].used = true; return t; }
+function signup(name, email, password) {
+  const p = DB.parents[email];
+  if (p && p.password && p.verified) {
+    outbox("ACCOUNT_EXISTS", email, "You already have an account", `Someone tried to sign up with this email. You already have an account.\nSign in: #/login\nForgot your password? #/forgot-password`);
+    return;
+  }
+  const q = p || (DB.parents[email] = { email, name, phone: "", tz: "America/New_York", created: DB.now });
+  q.name = name; q.password = password; q.verified = false;
+  const t = issueToken(email, "VERIFY_EMAIL", 24);
+  outbox("VERIFY_EMAIL", email, "Verify your email", `Hi ${name}, confirm this is your email to see your bookings.\nVerify: #/verify-email?token=${t}\nThis link works for 24 hours.`);
+}
+function useToken(t, purpose) { const r = DB.tokens[t]; if (!r || r.used || r.purpose !== purpose || r.exp < DB.now) return null; r.used = true; return r; }
+
+/* ---------- seed (Technical Design §15) ---------- */
+function seed(todayIso) {
+  rng = mulberry(7);
+  DB.now = Date.parse(todayIso + "T14:00:00Z");
+  DB.bookings = []; DB.parents = {}; DB.outbox = []; DB.tokens = {}; DB.seq = 0;
+  let n = 0;
+  const FIRST = ["Sarah", "Michael", "Priyanka", "James", "Olivia", "Daniel", "Hannah", "Marcus", "Grace", "Tom", "Aisha", "Ryan", "Chloe", "Ben", "Fatima", "Lucas", "Megan", "Omar", "Rachel", "Sean"];
+  const LAST = ["Miller", "Johnson", "Shah", "O'Brien", "Walker", "Kim", "Murphy", "Brooks", "Nguyen", "Hughes", "Khan", "Foster", "Evans", "Carter", "Ali", "Garcia", "Byrne", "Haddad", "Cohen", "Price"];
+  const KIDS = ["Ava", "Leo", "Zara", "Noah", "Isla", "Kai", "Maya", "Eli", "Ruby", "Finn", "Nora", "Arlo"];
+  const person = () => { n++; const f = FIRST[n % FIRST.length], l = LAST[(n * 7) % LAST.length]; return { name: `${f} ${l}`, email: `${f}.${l}${n}`.toLowerCase().replace(/[^a-z0-9.]/g, "") + "@example.com" }; };
+  const mk = (s, tz, who, opts) => { const w = who || person(); return createBooking({ s, tz, email: w.email, name: w.name, child: KIDS[n % KIDS.length], grade: 2 + (n % 8), subject: n % 2 ? "CODING" : "MATH" }, Object.assign({ quiet: true }, opts)); };
+  const NY = "America/New_York", LDN = "Europe/London";
+  const today = todayLocal(NY);
+  // S1 mentor at cap: tomorrow's IST date, two UK-shift bookings for the same mentor
+  const tIst = addDays(localDate(DB.now, IST), 1);
+  const s1m = MENTORS.find(m => m.shift === "UK" && parts(zonedToUtc(tIst, 720, IST), IST).wd !== m.off);
+  for (const mins of [19 * 60, 21 * 60]) { const w = person(); insertBooking({ s: zonedToUtc(tIst, mins, IST), tz: LDN, email: w.email, name: w.name, child: "Oliver", grade: 5, subject: "CODING" }, s1m, true); }
+  // S2 full slot: day+2, 9:30 AM New York
+  const s2 = zonedToUtc(addDays(today, 2), 9 * 60 + 30, NY);
+  for (let i = 0; i < 6 && availableMentors(s2).length; i++) mk(s2, NY);
+  // S3 full day: day+4 New York, book every open slot
+  const d3 = addDays(today, 4);
+  for (let guard = 0; guard < 40; guard++) { const o = daySlots(NY, d3).slots.find(x => x.status === "OPEN"); if (!o) break; mk(o.s, NY); }
+  // background bookings for realism
+  for (let i = 0; i < 9; i++) {
+    const tz = i % 3 ? NY : LDN, d = daySlots(tz, addDays(today, 1 + ((i * 3) % 12)));
+    const open = d.slots.filter(x => x.status === "OPEN"); if (open.length) mk(open[Math.floor(rng() * open.length)].s, tz);
+  }
+  // S4 cancelled
+  const d5 = daySlots(NY, addDays(today, 5)).slots.find(x => x.status === "OPEN");
+  if (d5) { const r = mk(d5.s, NY, { name: "Chris Patel", email: "cancelled.parent@example.com" }); if (r.booking) cancelBooking(r.booking.ref, "PARENT"); }
+  // S5 verified demo parent (London): one upcoming + one past
+  const demo = "demo.parent@example.com";
+  DB.parents[demo] = { email: demo, name: "Emma Clarke", phone: "+44 7700 900123", tz: LDN, password: "Parent123!", verified: true, created: DB.now - 20 * DAY };
+  const d6 = daySlots(LDN, addDays(todayLocal(LDN), 3)).slots.filter(x => x.status === "OPEN");
+  if (d6.length) { const r = createBooking({ s: d6[Math.floor(d6.length / 2)].s, tz: LDN, email: demo, name: "Emma Clarke", child: "Freddie", grade: 4, subject: "CODING" }, { quiet: true }); }
+  const savedNow = DB.now; DB.now -= 4 * DAY;
+  const past = daySlots(LDN, todayLocal(LDN)).slots.filter(x => x.status === "OPEN").pop();
+  if (past) insertBooking({ s: past.s, tz: LDN, email: demo, name: "Emma Clarke", child: "Freddie", grade: 4, subject: "MATH" }, availableMentors(past.s)[0] || MENTORS[0], true);
+  DB.now = savedNow;
+  // S6 pending parent with a guest booking + verification email in the outbox
+  const pend = "pending.parent@example.com";
+  const d7 = daySlots(NY, addDays(today, 6)).slots.find(x => x.status === "OPEN");
+  if (d7) createBooking({ s: d7.s, tz: NY, email: pend, name: "Jordan Lee", child: "Sam", grade: 6, subject: "MATH" }, { quiet: true });
+  signup("Jordan Lee", pend, "Pending123!");
+  // S7 guest only
+  const d8 = daySlots("America/Los_Angeles", addDays(today, 7)).slots.find(x => x.status === "OPEN");
+  if (d8) createBooking({ s: d8.s, tz: "America/Los_Angeles", email: "guest.parent@example.com", name: "Alex Rivera", child: "Luna", grade: 2, subject: "CODING" }, { quiet: true });
+  rng = mulberry(Date.now() & 0xffff);
+}
+</script>
+
+<script>
+/* ================= UI ================= */
+const ADMIN = { email: "admin@trialdesk.example", password: "Admin123!", name: "Ops Admin" };
+const S = {
+  session: { parent: null, admin: null },
+  browserTz: "America/New_York", chosenTz: null, tzOpen: false, tzFilter: "",
+  book: null, attempts: {}, adminFilters: { scope: "upcoming", status: "", mentor: "", q: "" }, myTab: "upcoming", lastSignupEmail: ""
+};
+const $ = s => document.querySelector(s);
+const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const initials = n => n.split(" ").map(x => x[0]).slice(0, 2).join("");
+const anno = t => `<span class="anno">${esc(t)}</span>`;
+function parentTz() { return S.chosenTz || normalizeZone(S.browserTz); }
+function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; $("#toasts").appendChild(t); setTimeout(() => t.remove(), 2600); }
+function go(h) { if (location.hash === h) render(); else location.hash = h; }
+function route() {
+  const h = location.hash.replace(/^#/, "") || "/";
+  const [path, qs] = h.split("?");
+  return { path, parts: path.split("/").filter(Boolean), q: Object.fromEntries(new URLSearchParams(qs || "")) };
+}
+function freshBook() { return { date: null, sel: null, step: 1, form: {}, errors: {}, sugg: null, lead: "", existing: null, submitting: false }; }
+
+/* ---------- shells ---------- */
+function publicShell(inner) {
+  const p = S.session.parent ? DB.parents[S.session.parent] : null;
+  const nav = p
+    ? `<a class="btn btn-ghost btn-sm" href="#/book">Book a trial</a><a class="btn btn-ghost btn-sm" href="#/my-bookings">My bookings</a><span class="small muted">${esc(p.name)}</span><button class="btn btn-secondary btn-sm" data-act="parent-logout">Sign out</button>`
+    : `<a class="btn btn-ghost btn-sm" href="#/book">Book a trial</a><a class="btn btn-secondary btn-sm" href="#/login">Sign in</a>`;
+  return `<header class="site-head"><div class="inner"><a class="brand" href="#/book"><span class="mark">TD</span>TrialDesk</a><nav aria-label="Main">${nav}</nav></div></header><main class="main">${inner}</main>`;
+}
+function adminShell(active, inner) {
+  const items = [["", "Dashboard"], ["bookings", "Bookings"], ["parents", "Parents"], ["mentors", "Mentors"], ["outbox", "Outbox"]];
+  return `<div class="admin"><aside class="side" aria-label="Admin navigation"><a class="brand" href="#/admin"><span class="mark">TD</span>Admin</a>
+    ${items.map(([k, l]) => `<a href="#/admin${k ? "/" + k : ""}" ${active === k ? 'aria-current="page"' : ""}>${l}</a>`).join("")}
+    <div class="foot"><div class="stack" style="gap:6px"><span class="muted">${esc(ADMIN.name)}</span><button class="btn btn-secondary btn-sm" data-act="admin-logout">Sign out</button></div></div></aside>
+    <section class="admin-main">${inner}</section></div>`;
+}
+
+/* ---------- flow map ---------- */
+function viewMap() {
+  const edges = [
+    ["FR-2 · C4", "Full slot", "Day + 2 at 9:30 AM Eastern is full. Click it to see same-day suggestions.", "edge-full-slot"],
+    ["FR-11 · C5", "Fully booked day", "Day + 4 for New York has no open slots. Suggestions jump to the same time on other days.", "edge-full-day"],
+    ["C1", "Lost race", "Turn on “Next booking loses race” above, then book any slot.", "edge-race"],
+    ["C9", "Too soon", "Turn on “Next booking is too soon”, then book.", "edge-soon"],
+    ["FR-12 · C8", "Already has a trial", "Book with demo.parent@example.com; it already has an upcoming trial.", "edge-active"],
+    ["FR-13 · T1", "Clock change banner", "Set “Today is” to 20 Oct 2026. New York shows the 1 Nov banner; London the 25 Oct one.", "edge-dst"],
+    ["T8", "Zone not detected / legacy name", "Set “Browser zone” to Not detected or Asia/Calcutta.", "edge-tz"],
+    ["T9", "Travelling parent", "Book in New York, then switch Browser zone to Los Angeles and reopen the booking.", null],
+    ["C3 · FR-19", "Mentor at 2 / 2", "Admin → Mentors: one UK-shift mentor is at capacity tomorrow (IST).", "edge-cap"],
+    ["A12", "Pending account", "Sign in as pending.parent@example.com / Pending123!", "edge-pending"],
+    ["A8", "Rate limit", "Enter a wrong password 6 times on the sign-in page.", "edge-login"],
+    ["A7", "Expired link", "Verify an email from the dev outbox, then click the same link again.", "edge-outbox"],
+    ["FR-10", "Bad manage link", "Open a booking with a wrong token.", "edge-badtoken"]
+  ];
+  return `<main class="main stack-lg">
+    <div class="stack"><span class="eyebrow">TrialDesk trial booking · clickable prototype of the PRD</span><h1>Every screen, by persona</h1>
+      <p class="muted" style="max-width:68ch">Times, shifts, the 2-per-day cap, suggestions and clock changes are computed for real, so this behaves like the spec. Use the bar above to switch persona, the demo date and the browser time zone. Yellow tags show which PRD requirement each part covers.</p></div>
+    <div class="personas">
+      <section class="persona"><span class="chip chip-info">Parent · guest</span><h2>Book without an account</h2>
+        <ol><li><a href="#/book" data-act="as-guest">Pick a day and time</a> in local time</li><li>Click a Full slot to see suggestions</li><li>Fill in parent and child details</li><li>Confirmation with class link, calendar and private manage link</li><li>Manage or cancel via the link</li></ol></section>
+      <section class="persona"><span class="chip chip-open">Parent · account</span><h2>See all my bookings</h2>
+        <ol><li><a href="#/signup">Sign up</a> with the booking email</li><li>Open the verification link in the <a href="#/dev/outbox">dev outbox</a></li><li><a href="#/login">Sign in</a> (demo.parent@example.com / Parent123!)</li><li><a href="#/my-bookings">My bookings</a>: upcoming and past</li><li><a href="#/forgot-password">Forgot password</a> → reset link</li></ol></section>
+      <section class="persona"><span class="chip chip-pending">Admin</span><h2>Run the trial schedule</h2>
+        <ol><li><a href="#/admin/login">Sign in</a> (admin@trialdesk.example / Admin123!)</li><li><a href="#/admin" data-act="as-admin">Dashboard</a>: load per IST date</li><li>Bookings: filter, search, cancel</li><li>Parents: account status and history</li><li>Mentors: shifts and full schedule</li></ol></section>
+    </div>
+    <section class="stack"><h2>Edge cases to try</h2><div class="edge-grid">
+      ${edges.map(([id, t, d, act]) => `<div class="edge"><span class="id">${id}</span><strong>${t}</strong><span class="small muted">${d}</span>${act ? `<button class="btn-link small" data-act="${act}" style="align-self:flex-start">Show me</button>` : ""}</div>`).join("")}
+    </div></section>
+    <section class="stack"><h2>Mentor shifts behind the times</h2>
+      <div class="table-wrap"><table><thead><tr><th>Shift</th><th>India time</th><th>Mentors</th><th>Covers</th></tr></thead><tbody>
+        <tr><td>UK shift</td><td>1:00 PM – 11:30 PM</td><td>4</td><td>UK and Ireland day and after-school, US mornings</td></tr>
+        <tr><td>US-East shift</td><td>12:30 AM – 7:30 AM</td><td>4</td><td>US East and Central after-school evenings</td></tr>
+        <tr><td>US-West shift</td><td>3:30 AM – 9:30 AM</td><td>2</td><td>US Pacific, Mountain, Alaska and Hawaii afternoons and evenings</td></tr>
+      </tbody></table></div>
+      <p class="small muted">Parents only ever see times between 8:00 AM and 9:00 PM in their own zone. Each mentor takes one day off a week.</p></section>
+  </main>`;
+}
+
+/* ---------- booking ---------- */
+function stepper(n) {
+  const st = ["Pick a time", "About your child", "Confirmed"];
+  return `<div class="stepper" aria-label="Progress">${st.map((t, i) => `${i ? '<span class="sep"></span>' : ""}<span class="s ${i + 1 === n ? "cur" : i + 1 < n ? "done" : ""}"><span class="n">${i + 1 < n ? "✓" : i + 1}</span>${t}</span>`).join("")}</div>`;
+}
+function tzBar(tz) {
+  const now = DB.now;
+  const head = tz
+    ? `<div class="globe" aria-hidden="true">◷</div><div style="flex:1;min-width:200px"><div class="small muted">Times shown in</div><strong>${esc(zoneLabel(tz, now))}</strong>${S.chosenTz ? "" : `<span class="small muted"> · detected from your browser</span>`}${anno("FR-1")}</div><button class="btn btn-secondary btn-sm" data-act="tz-toggle" aria-expanded="${S.tzOpen}">Change</button>`
+    : `<div class="globe" aria-hidden="true">◷</div><div style="flex:1"><strong>Choose your time zone to see class times</strong><div class="small muted">We couldn't detect it from your browser.</div>${anno("FR-1 AC4")}</div>`;
+  let picker = "";
+  if (S.tzOpen || !tz) {
+    const f = S.tzFilter.toLowerCase();
+    const all = (Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : PINNED).filter(z => !PINNED.includes(z));
+    const match = z => !f || z.toLowerCase().includes(f) || (ZONE_NAMES[z] || "").toLowerCase().includes(f);
+    const btn = z => `<button type="button" role="option" aria-selected="${z === tz}" data-act="tz-pick" data-tz="${z}"><span>${esc(ZONE_NAMES[z] || z.replace(/_/g, " "))}</span><span class="small muted">${esc(fmtOffset(offsetMin(now, z)))}</span></button>`;
+    const pin = PINNED.filter(match), rest = all.filter(match).slice(0, 80);
+    picker = `<div class="tzpicker"><label class="small muted" for="tz-search">Search time zones</label><input class="input" id="tz-search" placeholder="e.g. London, Pacific, Chicago" value="${esc(S.tzFilter)}" autocomplete="off">
+      <div class="tzlist" role="listbox" aria-label="Time zones">${pin.length ? `<div class="grp">US, UK, Ireland, India</div>${pin.map(btn).join("")}` : ""}${rest.length ? `<div class="grp">All zones</div>${rest.map(btn).join("")}` : ""}${!pin.length && !rest.length ? `<p class="small muted" style="padding:8px">No zone matches “${esc(S.tzFilter)}”.</p>` : ""}</div></div>`;
+  }
+  return `<div class="stack"><div class="tzbar">${head}</div>${picker}</div>`;
+}
+function dstBanner(tz) {
+  const t = transitions(tz)[0];
+  if (!t) return "";
+  return `<div class="callout callout-warn" role="status"><span class="ic">!</span><div><strong>Clocks ${t.back ? "go back" : "go forward"} on ${esc(fmtDayLong(t.at, tz))}.</strong> Times from then are in ${esc(abbr(tz, t.at))} (${esc(fmtOffset(t.to))}). The times below already account for this.${anno("FR-13 · T1")}</div></div>`;
+}
+function badge(d) {
+  if (d.status === "OPEN") return d.open >= 3 ? `<span class="chip chip-open">Open</span>` : `<span class="chip chip-few">Few left</span>`;
+  if (d.status === "FULL") return `<span class="chip chip-full">Full</span>`;
+  return `<span class="chip chip-closed">No classes</span>`;
+}
+function suggPanel(tz, sg, lead) {
+  if (!sg) return "";
+  const head = {
+    SAME_DAY: `No mentor is free at ${fmtMinutes(sg.T)} on ${fmtDay(zonedToUtc(sg.D, 720, tz), tz)}. These times that day are open:`,
+    SAME_TIME: `${fmtDay(zonedToUtc(sg.D, 720, tz), tz)} is fully booked. ${fmtMinutes(sg.T)} is open on these days:`,
+    NEAREST: `We couldn't find ${fmtMinutes(sg.T)} on nearby days. Here are the closest good times:`,
+    NONE: `We're fully booked for the next two weeks.`
+  }[sg.strategy];
+  const step = { SAME_DAY: "Step 1 · same day", SAME_TIME: "Step 2 · same time, other days", NEAREST: "Step 3 · closest good times", NONE: "Step 4 · nothing open" }[sg.strategy];
+  return `<div class="panel" id="sugg" tabindex="-1" aria-live="polite">
+    <div class="spread"><span class="eyebrow">Other times</span><span class="anno">FR-11 · ${step}</span></div>
+    ${lead ? `<div class="callout callout-danger"><span class="ic">!</span><div><strong>${esc(lead)}</strong></div></div>` : ""}
+    <h3>${esc(head)}</h3>
+    ${sg.notes.map(n => `<p class="small" style="color:var(--warning)">${esc(n)}</p>`).join("")}
+    ${sg.items.length ? `<div class="sugg-list">${sg.items.map(x => `<button class="sugg" data-act="pick-sugg" data-s="${x.s}"><span><span class="t">${esc(fmtSlot(x.s, tz))}</span>${x.avail === 1 ? `<br><span class="small" style="color:var(--accent-text)">Last spot</span>` : ""}</span><span class="go">Choose →</span></button>`).join("")}</div>`
+      : `<p class="muted">Please check back soon, or write to us at hello@trialdesk.example and we'll find a time that works.</p>`}
+  </div>`;
+}
+function viewBook() {
+  const tz = parentTz();
+  const B = S.book || (S.book = freshBook());
+  if (B.step === 2 && B.sel) return publicShell(viewBookDetails(tz, B));
+  if (!tz) return publicShell(`<div class="stack-lg">${stepper(1)}<h1>Book a free trial class</h1>${tzBar(null)}</div>`);
+  const days = allDays(tz);
+  if (!B.date || !days.some(d => d.date === B.date)) B.date = (days.find(d => d.status === "OPEN") || days[0]).date;
+  const day = days.find(d => d.date === B.date);
+  const anyOpen = days.some(d => d.status === "OPEN");
+  const groups = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
+  let slotsHtml;
+  if (!anyOpen) slotsHtml = suggPanel(tz, { strategy: "NONE", items: [], notes: [], T: 0, D: B.date });
+  else if (day.status === "CLOSED") slotsHtml = `<div class="empty"><strong>No classes on this day.</strong><span>None of our mentors work at family-friendly hours for your time zone on ${esc(fmtDayLong(zonedToUtc(day.date, 720, tz), tz))}.</span></div>`;
+  else slotsHtml = Object.entries(groups).map(([k, label]) => {
+    const g = day.slots.filter(x => timeGroup(x.s, tz) === k);
+    if (!g.length) return "";
+    return `<div class="slot-group"><h3>${label} ${k === "evening" ? anno("after school") : ""}</h3><div class="slots">${g.map(x => {
+      const full = x.status === "FULL", sel = B.sugg && B.suggFrom === x.s;
+      const aria = `${fmtDayLong(x.s, tz)}, ${fmtTime(x.s, tz)} ${zoneLabel(tz, x.s)}${full ? ", Full, show other times" : ""}`;
+      return `<button class="slot ${full ? "full" : ""} ${x.avail === 1 ? "last" : ""} ${sel ? "sel" : ""}" data-act="${full ? "full-slot" : "pick-slot"}" data-s="${x.s}" aria-label="${esc(aria)}">${esc(fmtTime(x.s, tz))}<span class="sub">${full ? "Full" : x.avail === 1 ? "Last spot" : abbr(tz, x.s)}</span></button>`;
+    }).join("")}</div></div>`;
+  }).join("");
+  const dayFull = day.status === "FULL";
+  const side = B.sugg ? suggPanel(tz, B.sugg, B.lead)
+    : dayFull ? suggPanel(tz, suggest(tz, day.date, day.slots[0] ? day.slots[Math.floor(day.slots.length / 2)].min : 600), "This day is fully booked.")
+    : `<div class="panel"><span class="eyebrow">What you get</span><h3>A free 60-minute 1:1 class</h3>
+       <ul class="small muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>A mentor matched to your time, assigned instantly</li><li>Class link and calendar invite right after booking</li><li>No account needed. Cancel any time before the class.</li></ul>
+       <div class="proto-note">Slots: whole class inside 8 AM–9 PM your time <b>and</b> inside a mentor's shift; ≥ 2 h notice; 14 days. Full = mentors work then but none is free (busy or already at 2 trials that India date).</div></div>`;
+  return publicShell(`<div class="stack-lg">${stepper(1)}
+    <div class="stack"><h1>Book a free trial class</h1><p class="muted">Pick a time that suits your family. We'll match a mentor who's free then.</p></div>
+    ${tzBar(tz)}${dstBanner(tz)}
+    <div class="stack"><div class="spread"><h2 id="days-h">Choose a day</h2>${anno("FR-2 · FR-3")}</div>
+      <div class="daystrip" role="group" aria-labelledby="days-h">${days.map(d => { const ms = zonedToUtc(d.date, 720, tz); const p = parts(ms, tz); return `<button class="daypill" data-act="pick-day" data-d="${d.date}" aria-pressed="${d.date === B.date}"><span class="wd">${WD_NAMES[p.wd]}</span><span class="dn">${p.d}</span><span class="mo">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" }).format(new Date(Date.parse(d.date)))}</span>${badge(d)}</button>`; }).join("")}</div></div>
+    <div class="book-grid"><div class="stack-lg"><div class="spread"><h2>${esc(fmtDayLong(zonedToUtc(day.date, 720, tz), tz))}</h2><span class="small muted">${day.open} open · ${day.slots.length - day.open} full</span></div>${slotsHtml}</div><div>${side}</div></div>
+  </div>`);
+}
+function viewBookDetails(tz, B) {
+  const p = S.session.parent ? DB.parents[S.session.parent] : null;
+  const f = B.form, e = B.errors;
+  const v = (k, d = "") => esc(f[k] != null ? f[k] : d);
+  const fld = (id, label, input, hint) => `<div class="field ${e[id] ? "has-error" : ""}"><label for="f-${id}">${label}</label>${input}${e[id] ? `<span class="err" id="e-${id}">${esc(e[id])}</span>` : hint ? `<span class="hint">${hint}</span>` : ""}</div>`;
+  const ms = B.sel, pp = parts(ms, tz);
+  const existing = B.existing ? `<div class="callout callout-info"><span class="ic">i</span><div class="stack" style="gap:6px"><strong>You already have a trial on ${esc(fmtSlot(B.existing.start, B.existing.tz))}.</strong><span class="small">Each family can hold one upcoming free trial. ${p ? "" : "Use the manage link in your confirmation email to change it."}</span>${anno("FR-12 · C8")}${p ? `<a class="btn btn-secondary btn-sm" style="align-self:flex-start" href="#/booking/${B.existing.ref}">View booking</a>` : `<a class="btn-link small" href="#/dev/outbox" style="align-self:flex-start">Open the confirmation (dev outbox)</a>`}</div></div>` : "";
+  return `<div class="stack-lg">${stepper(2)}
+    <div class="book-grid"><div class="stack-lg">
+      <div class="selected-slot"><div class="cal-ic"><div class="m">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(new Date(ms))}</div><div class="d">${pp.d}</div></div>
+        <div style="flex:1"><div class="small muted">Your trial class</div><strong class="tnum">${esc(fmtSlot(ms, tz))}</strong><div class="small muted">60 minutes · ${esc(zoneLabel(tz, ms))}</div></div>
+        <button class="btn btn-secondary btn-sm" data-act="change-time">Change</button></div>
+      ${existing}
+      <form class="card stack-lg" data-form="book" novalidate>
+        <div class="spread"><h2>About you and your child</h2>${anno("FR-6")}</div>
+        <div class="grid-2">
+          ${fld("name", "Your name", `<input class="input" id="f-name" name="name" autocomplete="name" value="${v("name", p ? p.name : "")}" ${e.name ? 'aria-invalid="true" aria-describedby="e-name"' : ""}>`)}
+          ${fld("email", "Email", `<input class="input" id="f-email" name="email" type="email" autocomplete="email" value="${v("email", p ? p.email : "")}" ${p ? "readonly" : ""} ${e.email ? 'aria-invalid="true" aria-describedby="e-email"' : ""}>`, p ? "Signed in. Bookings use your account email." : "We'll send the class link here.")}
+          ${fld("phone", "Phone <span class=\"muted\">(optional)</span>", `<input class="input" id="f-phone" name="phone" type="tel" autocomplete="tel" value="${v("phone", p ? p.phone : "")}">`, "Only used if the mentor can't connect.")}
+          ${fld("child", "Child's first name", `<input class="input" id="f-child" name="child" value="${v("child")}" ${e.child ? 'aria-invalid="true" aria-describedby="e-child"' : ""}>`)}
+          ${fld("grade", "Grade", `<select class="select" id="f-grade" name="grade">${['<option value="">Choose a grade</option>'].concat(Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${String(f.grade) === String(i + 1) ? "selected" : ""}>Grade ${i + 1}</option>`)).join("")}</select>`)}
+          <div class="field ${e.subject ? "has-error" : ""}"><span style="font-weight:600;font-size:14px" id="subj-l">Subject</span><div class="seg" role="group" aria-labelledby="subj-l"><button type="button" data-act="subject" data-v="CODING" aria-pressed="${f.subject === "CODING"}">Coding</button><button type="button" data-act="subject" data-v="MATH" aria-pressed="${f.subject === "MATH"}">Maths</button></div>${e.subject ? `<span class="err">${esc(e.subject)}</span>` : ""}</div>
+        </div>
+        <div class="row"><button class="btn btn-primary" type="submit" ${B.submitting ? "disabled" : ""}>${B.submitting ? "Booking…" : "Book free trial"}</button><span class="small muted">No payment, no account needed.</span></div>
+        <div class="proto-note">Submit sends an Idempotency-Key, so a double-click creates one booking (C7). The server re-checks the slot inside a locked transaction and assigns the least-loaded free mentor (FR-7).</div>
+      </form></div>
+      <div>${B.sugg ? suggPanel(tz, B.sugg, B.lead) : `<div class="panel"><span class="eyebrow">What happens next</span><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>We assign a mentor who is free at this time.</li><li>You get the class link and a calendar invite.</li><li>Your mentor gets the same details in their own time zone.</li></ol></div>`}</div>
+    </div></div>`;
+}
+function validateBook(f) {
+  const e = {};
+  if (!f.name || f.name.trim().length < 2) e.name = "Please enter your name";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email || "")) e.email = "Please enter a valid email";
+  if (f.phone && !/^\+?[0-9 ()-]{7,20}$/.test(f.phone)) e.phone = "Please enter a valid phone number";
+  if (!f.child || !f.child.trim()) e.child = "Please enter your child's name";
+  if (!f.grade) e.grade = "Choose a grade between 1 and 12";
+  if (!f.subject) e.subject = "Choose a subject";
+  return e;
+}
+function submitBook(form) {
+  const B = S.book, tz = parentTz();
+  const fd = Object.fromEntries(new FormData(form));
+  B.form = Object.assign(B.form, fd, { email: (fd.email || "").trim().toLowerCase() });
+  B.errors = validateBook(B.form); B.existing = null;
+  if (Object.keys(B.errors).length) { render(); const first = document.querySelector("[aria-invalid=true]"); if (first) first.focus(); return; }
+  B.submitting = true; render();
+  setTimeout(() => {
+    const race = $("#pb-race").checked, soon = $("#pb-soon").checked;
+    $("#pb-race").checked = false; $("#pb-soon").checked = false;
+    const r = createBooking({ s: B.sel, tz, email: B.form.email, name: B.form.name.trim(), phone: B.form.phone, child: B.form.child.trim(), grade: +B.form.grade, subject: B.form.subject }, { race, tooSoon: soon });
+    B.submitting = false;
+    const p = parts(B.sel, tz);
+    if (r.error === "ACTIVE_TRIAL_EXISTS") { B.existing = r.booking; render(); return; }
+    if (r.error) {
+      B.lead = r.error === "SLOT_TOO_SOON" ? "This time is now too soon to book." : r.error === "OUTSIDE_HOURS" ? "That time is outside our class hours." : "That time was just booked.";
+      B.sugg = suggest(tz, p.date, p.min, B.sel); render(); const el = $("#sugg"); if (el) el.focus(); return;
+    }
+    S.book = null;
+    toast("Trial booked");
+    go(`#/booking/${r.booking.ref}?token=${manageToken(r.booking.ref)}`);
+  }, 650);
+}
+
+/* ---------- confirmation / manage ---------- */
+function canSee(b, q) {
+  if (!b) return false;
+  if (q.token && q.token === manageToken(b.ref)) return "token";
+  if (S.session.admin) return "admin";
+  const p = S.session.parent && DB.parents[S.session.parent];
+  if (p && p.verified && p.email === b.email) return "owner";
+  return false;
+}
+function viewBooking(ref, q) {
+  const b = DB.bookings.find(x => x.ref === ref);
+  const how = canSee(b, q);
+  if (!how) return publicShell(`<div class="auth-wrap card center-state"><div class="big-ic" style="background:var(--surface-2)">?</div><h2>We couldn't find this booking</h2><p class="muted">The link may be incomplete. Use the link from your confirmation email, or sign in to see your bookings.</p>${anno("FR-10 AC1 · A5")}<div class="row" style="justify-content:center"><a class="btn btn-primary" href="#/login">Sign in</a><a class="btn btn-secondary" href="#/book">Book a trial</a></div></div>`);
+  const m = mentorById(b.mentorId), tz = b.tz, cur = normalizeZone(S.browserTz);
+  const cancelled = b.status === "CANCELLED", started = b.start <= DB.now;
+  const p = DB.parents[b.email];
+  const guestPrompt = how === "token" && parentStatus(p) !== "VERIFIED" && !cancelled
+    ? `<div class="panel"><span class="eyebrow">Optional</span><h3>Create an account to see all your bookings</h3><p class="small muted">Use ${esc(b.email)}. We'll ask you to verify the email first, so only you can see your family's bookings.</p>${anno("FR-8 · FR-14")}<a class="btn btn-secondary" href="#/signup?email=${encodeURIComponent(b.email)}">Create account</a></div>` : "";
+  const status = cancelled ? `<span class="chip chip-full"><span class="dot"></span>Cancelled</span>` : started ? `<span class="chip chip-closed">Completed</span>` : `<span class="chip chip-open"><span class="dot"></span>Confirmed</span>`;
+  return publicShell(`<div class="stack-lg">${how === "token" && !cancelled ? stepper(3) : ""}
+    ${cancelled ? `<div class="callout callout-danger"><span class="ic">×</span><div class="stack" style="gap:6px"><strong>This booking was cancelled${b.cancelledBy === "ADMIN" ? " by our team" : ""}.</strong><span class="small">The time is free again for other families.</span><a class="btn btn-primary btn-sm" style="align-self:flex-start" href="#/book" data-act="new-book">Book another time</a></div></div>` : ""}
+    <div class="confirm-grid"><div class="card card-raised stack-lg">
+      <div class="spread">${status}<span class="small muted">Reference <span class="mono">${b.ref}</span></span></div>
+      <div class="stack" style="gap:6px"><span class="muted">${b.subject === "CODING" ? "Coding" : "Maths"} trial for ${esc(b.child)} · Grade ${b.grade}</span>
+        <div class="bigtime">${esc(fmtDayLong(b.start, tz))}<br>${esc(fmtTime(b.start, tz))} ${esc(abbr(tz, b.start))}</div>
+        <span class="small muted">${esc(zoneLabel(tz, b.start))} · 60 minutes ${anno("FR-8")}</span>
+        ${cur && cur !== tz ? `<div class="callout callout-info"><span class="ic">i</span><div class="small">You're currently in ${esc(ZONE_NAMES[cur] || cur)}. That's <strong>${esc(fmtSlot(b.start, cur))}</strong> for you. ${anno("T9")}</div></div>` : ""}
+      </div>
+      <dl class="kv"><dt>Mentor's time</dt><dd>${esc(fmtSlot(b.start, IST))} ${anno("display rule 3")}</dd><dt>Parent</dt><dd>${esc(b.parentName)} · ${esc(b.email)}</dd></dl>
+      <div class="mentor"><div class="avatar">${initials(m.name)}</div><div><strong>${esc(m.name)}</strong><div class="small muted">${esc(SHIFTS[m.shift].label)} · ${esc(m.bio)}</div></div></div>
+      ${cancelled ? "" : `<div class="stack"><span class="eyebrow">Class link</span><div class="linkbox"><span class="mono">${esc(b.meet)}</span><button class="btn btn-secondary btn-sm" data-act="copy" data-v="${esc(b.meet)}">Copy</button></div>
+        <div class="row"><button class="btn btn-primary" data-act="ics">Add to calendar (.ics)</button><button class="btn btn-secondary" data-act="gcal">Google Calendar</button>${started ? "" : `<button class="btn btn-ghost" data-act="cancel" data-ref="${b.ref}">Cancel trial</button>`}</div></div>`}
+    </div>
+    <div class="stack">${guestPrompt}
+      <div class="panel"><span class="eyebrow">Manage this booking</span><p class="small muted">This private link lets you view or cancel this booking without an account. Keep it to yourself.</p>${anno("FR-10 · ADR-11")}
+        <div class="linkbox"><span class="mono">…/booking/${b.ref}?token=${manageToken(b.ref).slice(0, 8)}…</span><button class="btn btn-secondary btn-sm" data-act="copy" data-v="#/booking/${b.ref}?token=${manageToken(b.ref)}">Copy</button></div>
+        <p class="small muted">We've also emailed this to ${esc(b.email)}. <a href="#/dev/outbox">See it in the dev outbox</a>.</p></div>
+      ${how === "admin" ? `<div class="proto-note">You're viewing as admin. <a href="#/admin/bookings">Back to bookings</a></div>` : ""}
+    </div></div></div>`);
+}
+
+/* ---------- account ---------- */
+function authCard(title, sub, body, tag) { return publicShell(`<div class="auth-wrap stack-lg"><div class="stack"><h1>${title}</h1>${sub ? `<p class="muted">${sub}</p>` : ""}${tag ? anno(tag) : ""}</div>${body}</div>`); }
+function viewSignup(q) {
+  if (q.sent) return authCard("Check your email", "", `<div class="card center-state"><div class="big-ic" style="background:var(--primary-soft);color:var(--primary-text)">✉</div><p>If ${esc(S.lastSignupEmail)} can be used, we've sent a link to verify it. The link works for 24 hours.</p><p class="small muted">After verifying, sign in to see every booking made with this email.</p><a class="btn btn-secondary" href="#/dev/outbox">Open dev outbox</a>${anno("FR-14 AC2 · A3")}</div>`);
+  return authCard("Create your account", "See all your trial bookings in one place. Use the email you booked with.", `<form class="card stack" data-form="signup" novalidate>
+      <div class="field"><label for="su-name">Your name</label><input class="input" id="su-name" name="name" autocomplete="name"></div>
+      <div class="field"><label for="su-email">Email</label><input class="input" id="su-email" name="email" type="email" autocomplete="email" value="${esc(q.email || "")}"></div>
+      <div class="field"><label for="su-pw">Password</label><input class="input" id="su-pw" name="password" type="password" autocomplete="new-password"><span class="hint">At least 8 characters.</span></div>
+      <span class="err" id="su-err" hidden></span>
+      <button class="btn btn-primary" type="submit">Create account</button>
+      <p class="small muted">Already have an account? <a href="#/login">Sign in</a></p></form>`, "FR-14");
+}
+function viewVerify(q) {
+  const r = useToken(q.token, "VERIFY_EMAIL");
+  if (!r) return authCard("This link has expired", "", `<div class="card stack"><p>Verification links work once and for 24 hours. Request a new one below.</p>${anno("A7")}<form class="row" data-form="resend"><input class="input" style="flex:1;min-width:200px" name="email" type="email" aria-label="Email" placeholder="you@example.com"><button class="btn btn-primary" type="submit">Send new link</button></form></div>`);
+  DB.parents[r.email].verified = true;
+  return authCard("Email verified", "", `<div class="card center-state"><div class="big-ic" style="background:var(--success-soft);color:var(--success)">✓</div><p>${esc(r.email)} is verified. You can sign in now, and you'll see every booking made with this email.</p><a class="btn btn-primary" href="#/login?email=${encodeURIComponent(r.email)}">Sign in</a>${anno("A1")}</div>`);
+}
+function viewLogin(q) {
+  return authCard("Sign in", "See and manage all your trial bookings.", `<form class="card stack" data-form="login" novalidate>
+      <div id="login-msg">${q.msg ? q.msg : ""}</div>
+      <div class="field"><label for="li-email">Email</label><input class="input" id="li-email" name="email" type="email" autocomplete="email" value="${esc(q.email || "")}"></div>
+      <div class="field"><label for="li-pw">Password</label><input class="input" id="li-pw" name="password" type="password" autocomplete="current-password"></div>
+      <button class="btn btn-primary" type="submit">Sign in</button>
+      <div class="spread small"><a href="#/forgot-password">Forgot password?</a><span class="muted">New here? <a href="#/signup">Create an account</a></span></div>
+      <div class="proto-note">Demo: demo.parent@example.com / Parent123! · pending.parent@example.com / Pending123! (not verified)</div></form>`, "FR-15");
+}
+function loginMsg(kind, email) {
+  if (kind === "bad") return `<div class="callout callout-danger"><span class="ic">!</span><div><strong>Email or password is incorrect.</strong>${anno("FR-15 AC1")}</div></div>`;
+  if (kind === "rate") return `<div class="callout callout-danger"><span class="ic">!</span><div><strong>Too many attempts. Try again in a minute.</strong>${anno("A8")}</div></div>`;
+  if (kind === "pending") return `<div class="callout callout-warn"><span class="ic">!</span><div class="stack" style="gap:6px"><strong>Please verify your email first.</strong><span class="small">We sent a link to ${esc(email)} when you signed up.</span><button class="btn-link small" style="align-self:flex-start" data-act="resend" data-email="${esc(email)}">Send a new link</button>${anno("A12")}</div></div>`;
+  return "";
+}
+function viewForgot(q) {
+  if (q.sent) return authCard("Check your email", "", `<div class="card center-state"><div class="big-ic" style="background:var(--primary-soft);color:var(--primary-text)">✉</div><p>If an account exists for that email, we've sent a reset link. It works for 1 hour.</p><a class="btn btn-secondary" href="#/dev/outbox">Open dev outbox</a>${anno("FR-16")}</div>`);
+  return authCard("Reset your password", "We'll email you a link to set a new one.", `<form class="card stack" data-form="forgot"><div class="field"><label for="fp-email">Email</label><input class="input" id="fp-email" name="email" type="email" autocomplete="email"></div><button class="btn btn-primary" type="submit">Send reset link</button></form>`);
+}
+function viewReset(q) {
+  const r = DB.tokens[q.token];
+  if (!r || r.used || r.purpose !== "RESET_PASSWORD" || r.exp < DB.now) return authCard("This link has expired", "", `<div class="card stack"><p>Reset links work once and for 1 hour.</p><a class="btn btn-primary" href="#/forgot-password">Request a new link</a>${anno("A7")}</div>`);
+  return authCard("Set a new password", `For ${esc(r.email)}`, `<form class="card stack" data-form="reset" data-token="${esc(q.token)}" novalidate><div class="field"><label for="rp-pw">New password</label><input class="input" id="rp-pw" name="password" type="password" autocomplete="new-password"><span class="hint">At least 8 characters. Signing in elsewhere will end.</span></div><span class="err" id="rp-err" hidden></span><button class="btn btn-primary" type="submit">Save password</button>${anno("FR-16 · A9")}</form>`);
+}
+function viewMyBookings() {
+  const p = DB.parents[S.session.parent];
+  const mine = DB.bookings.filter(b => b.email === p.email);
+  const up = mine.filter(b => b.status === "CONFIRMED" && b.start > DB.now).sort((a, b) => a.start - b.start);
+  const past = mine.filter(b => !(b.status === "CONFIRMED" && b.start > DB.now)).sort((a, b) => b.start - a.start);
+  const list = S.myTab === "upcoming" ? up : past;
+  const card = b => { const m = mentorById(b.mentorId); const ms = b.start, tz = b.tz;
+    return `<div class="card bk-card"><div class="cal-ic"><div class="m">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(new Date(ms))}</div><div class="d">${parts(ms, tz).d}</div></div>
+      <div class="stack" style="gap:2px;min-width:0"><strong class="tnum">${esc(fmtSlot(ms, tz))}</strong><span class="small muted">${b.subject === "CODING" ? "Coding" : "Maths"} · ${esc(b.child)}, Grade ${b.grade} · with ${esc(m.name)}</span>
+        <span>${b.status === "CANCELLED" ? `<span class="chip chip-full">Cancelled</span>` : ms <= DB.now ? `<span class="chip chip-closed">Completed</span>` : `<span class="chip chip-open">Confirmed</span>`}</span></div>
+      <div class="row acts"><a class="btn btn-secondary btn-sm" href="#/booking/${b.ref}">View</a>${b.status === "CONFIRMED" && ms > DB.now ? `<button class="btn btn-ghost btn-sm" data-act="cancel" data-ref="${b.ref}">Cancel</button>` : ""}</div></div>`; };
+  return publicShell(`<div class="stack-lg"><div class="spread"><div class="stack" style="gap:4px"><h1>My bookings</h1><p class="muted">Every trial booked with ${esc(p.email)}, including ones booked before you signed up. ${anno("FR-17 · A1")}</p></div><a class="btn btn-primary" href="#/book" data-act="new-book">Book a trial</a></div>
+    <div class="tabs" role="tablist"><button role="tab" aria-selected="${S.myTab === "upcoming"}" data-act="my-tab" data-v="upcoming">Upcoming (${up.length})</button><button role="tab" aria-selected="${S.myTab === "past"}" data-act="my-tab" data-v="past">Past and cancelled (${past.length})</button></div>
+    <div class="stack">${list.length ? list.map(card).join("") : `<div class="empty"><strong>No ${S.myTab === "upcoming" ? "upcoming" : "past"} bookings.</strong>${S.myTab === "upcoming" ? `<a class="btn btn-primary" href="#/book" data-act="new-book">Book a free trial</a>` : ""}</div>`}</div></div>`);
+}
+
+/* ---------- admin ---------- */
+function viewAdminLogin(q) {
+  return publicShell(`<div class="auth-wrap stack-lg"><div class="stack"><span class="eyebrow">Staff only</span><h1>Admin sign in</h1>${anno("FR-18")}</div>
+    <form class="card stack" data-form="admin-login" novalidate><div id="al-msg">${q.msg === "bad" ? loginMsg("bad") : q.msg === "rate" ? loginMsg("rate") : ""}</div>
+      <div class="field"><label for="al-email">Email</label><input class="input" id="al-email" name="email" type="email" autocomplete="username" value="${esc(ADMIN.email)}"></div>
+      <div class="field"><label for="al-pw">Password</label><input class="input" id="al-pw" name="password" type="password" autocomplete="current-password"></div>
+      <button class="btn btn-primary" type="submit">Sign in</button><div class="proto-note">Demo password: Admin123!</div></form></div>`);
+}
+function istDates(n) { const t = localDate(DB.now, IST); return Array.from({ length: n }, (_, i) => addDays(t, i)); }
+function capacityOn(d) { const wd = parts(zonedToUtc(d, 720, IST), IST).wd; return MENTORS.filter(m => m.off !== wd).length * CFG.cap; }
+function bookedOn(d) { return confirmed().filter(b => b.istDate === d).length; }
+function viewAdminDash() {
+  const ds = istDates(14), today = ds[0];
+  const next7 = confirmed().filter(b => b.start > DB.now && b.start < DB.now + 7 * DAY).length;
+  const totCap = ds.reduce((a, d) => a + capacityOn(d), 0), totB = ds.reduce((a, d) => a + bookedOn(d), 0);
+  const fullDates = ds.filter(d => bookedOn(d) >= capacityOn(d));
+  return adminShell("", `<div class="spread"><div class="stack" style="gap:4px"><h1>Dashboard</h1><p class="muted">All dates are India dates, because the 2-per-day limit counts on the mentor's calendar. ${anno("FR-19")}</p></div></div>
+    <div class="tiles"><div class="tile"><div class="l">Trials today (India)</div><div class="v">${bookedOn(today)}</div></div><div class="tile"><div class="l">Next 7 days</div><div class="v">${next7}</div></div>
+      <div class="tile"><div class="l">Capacity used, 14 days</div><div class="v">${Math.round((totB / totCap) * 100)}%</div><div class="small muted tnum">${totB} of ${totCap} trials</div></div><div class="tile"><div class="l">Fully booked India dates</div><div class="v">${fullDates.length}</div></div></div>
+    <div class="card stack"><div class="spread"><h2>Load per India date</h2><span class="small muted">booked / capacity (mentors working that day × 2)</span></div>
+      <div class="capbars">${ds.map(d => { const c = capacityOn(d), b = bookedOn(d); return `<div class="capbar ${b >= c ? "full" : ""}"><span>${esc(fmtDay(zonedToUtc(d, 720, IST), IST))}</span><div class="track" role="img" aria-label="${b} of ${c} booked"><div class="fill" style="width:${Math.min(100, (b / c) * 100)}%"></div></div><span class="tnum">${b} / ${c}</span></div>`; }).join("")}</div></div>
+    <div class="card stack"><div class="spread"><h2>Next up</h2><a class="btn btn-secondary btn-sm" href="#/admin/bookings">All bookings</a></div>${bookingTable(confirmed().filter(b => b.start > DB.now).sort((a, b) => a.start - b.start).slice(0, 6), false)}</div>`);
+}
+function bookingTable(rows, actions = true) {
+  if (!rows.length) return `<div class="empty"><strong>No bookings match these filters.</strong></div>`;
+  return `<div class="table-wrap"><table><thead><tr><th>Reference</th><th>India time</th><th>Parent's time</th><th>Child</th><th>Parent</th><th>Mentor</th><th>Status</th>${actions ? "<th></th>" : ""}</tr></thead><tbody>
+    ${rows.map(b => { const m = mentorById(b.mentorId); return `<tr><td><a class="mono" href="#/booking/${b.ref}">${b.ref}</a></td><td>${esc(fmtSlot(b.start, IST).replace(" IST (India)", ""))}</td><td>${esc(fmtSlot(b.start, b.tz))}<div class="sub">${esc(ZONE_NAMES[b.tz] || b.tz)}</div></td>
+      <td>${esc(b.child)}<div class="sub">Grade ${b.grade} · ${b.subject === "CODING" ? "Coding" : "Maths"}</div></td><td><a href="#/admin/parents/${encodeURIComponent(b.email)}">${esc(b.parentName)}</a><div class="sub">${esc(b.email)}</div></td>
+      <td><a href="#/admin/mentors/${m.id}">${esc(m.name)}</a><div class="sub">${SHIFTS[m.shift].label}</div></td>
+      <td>${b.status === "CANCELLED" ? `<span class="chip chip-full">Cancelled</span>` : b.start <= DB.now ? `<span class="chip chip-closed">Completed</span>` : `<span class="chip chip-open">Confirmed</span>`}</td>
+      ${actions ? `<td>${b.status === "CONFIRMED" && b.start > DB.now ? `<button class="btn btn-ghost btn-sm" data-act="cancel" data-ref="${b.ref}" data-by="ADMIN">Cancel</button>` : ""}</td>` : ""}</tr>`; }).join("")}</tbody></table></div>`;
+}
+function viewAdminBookings() {
+  const F = S.adminFilters, q = F.q.trim().toLowerCase();
+  const rows = DB.bookings.filter(b => (F.scope === "upcoming" ? b.start > DB.now : F.scope === "past" ? b.start <= DB.now : true)
+    && (!F.status || b.status === F.status) && (!F.mentor || b.mentorId === F.mentor)
+    && (!q || [b.ref, b.email, b.parentName, b.child].some(x => String(x).toLowerCase().includes(q)))).sort((a, b) => a.start - b.start);
+  return adminShell("bookings", `<div class="stack" style="gap:4px"><h1>Bookings</h1><p class="muted">${rows.length} shown</p></div>
+    <div class="filters">
+      <div class="field"><label for="af-scope">When</label><select class="select" id="af-scope" data-filter="scope"><option value="upcoming">Upcoming</option><option value="past">Past</option><option value="all">All</option></select></div>
+      <div class="field"><label for="af-status">Status</label><select class="select" id="af-status" data-filter="status"><option value="">Any</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option></select></div>
+      <div class="field"><label for="af-mentor">Mentor</label><select class="select" id="af-mentor" data-filter="mentor"><option value="">All mentors</option>${MENTORS.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select></div>
+      <div class="field" style="flex:1;min-width:220px"><label for="af-q">Search</label><input class="input" id="af-q" data-filter="q" placeholder="Reference, parent, email or child" value="${esc(F.q)}"></div></div>
+    ${bookingTable(rows)}`);
+}
+function viewAdminParents() {
+  const list = Object.values(DB.parents).filter(p => !p.email.startsWith("ghost")).sort((a, b) => a.name.localeCompare(b.name));
+  return adminShell("parents", `<div class="stack" style="gap:4px"><h1>Parents</h1><p class="muted">Guest = booked without an account. Pending = signed up, email not verified. ${anno("FR-19 · §9.2")}</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Account</th><th>Bookings</th><th>Upcoming</th><th>Zone</th></tr></thead><tbody>
+    ${list.map(p => { const st = parentStatus(p); const bs = DB.bookings.filter(b => b.email === p.email);
+      return `<tr><td><a href="#/admin/parents/${encodeURIComponent(p.email)}">${esc(p.name)}</a></td><td>${esc(p.email)}</td><td>${st === "VERIFIED" ? `<span class="chip chip-open">Verified</span>` : st === "PENDING" ? `<span class="chip chip-pending">Pending</span>` : `<span class="chip chip-closed">Guest</span>`}</td><td class="tnum">${bs.length}</td><td class="tnum">${bs.filter(b => b.status === "CONFIRMED" && b.start > DB.now).length}</td><td>${esc(ZONE_NAMES[p.tz] || p.tz)}</td></tr>`; }).join("")}</tbody></table></div>`);
+}
+function viewAdminParent(email) {
+  const p = DB.parents[email];
+  if (!p) return adminShell("parents", `<div class="empty"><strong>Parent not found.</strong><a href="#/admin/parents">Back to parents</a></div>`);
+  const st = parentStatus(p);
+  return adminShell("parents", `<a href="#/admin/parents" class="small">← Parents</a><div class="stack" style="gap:4px"><h1>${esc(p.name)}</h1><p class="muted">${esc(p.email)}${p.phone ? " · " + esc(p.phone) : ""} · ${esc(zoneLabel(p.tz, DB.now))}</p></div>
+    <div class="row">${st === "VERIFIED" ? `<span class="chip chip-open">Verified account</span>` : st === "PENDING" ? `<span class="chip chip-pending">Pending verification</span>` : `<span class="chip chip-closed">Guest (no account)</span>`}</div>
+    <h2>Bookings</h2>${bookingTable(DB.bookings.filter(b => b.email === email).sort((a, b) => b.start - a.start))}`);
+}
+function shiftText(m) { const s = SHIFTS[m.shift]; return `${fmtMinutes(s.start)} – ${fmtMinutes(s.end)}`; }
+function meter(n, max) { return `<span class="meter ${n >= max ? "full" : ""}" role="img" aria-label="${n} of ${max} trials">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}<span class="small tnum" style="margin-left:4px">${n} / ${max}</span></span>`; }
+function viewAdminMentors() {
+  const today = localDate(DB.now, IST), wd = parts(DB.now, IST).wd;
+  return adminShell("mentors", `<div class="stack" style="gap:4px"><h1>Mentors</h1><p class="muted">Today in India: ${esc(fmtDayLong(DB.now, IST))}</p></div>
+    <div class="table-wrap"><table><thead><tr><th>Mentor</th><th>Shift (India time)</th><th>Day off</th><th>Today</th><th>Upcoming</th></tr></thead><tbody>
+    ${MENTORS.map(m => `<tr><td><a href="#/admin/mentors/${m.id}">${esc(m.name)}</a><div class="sub">${esc(m.bio)}</div></td><td>${SHIFTS[m.shift].label}<div class="sub">${shiftText(m)}</div></td><td>${WD_NAMES[m.off]}</td>
+      <td>${m.off === wd ? `<span class="chip chip-closed">Day off</span>` : meter(dayCount(m, today), CFG.cap)}</td><td class="tnum">${confirmed().filter(b => b.mentorId === m.id && b.start > DB.now).length}</td></tr>`).join("")}</tbody></table></div>`);
+}
+function viewAdminMentor(id) {
+  const m = mentorById(id);
+  if (!m) return adminShell("mentors", `<div class="empty"><strong>Mentor not found.</strong></div>`);
+  const ds = istDates(14);
+  return adminShell("mentors", `<a href="#/admin/mentors" class="small">← Mentors</a>
+    <div class="mentor"><div class="avatar">${initials(m.name)}</div><div><h1>${esc(m.name)}</h1><p class="muted">${SHIFTS[m.shift].label} · ${esc(m.bio)}</p></div></div>
+    <div class="card stack"><div class="spread"><h2>Weekly shift</h2><span class="small muted">India Standard Time (UTC+05:30)</span></div>
+      <div class="week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<div class="${d === m.off ? "" : "on"}"><b>${WD_NAMES[d]}</b>${d === m.off ? "Off" : shiftText(m)}</div>`).join("")}</div></div>
+    <div class="card"><div class="spread" style="margin-bottom:8px"><h2>Schedule, next 14 India dates</h2>${anno("FR-19 · C3")}</div>
+      ${ds.map(d => { const wd = parts(zonedToUtc(d, 720, IST), IST).wd; const bs = confirmed().filter(b => b.mentorId === m.id && b.istDate === d).sort((a, b) => a.start - b.start);
+        return `<div class="sched-day"><div class="stack" style="gap:4px"><strong>${esc(fmtDay(zonedToUtc(d, 720, IST), IST))}</strong>${wd === m.off ? `<span class="chip chip-closed" style="align-self:flex-start">Day off</span>` : meter(bs.length, CFG.cap)}</div>
+          <div class="stack" style="gap:8px">${bs.length ? bs.map(b => `<div class="spread"><div><strong class="tnum">${esc(fmtTime(b.start, IST))}</strong> · ${esc(b.child)} (Grade ${b.grade}, ${b.subject === "CODING" ? "Coding" : "Maths"})<div class="small muted">Parent's time: ${esc(fmtSlot(b.start, b.tz))} · ${esc(b.parentName)}</div></div><a class="btn btn-secondary btn-sm" href="#/booking/${b.ref}">Open</a></div>`).join("") : `<span class="small muted">${wd === m.off ? "" : "No trials booked."}</span>`}</div></div>`; }).join("")}</div>`);
+}
+function outboxList(limit) {
+  const msgs = DB.outbox.slice(0, limit);
+  if (!msgs.length) return `<div class="empty"><strong>No messages yet.</strong></div>`;
+  return `<div class="stack">${msgs.map(o => `<article class="outbox-msg"><div class="spread"><span class="chip chip-info mono">${o.kind}</span><span class="small muted">to ${esc(o.to)}</span></div><strong>${esc(o.subject)}</strong>
+    <div class="body">${esc(o.body).replace(/(#\/[^\s]+)/g, '<a href="$1">$1</a>').replace(/(https:\/\/meet\.example\.com\/[^\s]+)/g, '<span class="mono">$1</span>')}</div></article>`).join("")}</div>`;
+}
+function viewAdminOutbox() { return adminShell("outbox", `<div class="stack" style="gap:4px"><h1>Outbox</h1><p class="muted">Every message the system would email: booking confirmations and cancellations for parents and mentors, and account emails. ${anno("FR-9")}</p></div>${outboxList(80)}`); }
+function viewDevOutbox() {
+  return publicShell(`<div class="stack-lg"><div class="stack" style="gap:4px"><span class="eyebrow">Development only</span><h1>Dev outbox</h1><p class="muted">This app doesn't send real email. Messages land here so you can click verification, reset and manage links. ${anno("FR-20")}</p></div>${outboxList(60)}</div>`);
+}
+
+/* ---------- dialog ---------- */
+function confirmDialog(title, body, okLabel, onOk) {
+  const root = $("#dialog-root");
+  root.innerHTML = `<div class="scrim" data-act="dlg-close"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h2 id="dlg-t">${title}</h2><p class="muted">${body}</p><div class="row" style="justify-content:flex-end"><button class="btn btn-secondary" data-act="dlg-close">Keep it</button><button class="btn btn-danger" id="dlg-ok">${okLabel}</button></div></div></div>`;
+  $("#dlg-ok").onclick = () => { root.innerHTML = ""; onOk(); };
+  $("#dlg-ok").focus();
+}
+
+/* ---------- render ---------- */
+function render() {
+  const r = route(), [a, b, c] = r.parts;
+  let html;
+  if (!a) html = viewMap();
+  else if (a === "book") html = viewBook();
+  else if (a === "booking") html = viewBooking(b, r.q);
+  else if (a === "signup") html = viewSignup(r.q);
+  else if (a === "verify-email") html = viewVerify(r.q);
+  else if (a === "login") html = viewLogin(r.q);
+  else if (a === "forgot-password") html = viewForgot(r.q);
+  else if (a === "reset-password") html = viewReset(r.q);
+  else if (a === "my-bookings") html = S.session.parent ? viewMyBookings() : (setTimeout(() => go("#/login?next=my-bookings"), 0), "");
+  else if (a === "dev" && b === "outbox") html = viewDevOutbox();
+  else if (a === "admin" && b === "login") html = viewAdminLogin(r.q);
+  else if (a === "admin") {
+    if (!S.session.admin) { setTimeout(() => go("#/admin/login"), 0); html = ""; }
+    else if (!b) html = viewAdminDash();
+    else if (b === "bookings") html = viewAdminBookings();
+    else if (b === "parents") html = c ? viewAdminParent(decodeURIComponent(c)) : viewAdminParents();
+    else if (b === "mentors") html = c ? viewAdminMentor(c) : viewAdminMentors();
+    else if (b === "outbox") html = viewAdminOutbox();
+  }
+  $("#app").innerHTML = html || viewMap();
+  $("#pb-outbox-count").textContent = DB.outbox.length;
+  const F = S.adminFilters;
+  for (const k of ["scope", "status", "mentor"]) { const el = document.querySelector(`[data-filter="${k}"]`); if (el) el.value = F[k]; }
+}
+window.addEventListener("hashchange", () => { $("#dialog-root").innerHTML = ""; render(); window.scrollTo(0, 0); });
+
+/* ---------- events ---------- */
+const actions = {
+  reset() { seed($("#pb-date").value); S.book = null; S.attempts = {}; toast("Demo data reset"); render(); },
+  "tz-toggle"() { S.tzOpen = !S.tzOpen; S.tzFilter = ""; render(); if (S.tzOpen) $("#tz-search").focus(); },
+  "tz-pick"(el) { S.chosenTz = el.dataset.tz; S.tzOpen = false; S.tzFilter = ""; if (S.book) { S.book.date = null; S.book.sugg = null; } toast(`Times now in ${ZONE_NAMES[el.dataset.tz] || el.dataset.tz}`); render(); },
+  "pick-day"(el) { S.book.date = el.dataset.d; S.book.sugg = null; S.book.lead = ""; render(); },
+  "pick-slot"(el) { Object.assign(S.book, { sel: +el.dataset.s, step: 2, sugg: null, lead: "", errors: {}, existing: null }); render(); window.scrollTo(0, 0); },
+  "full-slot"(el) { const tz = parentTz(), s = +el.dataset.s, p = parts(s, tz); S.book.sugg = suggest(tz, p.date, p.min, s); S.book.suggFrom = s; S.book.lead = ""; render(); const x = $("#sugg"); if (x) x.focus(); },
+  "pick-sugg"(el) { const s = +el.dataset.s, tz = parentTz(); Object.assign(S.book, { sel: s, step: 2, sugg: null, lead: "", existing: null, date: localDate(s, tz) }); toast(`Selected ${fmtSlot(s, tz)}`); render(); window.scrollTo(0, 0); },
+  "change-time"() { Object.assign(S.book, { step: 1, sugg: null, lead: "" }); const f = document.querySelector('[data-form="book"]'); if (f) Object.assign(S.book.form, Object.fromEntries(new FormData(f))); render(); },
+  subject(el) { const f = document.querySelector('[data-form="book"]'); if (f) Object.assign(S.book.form, Object.fromEntries(new FormData(f))); S.book.form.subject = el.dataset.v; delete S.book.errors.subject; render(); },
+  "new-book"() { S.book = null; },
+  copy(el) { try { navigator.clipboard.writeText(el.dataset.v).then(() => toast("Link copied"), () => toast("Link copied")); } catch { toast("Link copied"); } },
+  ics() { toast("Downloads an .ics file in the real app (blocked in this prototype)"); },
+  gcal() { toast("Opens Google Calendar with the class pre-filled"); },
+  cancel(el) {
+    const ref = el.dataset.ref, by = el.dataset.by || (S.session.admin && location.hash.startsWith("#/admin") ? "ADMIN" : "PARENT");
+    const b = DB.bookings.find(x => x.ref === ref);
+    confirmDialog("Cancel this trial?", `${esc(b.child)}'s class on ${esc(fmtSlot(b.start, by === "ADMIN" ? IST : b.tz))} will be cancelled and the ${by === "ADMIN" ? "parent and mentor" : "mentor"} will be told. The time becomes free for other families.`, "Cancel trial", () => {
+      const r = cancelBooking(ref, by); toast(r.error === "ALREADY_STARTED" ? "This class has already started and can't be cancelled." : "Trial cancelled"); render();
+    });
+  },
+  "dlg-close"(el, e) { if (el.classList.contains("scrim") && e.target !== el) return; $("#dialog-root").innerHTML = ""; },
+  "parent-logout"() { S.session.parent = null; toast("Signed out"); go("#/book"); },
+  "admin-logout"() { S.session.admin = null; toast("Signed out"); go("#/admin/login"); },
+  "my-tab"(el) { S.myTab = el.dataset.v; render(); },
+  resend(el) { const p = DB.parents[el.dataset.email]; if (parentStatus(p) === "PENDING") { const t = issueToken(p.email, "VERIFY_EMAIL", 24); outbox("VERIFY_EMAIL", p.email, "Verify your email", `Here's a new link to verify your email.\nVerify: #/verify-email?token=${t}`); } toast("If that account is waiting for verification, we've sent a new link"); render(); },
+  "as-guest"() { setPersona("guest"); },
+  "as-admin"() { setPersona("admin"); },
+  "edge-full-slot"() { setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); S.book.date = addDays(todayLocal("America/New_York"), 2); go("#/book"); },
+  "edge-full-day"() { setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); S.book.date = addDays(todayLocal("America/New_York"), 4); go("#/book"); },
+  "edge-race"() { $("#pb-race").checked = true; setPersona("guest", true); S.book = freshBook(); go("#/book"); toast("Race is on: pick any open slot and book"); },
+  "edge-soon"() { $("#pb-soon").checked = true; setPersona("guest", true); S.book = freshBook(); go("#/book"); toast("Too-soon is on: pick any open slot and book"); },
+  "edge-active"() { setPersona("guest", true); S.book = freshBook(); S.book.form = { email: "demo.parent@example.com", name: "Emma Clarke", child: "Freddie", grade: "4", subject: "CODING" }; go("#/book"); toast("Pick a slot; the form is pre-filled with demo.parent@example.com"); },
+  "edge-dst"() { $("#pb-date").value = "2026-10-20"; seed("2026-10-20"); setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); go("#/book"); },
+  "edge-tz"() { $("#pb-tz").value = ""; S.browserTz = ""; S.chosenTz = null; setPersona("guest", true); go("#/book"); },
+  "edge-cap"() { setPersona("admin"); go("#/admin/mentors"); },
+  "edge-pending"() { setPersona("pending"); },
+  "edge-login"() { setPersona("guest", true); go("#/login?email=demo.parent%40example.com"); },
+  "edge-outbox"() { go("#/dev/outbox"); },
+  "edge-badtoken"() { const b = DB.bookings.find(x => x.status === "CONFIRMED"); go(`#/booking/${b.ref}?token=wrong`); }
+};
+function setPersona(v, stay) {
+  $("#pb-persona").value = v;
+  S.session.parent = v === "parent" ? "demo.parent@example.com" : null;
+  S.session.admin = v === "admin" ? true : null;
+  S.book = null;
+  if (stay) return;
+  go(v === "admin" ? "#/admin" : v === "parent" ? "#/my-bookings" : v === "pending" ? "#/login?email=pending.parent%40example.com" : "#/book");
+}
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (!el) return;
+  const fn = actions[el.dataset.act];
+  if (!fn) return;
+  if (el.tagName === "BUTTON" || el.dataset.act === "dlg-close") e.preventDefault();
+  fn(el, e);
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "tz-search") { S.tzFilter = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#tz-search"); i.focus(); i.setSelectionRange(pos, pos); }
+  if (e.target.dataset.filter === "q") { S.adminFilters.q = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#af-q"); i.focus(); i.setSelectionRange(pos, pos); }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.filter && t.dataset.filter !== "q") { S.adminFilters[t.dataset.filter] = t.value; render(); }
+  if (t.id === "pb-persona") setPersona(t.value);
+  if (t.id === "pb-date") { seed(t.value); S.book = null; toast(`Today is now ${t.options[t.selectedIndex].text}`); render(); }
+  if (t.id === "pb-tz") { S.browserTz = t.value; S.chosenTz = null; S.tzOpen = false; if (S.book) { S.book.date = null; S.book.sugg = null; } render(); }
+  if (t.id === "pb-annos") document.body.classList.toggle("annos", t.checked);
+});
+const forms = {
+  book: f => submitBook(f),
+  signup(f) {
+    const d = Object.fromEntries(new FormData(f)), email = (d.email || "").trim().toLowerCase(), err = $("#su-err");
+    const msg = !d.name || d.name.trim().length < 2 ? "Please enter your name" : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Please enter a valid email" : (d.password || "").length < 8 ? "Use at least 8 characters" : d.password.toLowerCase() === email ? "Password can't be your email" : "";
+    if (msg) { err.textContent = msg; err.hidden = false; return; }
+    signup(d.name.trim(), email, d.password); S.lastSignupEmail = email; go("#/signup?sent=1");
+  },
+  login(f) {
+    const d = Object.fromEntries(new FormData(f)), email = (d.email || "").trim().toLowerCase();
+    const k = email || "_"; const at = S.attempts[k] = (S.attempts[k] || []).filter(t => Date.now() - t < 60000);
+    const box = $("#login-msg");
+    if (at.length >= 5) { box.innerHTML = loginMsg("rate"); return; }
+    const p = DB.parents[email];
+    if (!p || !p.password || p.password !== d.password) { at.push(Date.now()); box.innerHTML = loginMsg("bad"); return; }
+    if (!p.verified) { box.innerHTML = loginMsg("pending", email); return; }
+    S.session.parent = email; S.attempts[k] = []; $("#pb-persona").value = email === "demo.parent@example.com" ? "parent" : "guest";
+    toast(`Signed in as ${p.name}`); go("#/my-bookings");
+  },
+  resend(f) { const email = (new FormData(f).get("email") || "").trim().toLowerCase(); actions.resend({ dataset: { email } }); },
+  forgot(f) {
+    const email = (new FormData(f).get("email") || "").trim().toLowerCase(), p = DB.parents[email];
+    if (p && p.password) { const t = issueToken(email, "RESET_PASSWORD", 1); outbox("RESET_PASSWORD", email, "Reset your password", `Use this link to set a new password. It works for 1 hour.\nReset: #/reset-password?token=${t}`); }
+    go("#/forgot-password?sent=1");
+  },
+  reset(f) {
+    const pw = new FormData(f).get("password") || "", r = useToken(f.dataset.token, "RESET_PASSWORD");
+    if (pw.length < 8) { const e = $("#rp-err"); e.textContent = "Use at least 8 characters"; e.hidden = false; if (r) r.used = false; return; }
+    if (!r) { render(); return; }
+    const p = DB.parents[r.email]; p.password = pw; p.verified = true; if (S.session.parent === r.email) S.session.parent = null;
+    toast("Password updated. Please sign in."); go(`#/login?email=${encodeURIComponent(r.email)}`);
+  },
+  "admin-login"(f) {
+    const d = Object.fromEntries(new FormData(f)); const k = "admin"; const at = S.attempts[k] = (S.attempts[k] || []).filter(t => Date.now() - t < 60000);
+    if (at.length >= 5) { $("#al-msg").innerHTML = loginMsg("rate"); return; }
+    if (d.email.trim().toLowerCase() !== ADMIN.email || d.password !== ADMIN.password) { at.push(Date.now()); $("#al-msg").innerHTML = loginMsg("bad"); return; }
+    S.session.admin = true; $("#pb-persona").value = "admin"; go("#/admin");
+  }
+};
+document.addEventListener("submit", e => { const f = e.target; if (!f.dataset.form) return; e.preventDefault(); forms[f.dataset.form](f); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dialog-root").innerHTML) $("#dialog-root").innerHTML = ""; });
+
+/* ---------- boot ---------- */
+document.body.classList.add("annos");
+seed($("#pb-date").value);
+S.browserTz = $("#pb-tz").value;
+render();
+</script>
