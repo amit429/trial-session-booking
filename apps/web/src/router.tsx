@@ -14,6 +14,7 @@ import { VerifyEmailPage } from "./features/account/VerifyEmailPage";
 import { DevOutboxPage } from "./features/dev/DevOutboxPage";
 import { RequireAdmin, RequireParent } from "./components/Guards";
 import { AdminLayout } from "./features/admin/AdminLayout";
+import { AdminBookingPage } from "./features/admin/BookingDetail";
 import { AdminLoginPage, BookingsPage, DashboardPage, MentorDetailPage, MentorsPage, OutboxPage, ParentDetailPage, ParentsPage } from "./features/admin/pages";
 
 function NotFound() {
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       children: [
         { index: true, element: <DashboardPage /> },
         { path: "bookings", element: <BookingsPage /> },
+        { path: "bookings/:reference", element: <AdminBookingPage /> },
         { path: "parents", element: <ParentsPage /> },
         { path: "parents/:id", element: <ParentDetailPage /> },
         { path: "mentors", element: <MentorsPage /> },

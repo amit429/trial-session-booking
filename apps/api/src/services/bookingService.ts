@@ -60,6 +60,7 @@ export class BookingService {
       subject: b.subject,
       child: { name: b.childName, grade: b.childGrade },
       parent: { name: b.parent.name, email: b.parent.email },
+      parentAccount: accountStatus(b.parent),
       mentor: { id: b.mentor.id, name: b.mentor.name, bio: b.mentor.bio, shiftLabel: b.mentor.shiftLabel, timezone: b.mentor.timezone },
       cancelledAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
       cancelledBy: (b.cancelledBy as "PARENT" | "ADMIN" | null) ?? null,

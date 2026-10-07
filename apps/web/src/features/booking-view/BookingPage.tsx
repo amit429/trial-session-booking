@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ZONE_NAMES, formatDayLong, formatSlot, formatTime, formatZoneLabel, normalizeZone, zoneAbbreviation, type BookingDto } from "@trial/shared";
-import { CalendarDays, Check, CheckCircle2, Copy, Download, Globe, Link2, Search, XCircle } from "lucide-react";
+import { CalendarDays, Check, CheckCircle2, Copy, Download, Globe, Link2, Mail, Search, ShieldCheck, XCircle } from "lucide-react";
 import { useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PublicLayout } from "@/components/SiteHeader";
 import { Alert } from "@/components/ui/alert";
@@ -31,19 +31,41 @@ function CopyBox({ value, display, label }: { value: string; display?: string; l
   );
 }
 
+function BookingSkeleton() {
+  return (
+    <div className="mx-auto flex max-w-[600px] flex-col gap-4" aria-busy="true" aria-label="Loading booking">
+      <Card className="shadow-md">
+        <CardContent className="flex flex-col gap-6 p-7">
+          <div className="flex flex-col items-center gap-3"><Skeleton className="size-[52px] rounded-full" /><Skeleton className="h-6 w-48" /><Skeleton className="h-4 w-64" /></div>
+          <Separator />
+          <div className="flex flex-col gap-[18px]">
+            {[0, 1, 2, 3, 4].map(i => <div key={i} className="grid grid-cols-[110px_minmax(0,1fr)] gap-4"><Skeleton className="h-4 w-16" /><div className="flex flex-col gap-1.5"><Skeleton className="h-4 w-3/4" />{i === 1 && <Skeleton className="h-4 w-1/2" />}</div></div>)}
+          </div>
+          <Separator />
+          <div className="flex gap-2"><Skeleton className="h-9 w-40" /><Skeleton className="h-9 w-44" /></div>
+        </CardContent>
+      </Card>
+      <Card><CardContent className="flex flex-col gap-2 py-[18px]"><Skeleton className="h-4 w-40" /><Skeleton className="h-9" /></CardContent></Card>
+    </div>
+  );
+}
+
 /** Confirmation and private manage page (FR-8, FR-10). */
 export function BookingPage() {
   const { reference = "" } = useParams();
   const [params] = useSearchParams();
   const token = params.get("token") ?? undefined;
-  const { parent } = useAuth();
+  const { parent, admin, isLoading: authLoading } = useAuth();
   const qc = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Staff without a parent's link get the admin view of the booking instead.
+  const sendToAdmin = !authLoading && !!admin && !token && !parent;
 
   const q = useQuery({
     queryKey: ["booking", reference, token],
     queryFn: () => api.get<BookingDto>(`/bookings/${reference}`, { token }),
-    retry: false
+    retry: false,
+    enabled: !authLoading && !sendToAdmin
   });
   const cancel = useMutation({
     mutationFn: () => api.post<BookingDto>(`/bookings/${reference}/cancel`, { token }),
@@ -60,9 +82,8 @@ export function BookingPage() {
     }
   });
 
-  if (q.isLoading) {
-    return <PublicLayout narrow><Card><CardContent className="flex flex-col gap-4 p-7"><Skeleton className="mx-auto size-12 rounded-full" /><Skeleton className="h-6" /><Skeleton className="h-40" /></CardContent></Card></PublicLayout>;
-  }
+  if (sendToAdmin) return <Navigate to={`/admin/bookings/${reference}`} replace />;
+  if (authLoading || q.isLoading) return <PublicLayout narrow><BookingSkeleton /></PublicLayout>;
   if (q.isError || !q.data) {
     return (
       <PublicLayout narrow>
@@ -83,7 +104,8 @@ export function BookingPage() {
   const browser = (() => { try { return normalizeZone(Intl.DateTimeFormat().resolvedOptions().timeZone); } catch { return null; } })();
   const cancelled = b.status === "CANCELLED";
   const done = !cancelled && new Date(b.startUtc) <= new Date();
-  const isGuestView = !!token && !parent;
+  // The parent's own link, opened by someone who isn't signed in as anyone.
+  const isGuestView = !!token && !parent && !admin;
   const hero = cancelled
     ? { Icon: XCircle, bg: "bg-destructive-soft text-destructive-text", title: "This trial was cancelled", text: b.cancelledBy === "ADMIN" ? "Our team cancelled this class. The time is free for other families." : "The time is free for other families." }
     : done
@@ -94,6 +116,11 @@ export function BookingPage() {
   return (
     <PublicLayout narrow>
       <div className="mx-auto flex max-w-[600px] flex-col gap-4">
+        {admin && token && (
+          <Alert variant="info" icon={<ShieldCheck />} title="You're signed in as admin">
+            This is the parent's view of the booking. <Link className="font-medium text-foreground underline underline-offset-4" to={`/admin/bookings/${b.reference}`}>Open it in admin</Link>
+          </Alert>
+        )}
         <Card className="shadow-md">
           <CardContent className="flex flex-col gap-6 p-7">
             <div className="flex flex-col items-center gap-2 text-center">
@@ -140,7 +167,7 @@ export function BookingPage() {
           </CardContent>
         </Card>
 
-        {b.manageUrl && token && (
+        {b.manageUrl && token && !admin && (
           <Card>
             <CardContent className="flex flex-col gap-2 py-[18px]">
               <p className="flex items-center gap-2 font-semibold"><Link2 className="size-4" />Manage this booking</p>
@@ -150,7 +177,11 @@ export function BookingPage() {
           </Card>
         )}
 
-        {isGuestView && !cancelled && (
+        {isGuestView && !cancelled && b.parentAccount === "PENDING" && (
+          <Alert variant="info" icon={<Mail />} title="Finish creating your account">Check {b.parent.email} for the verification link. Once verified, sign in to see all your bookings.</Alert>
+        )}
+
+        {isGuestView && !cancelled && b.parentAccount === "GUEST" && (
           <Card className="border-transparent bg-brand-soft">
             <CardContent className="flex flex-wrap items-center justify-between gap-3 py-[18px]">
               <div className="flex flex-col gap-0.5"><strong>See all your bookings in one place</strong><span className="text-[13px] text-muted-foreground">Create an account with {b.parent.email}.</span></div>

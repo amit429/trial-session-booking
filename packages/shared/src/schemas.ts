@@ -93,6 +93,7 @@ export type SuggestionsResponse = {
   suggestions: SlotDto[];
   notes: { type: "DST_SHIFT"; message: string }[];
 };
+export type AccountStatus = "GUEST" | "PENDING" | "VERIFIED";
 export type MentorPublicDto = { id: string; name: string; bio: string; shiftLabel: string; timezone: string };
 export type BookingStatus = "CONFIRMED" | "CANCELLED";
 export type BookingDto = {
@@ -108,12 +109,13 @@ export type BookingDto = {
   subject: Subject;
   child: { name: string; grade: number };
   parent: { name: string; email: string };
+  /** Whether the booking's email has an account: decides if "create an account" is offered. */
+  parentAccount: AccountStatus;
   mentor: MentorPublicDto;
   cancelledAt: string | null;
   cancelledBy: "PARENT" | "ADMIN" | null;
   createdAt: string;
 };
-export type AccountStatus = "GUEST" | "PENDING" | "VERIFIED";
 export type ParentDto = { id: string; name: string; email: string; timezone: string; status: AccountStatus };
 export type AdminDto = { id: string; name: string; email: string };
 export type MeResponse = { parent: ParentDto | null; admin: AdminDto | null };

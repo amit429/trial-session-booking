@@ -7,6 +7,8 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { ApiError, api } from "@/lib/api";
+import { setSession } from "@/lib/auth";
+import type { ParentDto } from "@trial/shared";
 import { AuthCard } from "./AuthCard";
 
 export function LoginPage() {
@@ -18,9 +20,9 @@ export function LoginPage() {
   const [problem, setProblem] = useState<"bad" | "rate" | "pending" | "other" | null>(null);
 
   const login = useMutation({
-    mutationFn: () => api.post<{ parent: { name: string } }>("/auth/parent/login", { email: email.trim(), password }),
+    mutationFn: () => api.post<{ parent: ParentDto }>("/auth/parent/login", { email: email.trim(), password }),
     onSuccess: r => {
-      qc.invalidateQueries();
+      setSession(qc, { parent: r.parent });
       toast.success("Signed in", { description: `Welcome back, ${r.parent.name.split(" ")[0]}` });
       const next = params.get("next");
       navigate(next && next.startsWith("/") ? next : "/my-bookings");

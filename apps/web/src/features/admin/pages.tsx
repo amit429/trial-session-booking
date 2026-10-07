@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, Skeleton } f
 import { Field, Input, NativeSelect } from "@/components/ui/input";
 import { OutboxList } from "@/features/dev/OutboxList";
 import { ApiError, api } from "@/lib/api";
+import { setSession } from "@/lib/auth";
+import type { AdminDto } from "@trial/shared";
 import { cn } from "@/lib/utils";
 import { AdminPage, PageTitle } from "./AdminLayout";
 import { AccountBadge, BookingsTable } from "./BookingsTable";
@@ -29,8 +31,8 @@ export function AdminLoginPage() {
   const [email, setEmail] = useState("admin@trialdesk.example");
   const [password, setPassword] = useState("");
   const m = useMutation({
-    mutationFn: () => api.post("/auth/admin/login", { email: email.trim(), password }),
-    onSuccess: () => { qc.invalidateQueries(); toast.success("Signed in", { description: "Welcome to the admin console" }); const n = params.get("next"); navigate(n?.startsWith("/admin") ? n : "/admin"); }
+    mutationFn: () => api.post<{ admin: AdminDto }>("/auth/admin/login", { email: email.trim(), password }),
+    onSuccess: r => { setSession(qc, { admin: r.admin }); toast.success("Signed in", { description: "Welcome to the admin console" }); const n = params.get("next"); navigate(n?.startsWith("/admin") ? n : "/admin"); }
   });
   const err = m.error instanceof ApiError ? m.error : null;
   return (
@@ -249,7 +251,7 @@ export function MentorDetailPage() {
                     {d.bookings.length ? d.bookings.map(b => (
                       <div key={b.reference} className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
                         <div className="flex min-w-0 flex-col"><span><strong className="tabular-nums">{formatTime(b.startUtc, IST)}</strong> · {b.child.name} <span className="text-muted-foreground">(Grade {b.child.grade})</span></span><span className="text-xs text-muted-foreground">Parent's time {formatSlot(b.startUtc, b.parentTimezone)} · {b.parent.name}</span></div>
-                        <Button asChild variant="ghost" size="sm"><Link to={`/booking/${b.reference}`}>Open</Link></Button>
+                        <Button asChild variant="ghost" size="sm"><Link to={`/admin/bookings/${b.reference}`}>Open</Link></Button>
                       </div>
                     )) : d.onShift ? <span className="pt-0.5 text-[13px] text-muted-foreground">No trials booked</span> : null}
                   </div>

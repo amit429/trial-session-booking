@@ -24,7 +24,7 @@ describe("manage a booking with its private link", () => {
     const { ref, token } = await book();
     const ok = await request(app).get(`/api/bookings/${ref}`).query({ token });
     expect(ok.status).toBe(200);
-    expect(ok.body).toMatchObject({ reference: ref, status: "CONFIRMED", subject: "MATH" });
+    expect(ok.body).toMatchObject({ reference: ref, status: "CONFIRMED", subject: "MATH", parentAccount: "GUEST" });
     expect((await request(app).get(`/api/bookings/${ref}`).query({ token: "wrong" })).status).toBe(404);
     expect((await request(app).get(`/api/bookings/${ref}`)).status).toBe(404);
     expect((await request(app).get(`/api/bookings/CY-NOPE22`).query({ token })).status).toBe(404);

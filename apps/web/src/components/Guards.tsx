@@ -7,17 +7,18 @@ function Loading() {
 }
 
 export function RequireParent({ children }: { children: React.ReactNode }) {
-  const { parent, isLoading } = useAuth();
+  const { parent, isLoading, isFetching } = useAuth();
   const loc = useLocation();
-  if (isLoading) return <Loading />;
+  // Wait for an in-flight session check before deciding to send someone to sign in.
+  if (isLoading || (!parent && isFetching)) return <Loading />;
   if (!parent) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname)}`} replace />;
   return <>{children}</>;
 }
 
 export function RequireAdmin() {
-  const { admin, isLoading } = useAuth();
+  const { admin, isLoading, isFetching } = useAuth();
   const loc = useLocation();
-  if (isLoading) return <Loading />;
+  if (isLoading || (!admin && isFetching)) return <Loading />;
   if (!admin) return <Navigate to={`/admin/login?next=${encodeURIComponent(loc.pathname)}`} replace />;
   return <Outlet />;
 }

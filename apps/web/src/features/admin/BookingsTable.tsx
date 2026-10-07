@@ -1,55 +1,59 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ZONE_NAMES, formatDay, formatSlot, formatTime, formatZoneLabel, zoneAbbreviation, type AdminBookingDto } from "@trial/shared";
+import { useQuery } from "@tanstack/react-query";
+import { ZONE_NAMES, formatDay, formatTime, zoneAbbreviation, type AdminBookingDto } from "@trial/shared";
 import { Copy, ExternalLink, Info, MoreHorizontal, Search, XCircle } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { Link, useNavigate } from "react-router-dom";
 import { StatusBadge } from "@/features/account/MyBookingsPage";
 import { OutboxList } from "@/features/dev/OutboxList";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ConfirmDialog, Sheet } from "@/components/ui/dialog";
+import { Card, Skeleton } from "@/components/ui/card";
+import { Sheet } from "@/components/ui/dialog";
 import { DropdownContent, DropdownItem, DropdownMenu, DropdownSeparator, DropdownTrigger } from "@/components/ui/dropdown";
 import { EmptyState } from "@/components/ui/empty";
-import { ApiError, api } from "@/lib/api";
-import { subjectLabel } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { cn, subjectLabel } from "@/lib/utils";
+import { BookingFacts, BookingFactsSkeleton, copyLink, isUpcoming, useAdminCancel } from "./BookingDetail";
 import type { BookingDetail } from "./types";
 
-const IST = "Asia/Kolkata";
-const isUpcoming = (b: AdminBookingDto) => b.status === "CONFIRMED" && new Date(b.startUtc) > new Date();
-const copy = (v: string) => navigator.clipboard?.writeText(v).then(() => toast.success("Class link copied"));
+export { AccountBadge } from "./accountBadge";
 
-export function AccountBadge({ status }: { status: string }) {
-  if (status === "VERIFIED") return <Badge variant="success" dot>Verified</Badge>;
-  if (status === "PENDING") return <Badge variant="warning" dot>Pending</Badge>;
-  return <Badge>Guest</Badge>;
+const IST = "Asia/Kolkata";
+const HEAD = ["Booking", "India time", "Parent's time", "Child", "Parent", "Mentor", "Status"];
+const th = "[&_th]:h-10 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:text-left [&_th]:font-medium [&_th]:text-muted-foreground";
+
+/** Placeholder rows shaped like the real table. */
+export function TableSkeleton({ rows = 6, cols = HEAD }: { rows?: number; cols?: string[] }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border bg-card" aria-busy="true" aria-label="Loading">
+      <table className="w-full text-[13.5px]">
+        <thead><tr className={th}>{cols.map(c => <th key={c}>{c}</th>)}</tr></thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, r) => (
+            <tr key={r} className="border-b border-border last:border-b-0">
+              {cols.map((c, i) => <td key={c} className="px-3 py-3"><Skeleton className={cn("h-4", i === 0 ? "w-20" : "w-24")} />{i > 0 && i < 6 && <Skeleton className="mt-1.5 h-3 w-16" />}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-/** Bookings table with row actions, a detail sheet and admin cancel. Times: India first, parent's alongside. */
-export function BookingsTable({ rows }: { rows: AdminBookingDto[] }) {
-  const qc = useQueryClient();
+/** Bookings table with row actions, a quick-look sheet and admin cancel. Times: India first, parent's alongside. */
+export function BookingsTable({ rows, fetching }: { rows: AdminBookingDto[]; fetching?: boolean }) {
+  const navigate = useNavigate();
   const [sheet, setSheet] = useState<string | null>(null);
-  const [toCancel, setToCancel] = useState<AdminBookingDto | null>(null);
   const detail = useQuery({ queryKey: ["admin-booking", sheet], queryFn: () => api.get<BookingDetail>(`/admin/bookings/${sheet}`), enabled: !!sheet });
-  const cancel = useMutation({
-    mutationFn: (ref: string) => api.post(`/admin/bookings/${ref}/cancel`),
-    onSuccess: () => { qc.invalidateQueries({ predicate: q => String(q.queryKey[0]).startsWith("admin") }); setToCancel(null); toast.success("Booking cancelled", { description: "The parent and mentor have been told." }); },
-    onError: e => { setToCancel(null); toast.error(e instanceof ApiError ? e.message : "Something went wrong."); }
-  });
+  const { ask, dialog } = useAdminCancel();
 
   if (!rows.length) return <Card><EmptyState icon={<Search />} title="No bookings match"><p className="text-[13px] text-muted-foreground">Try a different filter or search.</p></EmptyState></Card>;
   const b = detail.data;
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      <div aria-busy={fetching} className={cn("overflow-x-auto rounded-xl border border-border bg-card transition-opacity", fetching && "opacity-60")}>
         <table className="w-full border-collapse text-[13.5px] tabular-nums">
-          <thead>
-            <tr className="[&_th]:h-10 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:text-left [&_th]:font-medium [&_th]:text-muted-foreground">
-              <th>Booking</th><th>India time</th><th>Parent's time</th><th>Child</th><th>Parent</th><th>Mentor</th><th>Status</th><th><span className="sr-only">Actions</span></th>
-            </tr>
-          </thead>
+          <thead><tr className={th}>{HEAD.map(h => <th key={h}>{h}</th>)}<th><span className="sr-only">Actions</span></th></tr></thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.reference} className="border-b border-border last:border-b-0 hover:bg-muted/50 [&_td]:px-3 [&_td]:py-2.5 [&_td]:align-middle">
@@ -64,10 +68,10 @@ export function BookingsTable({ rows }: { rows: AdminBookingDto[] }) {
                   <DropdownMenu>
                     <DropdownTrigger asChild><Button variant="ghost" size="icon-sm" aria-label={`Actions for ${r.reference}`}><MoreHorizontal /></Button></DropdownTrigger>
                     <DropdownContent>
-                      <DropdownItem onSelect={() => setSheet(r.reference)}><Info />View details</DropdownItem>
-                      <DropdownItem onSelect={() => window.open(`/booking/${r.reference}`, "_self")}><ExternalLink />Open booking page</DropdownItem>
-                      <DropdownItem onSelect={() => copy(r.meetingUrl)}><Copy />Copy class link</DropdownItem>
-                      {isUpcoming(r) && <><DropdownSeparator /><DropdownItem destructive onSelect={() => setToCancel(r)}><XCircle />Cancel booking</DropdownItem></>}
+                      <DropdownItem onSelect={() => setSheet(r.reference)}><Info />Quick look</DropdownItem>
+                      <DropdownItem onSelect={() => navigate(`/admin/bookings/${r.reference}`)}><ExternalLink />Open booking</DropdownItem>
+                      {r.status === "CONFIRMED" && <DropdownItem onSelect={() => copyLink(r.meetingUrl)}><Copy />Copy class link</DropdownItem>}
+                      {isUpcoming(r) && <><DropdownSeparator /><DropdownItem destructive onSelect={() => ask(r)}><XCircle />Cancel booking</DropdownItem></>}
                     </DropdownContent>
                   </DropdownMenu>
                 </td>
@@ -81,31 +85,23 @@ export function BookingsTable({ rows }: { rows: AdminBookingDto[] }) {
         open={!!sheet}
         onOpenChange={o => !o && setSheet(null)}
         subtitle={<span className="font-mono text-xs text-muted-foreground">{sheet}</span>}
-        title={b ? `${subjectLabel(b.subject)} trial · ${b.child.name}` : "Loading…"}
+        title={b ? `${subjectLabel(b.subject)} trial · ${b.child.name}` : <Skeleton className="h-6 w-56" />}
         footer={b && <>
-          <Button asChild variant="outline"><Link to={`/booking/${b.reference}`}><ExternalLink />Booking page</Link></Button>
-          {isUpcoming(b) && <Button variant="destructive" onClick={() => setToCancel(b)}>Cancel booking</Button>}
+          <Button asChild variant="outline"><Link to={`/admin/bookings/${b.reference}`}><ExternalLink />Open booking</Link></Button>
+          {isUpcoming(b) && <Button variant="destructive" onClick={() => ask(b)}>Cancel booking</Button>}
         </>}
       >
-        {b && (
+        {b ? (
           <>
             <div><StatusBadge b={b} /></div>
-            <dl className="grid grid-cols-[100px_minmax(0,1fr)] gap-x-4 gap-y-3.5 text-sm [&_dt]:font-medium">
-              <dt>India time</dt><dd className="tabular-nums">{formatSlot(b.startUtc, IST)}</dd>
-              <dt>Parent's time</dt><dd className="tabular-nums">{formatSlot(b.startUtc, b.parentTimezone)}<div className="text-[13px] text-muted-foreground">{formatZoneLabel(b.parentTimezone, b.startUtc)}</div></dd>
-              <dt>Child</dt><dd>{b.child.name} · Grade {b.child.grade}</dd>
-              <dt>Parent</dt><dd>{b.parent.name}<div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">{b.parent.email} <AccountBadge status={b.parentStatus} /></div></dd>
-              <dt>Mentor</dt><dd><Link className="font-medium underline underline-offset-4" to={`/admin/mentors/${b.mentor.id}`}>{b.mentor.name}</Link><div className="text-[13px] text-muted-foreground">{b.mentor.shiftLabel} · India date {b.mentorLocalDate}</div></dd>
-              <dt>Class link</dt><dd className="truncate font-mono text-xs">{b.meetingUrl}</dd>
-            </dl>
+            <BookingFacts b={b} />
             <div className="flex flex-col gap-2"><strong className="text-sm">Messages sent</strong>{b.messages.length ? <OutboxList items={b.messages} /> : <p className="text-[13px] text-muted-foreground">No messages recorded for this booking.</p>}</div>
           </>
+        ) : (
+          <><Skeleton className="h-[22px] w-24" /><BookingFactsSkeleton /><Skeleton className="h-24" /></>
         )}
       </Sheet>
-
-      <ConfirmDialog open={!!toCancel} onOpenChange={o => !o && setToCancel(null)} title="Cancel this booking?" confirmLabel="Cancel booking" cancelLabel="Keep booking" busy={cancel.isPending}
-        description={toCancel ? `${toCancel.child.name}'s class on ${formatSlot(toCancel.startUtc, IST)} will be cancelled. We'll tell the parent and the mentor, and the time becomes free again.` : ""}
-        onConfirm={() => toCancel && cancel.mutate(toCancel.reference)} />
+      {dialog}
     </>
   );
 }
