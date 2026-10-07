@@ -55,7 +55,7 @@ npm run dev                   # API on :4000, web on http://localhost:5173
 > **npm 11 note:** npm 11 blocks dependency install scripts by default. If `npm install` warns about `prisma`, `@prisma/engines`, `@prisma/client` or `esbuild`, run
 > `npm approve-scripts @prisma/client prisma @prisma/engines esbuild && npm rebuild`.
 
-Open <http://localhost:5173>.
+Open <http://localhost:5173>. See [Running the app](#running-the-app) for ports and [Database](#database) to inspect the data.
 
 | Who | Where | Login |
 |---|---|---|
@@ -66,6 +66,120 @@ Open <http://localhost:5173>.
 | Emails (dev only) | `/dev/outbox` | none |
 
 No real email is sent. Every confirmation, cancellation, verification and reset email lands in the **dev outbox**, where the links are clickable.
+
+## Running the app
+
+`npm run dev` starts both servers together (output is prefixed `[api]` and `[web]`):
+
+| Service | URL | What it is |
+|---|---|---|
+| Web app | <http://localhost:5173> | Vite dev server (React). Proxies `/api/*` to the API, so cookies stay same-origin |
+| API | <http://localhost:4000/api> | Express server; health check at <http://localhost:4000/api/health> |
+| Dev database | `localhost:5432` | PostgreSQL 16 in Docker (`trialbooking`), data kept in a Docker volume |
+| Test database | `localhost:5433` | PostgreSQL 16 in Docker (`trialbooking_test`), in memory, rebuilt on every test run |
+
+Run them separately when you want separate terminals:
+
+```bash
+npm run dev -w apps/api      # API only, restarts on file changes
+npm run dev -w apps/web      # web only (needs the API running for data)
+npm run start -w apps/api    # API without file watching
+```
+
+Quick checks that everything is up:
+
+```bash
+curl http://localhost:4000/api/health                      # {"status":"ok","db":"ok"}
+curl "http://localhost:4000/api/slots?tz=America/New_York&days=1"
+docker compose ps                                          # both postgres containers "healthy"
+```
+
+Stop everything with `Ctrl+C` in the `npm run dev` terminal, then `npm run db:down` to stop Postgres. The dev data survives `db:down`. To delete it too, run `docker compose down -v`.
+
+## Database
+
+### Look at the data
+
+| Way | Command | Notes |
+|---|---|---|
+| **Prisma Studio** (browser UI) | `npm run db:studio` | Opens <http://localhost:5555>; browse and filter every table and follow relations |
+| **psql** (terminal, nothing to install) | `npm run db:psql` | `\dt` lists tables, `\d "Booking"` shows columns and constraints, `\q` quits |
+| **Desktop client** (TablePlus, DBeaver, pgAdmin, DataGrip) | connect with the details below | Use the dev database; the test one is emptied between runs |
+| **Admin console** | <http://localhost:5173/admin> | The same data through the app: bookings, parents, mentor schedules, outbox |
+
+| Connection | Dev | Test |
+|---|---|---|
+| Host / port | `localhost` / `5432` | `localhost` / `5433` |
+| User / password | `postgres` / `postgres` | `postgres` / `postgres` |
+| Database | `trialbooking` | `trialbooking_test` |
+| URL | `postgresql://postgres:postgres@localhost:5432/trialbooking` | `postgresql://postgres:postgres@localhost:5433/trialbooking_test` |
+
+### Tables
+
+| Table | Holds |
+|---|---|
+| `Mentor` | The 10 mentors: zone (`Asia/Kolkata`), shift label, daily cap (`maxDailyTrials`) |
+| `AvailabilityRule` | Each mentor's weekly shift: one row per working weekday (`weekday` 1 = Mon, minutes since local midnight) |
+| `Parent` | Everyone who booked or signed up. `passwordHash` empty = guest; `emailVerifiedAt` empty = pending |
+| `Booking` | Trials: `startUtc`/`endUtc` in UTC, `mentorLocalDate` (the India date the cap counts on), both zones, status |
+| `OutboxMessage` | Every email the app would send (booking, cancellation, verification, reset) |
+| `Session`, `AuthToken`, `AdminUser` | Sign-in sessions (hashed), verification/reset tokens (hashed), the admin account |
+
+Integrity rules live in the database, not only in code: an `EXCLUDE` constraint stops two confirmed bookings overlapping for one mentor, and `CHECK` constraints guard grades, weekdays and shift bounds (`apps/api/prisma/migrations/*_constraints`).
+
+### Useful queries
+
+Run these in `npm run db:psql` or any client:
+
+```sql
+-- Upcoming bookings with mentor and parent
+SELECT b.reference, b."startUtc", b."mentorLocalDate", m.name AS mentor, p.email, b.status
+FROM "Booking" b JOIN "Mentor" m ON m.id = b."mentorId" JOIN "Parent" p ON p.id = b."parentId"
+WHERE b."startUtc" > now() ORDER BY b."startUtc";
+
+-- Trials per mentor per India date (never more than 2)
+SELECT m.name, b."mentorLocalDate", count(*) AS trials
+FROM "Booking" b JOIN "Mentor" m ON m.id = b."mentorId"
+WHERE b.status = 'CONFIRMED' GROUP BY 1, 2 ORDER BY 2, 1;
+
+-- One booking in the parent's and the mentor's local time
+SELECT reference,
+       "startUtc" AT TIME ZONE "parentTimezone" AS parent_local,
+       "startUtc" AT TIME ZONE "mentorTimezone" AS mentor_local
+FROM "Booking" ORDER BY "startUtc" LIMIT 10;
+
+-- Parents and their account state
+SELECT name, email,
+       CASE WHEN "passwordHash" IS NULL THEN 'guest' WHEN "emailVerifiedAt" IS NULL THEN 'pending' ELSE 'verified' END AS account
+FROM "Parent" ORDER BY name;
+
+-- Latest emails (verification and reset links are in the body)
+SELECT "createdAt", kind, "toEmail", subject FROM "OutboxMessage" ORDER BY "createdAt" DESC LIMIT 10;
+```
+
+### Reset, reseed and migrate
+
+| Task | Command |
+|---|---|
+| Replace all dev data with fresh demo data | `npm run db:seed` (**deletes everything in the dev database first**) |
+| Apply migrations | `npm run db:migrate` |
+| Drop and recreate the dev database from migrations | `npm run db:reset`, then `npm run db:seed` |
+| Start from a completely empty Postgres | `docker compose down -v && npm run db:up && npm run db:migrate && npm run db:seed` |
+| Change the schema | edit `apps/api/prisma/schema.prisma`, then `npm run db:migrate:dev -w apps/api -- --name <change>` |
+| Watch Postgres logs | `npm run db:logs` |
+
+The seed builds its scenarios relative to *today*, so reseed if the demo data has drifted into the past.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `db: unreachable` from `/api/health`, or `P1001: Can't reach database server` | Start Docker Desktop, then `npm run db:up` |
+| `port is already allocated` on 5432 or 5433 | Another Postgres is running. Stop it, or change the left-hand port in `docker-compose.yml` and the matching URL in `.env` |
+| `The table "public.Mentor" does not exist` | Run `npm run db:migrate` |
+| Booking page shows no times | Run `npm run db:seed` (mentors come from the seed), and check the time zone isn't one where no mentor works at family-friendly hours |
+| `@prisma/client did not initialize yet` | `npx prisma generate --schema apps/api/prisma/schema.prisma` (or rerun `npm install` after approving install scripts, see Quick start) |
+| Integration tests fail to start | `npm run db:up`. The test container must be healthy on port 5433 |
 
 ## Tests
 

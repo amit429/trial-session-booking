@@ -14,7 +14,8 @@
     "db:migrate": "dotenv -e ../../.env -- prisma migrate deploy",
     "db:migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
     "db:seed": "dotenv -e ../../.env -- tsx prisma/seed.ts",
-    "db:reset": "dotenv -e ../../.env -- prisma migrate reset --force --skip-seed"
+    "db:reset": "dotenv -e ../../.env -- prisma migrate reset --force --skip-seed",
+    "db:studio": "dotenv -e ../../.env -- prisma studio"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
