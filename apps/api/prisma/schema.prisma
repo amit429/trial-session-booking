@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Subject {
+  CODING
+  MATH
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum SessionKind {
+  PARENT
+  ADMIN
+}
+
+enum AuthTokenPurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum OutboxKind {
+  BOOKING_CONFIRMED_PARENT
+  BOOKING_CONFIRMED_MENTOR
+  BOOKING_CANCELLED_PARENT
+  BOOKING_CANCELLED_MENTOR
+  VERIFY_EMAIL
+  RESET_PASSWORD
+  ACCOUNT_EXISTS
+}
+
+model Mentor {
+  id             String             @id @default(uuid()) @db.Uuid
+  name           String
+  email          String             @unique
+  timezone       String
+  bio            String
+  shiftLabel     String
+  maxDailyTrials Int                @default(2)
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now()) @db.Timestamptz(3)
+  rules          AvailabilityRule[]
+  bookings       Booking[]
+}
+
+/// One shift block on one weekday, in the mentor's own zone.
+model AvailabilityRule {
+  id          String @id @default(uuid()) @db.Uuid
+  mentorId    String @db.Uuid
+  weekday     Int
+  startMinute Int
+  endMinute   Int
+  mentor      Mentor @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId])
+}
+
+model Parent {
+  id              String      @id @default(uuid()) @db.Uuid
+  name            String
+  email           String      @unique
+  phone           String?
+  timezone        String
+  passwordHash    String?
+  emailVerifiedAt DateTime?   @db.Timestamptz(3)
+  createdAt       DateTime    @default(now()) @db.Timestamptz(3)
+  bookings        Booking[]
+  sessions        Session[]
+  authTokens      AuthToken[]
+}
+
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  sessions     Session[]
+}
+
+model Session {
+  id        String      @id
+  kind      SessionKind
+  parentId  String?     @db.Uuid
+  adminId   String?     @db.Uuid
+  expiresAt DateTime    @db.Timestamptz(3)
+  createdAt DateTime    @default(now()) @db.Timestamptz(3)
+  parent    Parent?     @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  admin     AdminUser?  @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([parentId])
+  @@index([adminId])
+}
+
+model AuthToken {
+  id        String           @id @default(uuid()) @db.Uuid
+  tokenHash String           @unique
+  purpose   AuthTokenPurpose
+  parentId  String           @db.Uuid
+  expiresAt DateTime         @db.Timestamptz(3)
+  usedAt    DateTime?        @db.Timestamptz(3)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+  parent    Parent           @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@index([parentId, purpose])
+}
+
+model Booking {
+  id              String          @id @default(uuid()) @db.Uuid
+  reference       String          @unique
+  parentId        String          @db.Uuid
+  mentorId        String          @db.Uuid
+  childName       String
+  childGrade      Int
+  subject         Subject
+  startUtc        DateTime        @db.Timestamptz(3)
+  endUtc          DateTime        @db.Timestamptz(3)
+  mentorLocalDate DateTime        @db.Date
+  parentTimezone  String
+  mentorTimezone  String
+  meetingUrl      String
+  status          BookingStatus   @default(CONFIRMED)
+  cancelledAt     DateTime?       @db.Timestamptz(3)
+  cancelledBy     String?
+  idempotencyKey  String          @unique
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(3)
+  parent          Parent          @relation(fields: [parentId], references: [id])
+  mentor          Mentor          @relation(fields: [mentorId], references: [id])
+  outbox          OutboxMessage[]
+
+  @@index([startUtc])
+  @@index([parentId, status])
+  @@index([mentorId, startUtc])
+}
+
+model OutboxMessage {
+  id        String     @id @default(uuid()) @db.Uuid
+  kind      OutboxKind
+  toEmail   String
+  bookingId String?    @db.Uuid
+  timezone  String?
+  subject   String
+  body      String
+  createdAt DateTime   @default(now()) @db.Timestamptz(3)
+  booking   Booking?   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+}
