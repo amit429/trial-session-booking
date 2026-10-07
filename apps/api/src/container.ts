@@ -2,8 +2,11 @@ import type { Clock } from "./clock";
 import type { Config } from "./config";
 import type { Db } from "./db";
 import { logger, type Logger } from "./logger";
+import { AdminAuthService } from "./services/adminAuthService";
 import { BookingService } from "./services/bookingService";
 import { OutboxService } from "./services/outboxService";
+import { ParentAuthService } from "./services/parentAuthService";
+import { SessionService } from "./services/sessionService";
 import { SlotService } from "./services/slotService";
 import { SuggestionService } from "./services/suggestionService";
 
@@ -16,6 +19,9 @@ export function buildContainer(input: { db: Db; clock: Clock; config: Config; lo
   const suggestions = new SuggestionService(deps, slots);
   const outbox = new OutboxService(deps);
   const bookings = new BookingService(deps, slots, suggestions, outbox);
-  return { ...deps, slots, suggestions, outbox, bookings };
+  const sessions = new SessionService(deps);
+  const parentAuth = new ParentAuthService(deps, sessions, outbox);
+  const adminAuth = new AdminAuthService(deps, sessions);
+  return { ...deps, slots, suggestions, outbox, bookings, sessions, parentAuth, adminAuth };
 }
 export type Container = ReturnType<typeof buildContainer>;
