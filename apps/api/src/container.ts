@@ -2,6 +2,8 @@ import type { Clock } from "./clock";
 import type { Config } from "./config";
 import type { Db } from "./db";
 import { logger, type Logger } from "./logger";
+import { BookingService } from "./services/bookingService";
+import { OutboxService } from "./services/outboxService";
 import { SlotService } from "./services/slotService";
 import { SuggestionService } from "./services/suggestionService";
 
@@ -12,6 +14,8 @@ export function buildContainer(input: { db: Db; clock: Clock; config: Config; lo
   const deps: Deps = { ...input, logger: input.logger ?? logger };
   const slots = new SlotService(deps);
   const suggestions = new SuggestionService(deps, slots);
-  return { ...deps, slots, suggestions };
+  const outbox = new OutboxService(deps);
+  const bookings = new BookingService(deps, slots, suggestions, outbox);
+  return { ...deps, slots, suggestions, outbox, bookings };
 }
 export type Container = ReturnType<typeof buildContainer>;
