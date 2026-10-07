@@ -6,6 +6,7 @@ import { pinoHttp } from "pino-http";
 import type { Container } from "./container";
 import { errorHandler, notFoundHandler } from "./http/errors";
 import { healthRoutes } from "./routes/health";
+import { slotRoutes } from "./routes/slots";
 
 export function createApp(c: Container, extra?: Router) {
   const app = express();
@@ -19,6 +20,7 @@ export function createApp(c: Container, extra?: Router) {
 
   const api = express.Router();
   api.use(healthRoutes(c));
+  api.use(slotRoutes(c));
   if (extra) api.use(extra);
   api.use(notFoundHandler);
 
