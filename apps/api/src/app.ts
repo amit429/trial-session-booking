@@ -11,6 +11,7 @@ import { loadSession } from "./http/session";
 import { adminRoutes } from "./routes/admin";
 import { authRoutes } from "./routes/auth";
 import { bookingRoutes } from "./routes/bookings";
+import { devRoutes } from "./routes/dev";
 import { meRoutes } from "./routes/me";
 import { slotRoutes } from "./routes/slots";
 
@@ -33,6 +34,7 @@ export function createApp(c: Container, extra?: Router) {
   api.use(authRoutes(c));
   api.use(meRoutes(c));
   api.use(adminRoutes(c));
+  api.use(devRoutes(c));
   if (extra) api.use(extra);
   api.use(notFoundHandler);
 

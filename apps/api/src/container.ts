@@ -3,6 +3,7 @@ import type { Config } from "./config";
 import type { Db } from "./db";
 import { logger, type Logger } from "./logger";
 import { AdminAuthService } from "./services/adminAuthService";
+import { AdminService } from "./services/adminService";
 import { BookingService } from "./services/bookingService";
 import { OutboxService } from "./services/outboxService";
 import { ParentAuthService } from "./services/parentAuthService";
@@ -22,6 +23,7 @@ export function buildContainer(input: { db: Db; clock: Clock; config: Config; lo
   const sessions = new SessionService(deps);
   const parentAuth = new ParentAuthService(deps, sessions, outbox);
   const adminAuth = new AdminAuthService(deps, sessions);
-  return { ...deps, slots, suggestions, outbox, bookings, sessions, parentAuth, adminAuth };
+  const admin = new AdminService(deps, bookings);
+  return { ...deps, slots, suggestions, outbox, bookings, sessions, parentAuth, adminAuth, admin };
 }
 export type Container = ReturnType<typeof buildContainer>;
