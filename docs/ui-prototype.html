@@ -1,311 +1,398 @@
 <title>TrialDesk Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: sticky prototype bar on top; public app = centered 1120px column (booking = calendar | side panel, stacks < 900px);
-   admin app = 232px sidebar + fluid content (sidebar becomes a top nav < 820px). */
+/* Layout: shadcn/ui look (zinc neutrals, one violet brand accent, Geist).
+   Public pages: 1100px column; booking = one card with 3 panes (details | month calendar | day times), stacks under 960px.
+   Admin: 248px sidebar + inset content with breadcrumb bar; sidebar collapses to a top bar under 860px. */
 :root{
-  --bg:#F7F6FB; --surface:#FFFFFF; --surface-2:#F1EFF8; --ink:#1B1530; --ink-2:#5E5874; --line:#E3E0EE;
-  --primary:#6D28D9; --primary-ink:#FFFFFF; --primary-soft:#EFE7FD; --primary-text:#5B21B6;
-  --accent:#FACC15; --accent-soft:#FEF6D2; --accent-text:#854D0E;
-  --success:#15803D; --success-soft:#E3F6EA; --warning:#B45309; --warning-soft:#FDF0DC; --danger:#DC2626; --danger-soft:#FDE6E6;
-  --full-bg:#F1F0F5; --full-ink:#8C88A0; --focus:#7C3AED;
-  --proto-bg:#16121F; --proto-ink:#ECE8F6; --proto-ink-2:#A39CB8; --proto-line:#2D2740; --proto-hi:#FACC15;
-  --font-sans:"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --r:12px; --r-sm:8px; --shadow:0 1px 2px rgba(27,21,48,.06), 0 4px 16px rgba(27,21,48,.06);
+  --page:#FAFAFA; --background:#FFFFFF; --foreground:#09090B; --card:#FFFFFF;
+  --muted:#F4F4F5; --muted-foreground:#71717A; --border:#E4E4E7; --input:#E4E4E7; --ring:#A1A1AA;
+  --primary:#18181B; --primary-foreground:#FAFAFA; --secondary:#F4F4F5; --accent:#F4F4F5;
+  --brand:#7C3AED; --brand-foreground:#FFFFFF; --brand-soft:#F5F3FF; --brand-text:#6D28D9; --brand-ring:rgba(124,58,237,.35);
+  --success:#16A34A; --success-soft:#F0FDF4; --success-text:#15803D;
+  --warning:#D97706; --warning-soft:#FFFBEB; --warning-text:#B45309;
+  --destructive:#DC2626; --destructive-soft:#FEF2F2; --destructive-text:#B91C1C;
+  --sidebar:#FAFAFA; --overlay:rgba(9,9,11,.45);
+  --shadow-xs:0 1px 2px rgba(9,9,11,.05); --shadow-md:0 4px 12px -2px rgba(9,9,11,.08),0 2px 4px -2px rgba(9,9,11,.04); --shadow-lg:0 16px 40px -8px rgba(9,9,11,.18);
+  --font-sans:"Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius:10px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#100E17; --surface:#191624; --surface-2:#221E31; --ink:#EEEAF7; --ink-2:#A9A3BD; --line:#302A45;
-    --primary:#A78BFA; --primary-ink:#1A1030; --primary-soft:#2A2145; --primary-text:#C4B5FD;
-    --accent:#FACC15; --accent-soft:#3A3114; --accent-text:#FDE68A;
-    --success:#4ADE80; --success-soft:#13301F; --warning:#FBBF24; --warning-soft:#36280D; --danger:#F87171; --danger-soft:#3B1818;
-    --full-bg:#1E1B29; --full-ink:#6F6986; --focus:#C4B5FD; --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+    --page:#09090B; --background:#09090B; --foreground:#FAFAFA; --card:#111113;
+    --muted:#1F1F23; --muted-foreground:#A1A1AA; --border:#27272A; --input:#2E2E33; --ring:#52525B;
+    --primary:#FAFAFA; --primary-foreground:#18181B; --secondary:#1F1F23; --accent:#232328;
+    --brand:#8B5CF6; --brand-foreground:#FFFFFF; --brand-soft:rgba(139,92,246,.14); --brand-text:#C4B5FD; --brand-ring:rgba(167,139,250,.45);
+    --success:#22C55E; --success-soft:rgba(34,197,94,.12); --success-text:#4ADE80;
+    --warning:#F59E0B; --warning-soft:rgba(245,158,11,.12); --warning-text:#FBBF24;
+    --destructive:#EF4444; --destructive-soft:rgba(239,68,68,.12); --destructive-text:#F87171;
+    --sidebar:#0C0C0E; --overlay:rgba(0,0,0,.6);
+    --shadow-xs:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 4px 12px -2px rgba(0,0,0,.5); --shadow-lg:0 16px 40px -8px rgba(0,0,0,.7);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#100E17; --surface:#191624; --surface-2:#221E31; --ink:#EEEAF7; --ink-2:#A9A3BD; --line:#302A45;
-  --primary:#A78BFA; --primary-ink:#1A1030; --primary-soft:#2A2145; --primary-text:#C4B5FD;
-  --accent:#FACC15; --accent-soft:#3A3114; --accent-text:#FDE68A;
-  --success:#4ADE80; --success-soft:#13301F; --warning:#FBBF24; --warning-soft:#36280D; --danger:#F87171; --danger-soft:#3B1818;
-  --full-bg:#1E1B29; --full-ink:#6F6986; --focus:#C4B5FD; --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  --page:#09090B; --background:#09090B; --foreground:#FAFAFA; --card:#111113;
+  --muted:#1F1F23; --muted-foreground:#A1A1AA; --border:#27272A; --input:#2E2E33; --ring:#52525B;
+  --primary:#FAFAFA; --primary-foreground:#18181B; --secondary:#1F1F23; --accent:#232328;
+  --brand:#8B5CF6; --brand-foreground:#FFFFFF; --brand-soft:rgba(139,92,246,.14); --brand-text:#C4B5FD; --brand-ring:rgba(167,139,250,.45);
+  --success:#22C55E; --success-soft:rgba(34,197,94,.12); --success-text:#4ADE80;
+  --warning:#F59E0B; --warning-soft:rgba(245,158,11,.12); --warning-text:#FBBF24;
+  --destructive:#EF4444; --destructive-soft:rgba(239,68,68,.12); --destructive-text:#F87171;
+  --sidebar:#0C0C0E; --overlay:rgba(0,0,0,.6);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 4px 12px -2px rgba(0,0,0,.5); --shadow-lg:0 16px 40px -8px rgba(0,0,0,.7);
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:15px;line-height:1.55}
-h1,h2,h3{line-height:1.2;text-wrap:balance;margin:0}
-h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
-h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
-h3{font-size:16px;font-weight:700}
+html,body{background:var(--page)}
+body{color:var(--foreground);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;line-height:1.2;letter-spacing:-.015em;text-wrap:balance}
 p{margin:0}
-a{color:var(--primary-text)}
-button,input,select{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+svg.i{flex:none;width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+:focus-visible{outline:none;box-shadow:0 0 0 3px var(--brand-ring)}
 .mono{font-family:var(--font-mono);font-size:.92em}
-.muted{color:var(--ink-2)}
-.small{font-size:13px}
 .tnum{font-variant-numeric:tabular-nums}
-.stack{display:flex;flex-direction:column;gap:12px}
-.stack-lg{display:flex;flex-direction:column;gap:24px}
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.spread{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.mf{color:var(--muted-foreground)}
+.xs{font-size:12px}.sm{font-size:13px}
+.flex{display:flex;align-items:center;gap:8px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:8px}
+.col-4{display:flex;flex-direction:column;gap:4px}
+.col-16{display:flex;flex-direction:column;gap:16px}
+.col-24{display:flex;flex-direction:column;gap:24px}
+.wrap{flex-wrap:wrap}
+.sep{height:1px;background:var(--border);border:0;margin:0}
 
-/* ---------- prototype bar ---------- */
-.protobar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--proto-bg);color:var(--proto-ink);border-bottom:1px solid var(--proto-line);padding-inline:16px;padding-block:8px;font-size:13px}
-.protobar .inner{max-width:1280px;margin-inline:auto;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
-.protobar .tag{background:var(--proto-hi);color:#1B1530;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
-.protobar label{display:flex;gap:6px;align-items:center;color:var(--proto-ink-2)}
-.protobar select{background:#221C30;color:var(--proto-ink);border:1px solid var(--proto-line);border-radius:6px;padding:4px 6px;font-size:13px}
-.protobar .pbtn{background:#221C30;color:var(--proto-ink);border:1px solid var(--proto-line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px;text-decoration:none;display:inline-flex;gap:6px;align-items:center}
-.protobar .pbtn:hover{border-color:var(--proto-ink-2)}
-.protobar .pbtn.on{background:var(--proto-hi);color:#1B1530;border-color:var(--proto-hi);font-weight:700}
-.protobar .grow{flex:1}
-.protobar .count{background:var(--proto-hi);color:#1B1530;border-radius:99px;padding:0 6px;font-weight:800;font-size:11px}
-.protobar input[type=checkbox]{accent-color:var(--proto-hi)}
+/* ---------- primitives ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border-radius:8px;font-size:14px;font-weight:500;border:1px solid transparent;cursor:pointer;white-space:nowrap;text-decoration:none;transition:background-color .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--primary);color:var(--primary-foreground);box-shadow:var(--shadow-xs)}
+.btn-primary:hover{opacity:.9}
+.btn-brand{background:var(--brand);color:var(--brand-foreground);box-shadow:var(--shadow-xs)}
+.btn-brand:hover{filter:brightness(1.07)}
+.btn-outline{background:var(--background);border-color:var(--border);box-shadow:var(--shadow-xs)}
+.btn-outline:hover{background:var(--accent)}
+.btn-secondary{background:var(--secondary)}
+.btn-secondary:hover{background:var(--border)}
+.btn-ghost{background:transparent}
+.btn-ghost:hover{background:var(--accent)}
+.btn-destructive{background:var(--destructive);color:#fff}
+.btn-destructive-ghost{background:transparent;color:var(--destructive-text)}
+.btn-destructive-ghost:hover{background:var(--destructive-soft)}
+.btn-sm{height:32px;padding:0 10px;font-size:13px;border-radius:7px}
+.btn-lg{height:40px;padding:0 18px}
+.btn-icon{width:36px;padding:0}
+.btn-icon.btn-sm{width:32px}
+.btn-block{width:100%}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.link{color:var(--foreground);text-decoration:underline;text-underline-offset:4px;font-weight:500;background:none;border:0;padding:0;cursor:pointer}
+.link:hover{color:var(--brand-text)}
+.label{font-size:14px;font-weight:500}
+.input,.select{height:36px;width:100%;border:1px solid var(--input);border-radius:8px;background:var(--background);padding:0 12px;box-shadow:var(--shadow-xs);transition:border-color .15s,box-shadow .15s}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:34px}
+.input:focus,.select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-ring);outline:none}
+.input[readonly]{background:var(--muted);color:var(--muted-foreground)}
+.input::placeholder{color:var(--muted-foreground)}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.field .desc{font-size:13px;color:var(--muted-foreground)}
+.field .msg{font-size:13px;color:var(--destructive-text);font-weight:500}
+.field.invalid .input,.field.invalid .select{border-color:var(--destructive)}
+.field.invalid .label{color:var(--destructive-text)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px}
+.form-grid .full{grid-column:1/-1}
+@media (max-width:600px){.form-grid{grid-template-columns:1fr}}
+.badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid transparent;white-space:nowrap}
+.badge-outline{border-color:var(--border);color:var(--foreground)}
+.badge-secondary{background:var(--secondary);color:var(--foreground)}
+.badge-success{background:var(--success-soft);color:var(--success-text)}
+.badge-warning{background:var(--warning-soft);color:var(--warning-text)}
+.badge-destructive{background:var(--destructive-soft);color:var(--destructive-text)}
+.badge-brand{background:var(--brand-soft);color:var(--brand-text)}
+.badge .d{width:6px;height:6px;border-radius:99px;background:currentColor}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-xs)}
+.card-h{padding:20px 22px 0;display:flex;flex-direction:column;gap:4px}
+.card-t{font-size:16px;font-weight:600}
+.card-d{font-size:13px;color:var(--muted-foreground)}
+.card-c{padding:20px 22px}
+.card-f{padding:0 22px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.alert{display:grid;grid-template-columns:16px minmax(0,1fr);gap:4px 12px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:var(--card);font-size:13px}
+.alert svg{margin-top:2px}
+.alert .at{font-weight:600;font-size:14px;grid-column:2}
+.alert .ad{grid-column:2;color:var(--muted-foreground)}
+.alert-warning{background:var(--warning-soft);border-color:transparent}.alert-warning svg,.alert-warning .at{color:var(--warning-text)}
+.alert-destructive{background:var(--destructive-soft);border-color:transparent}.alert-destructive svg,.alert-destructive .at{color:var(--destructive-text)}
+.alert-info{background:var(--brand-soft);border-color:transparent}.alert-info svg,.alert-info .at{color:var(--brand-text)}
+.alert-success{background:var(--success-soft);border-color:transparent}.alert-success svg,.alert-success .at{color:var(--success-text)}
+.avatar{flex:none;width:36px;height:36px;border-radius:99px;display:grid;place-items:center;font-weight:600;font-size:13px;background:var(--brand-soft);color:var(--brand-text);border:2px solid var(--card)}
+.avatar.lg{width:48px;height:48px;font-size:15px}
+.avatar.sm{width:28px;height:28px;font-size:11px}
+.avatars{display:flex}.avatars .avatar{margin-left:-8px}.avatars .avatar:first-child{margin-left:0}
+.tabs{display:inline-flex;background:var(--muted);border-radius:9px;padding:3px;gap:2px}
+.tabs button{border:0;background:transparent;height:30px;padding:0 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--muted-foreground);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--background);color:var(--foreground);box-shadow:var(--shadow-xs)}
+.menu-root{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:200px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);padding:4px;z-index:30;display:flex;flex-direction:column}
+.menu .mi{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border-radius:6px;border:0;background:none;text-align:left;cursor:pointer;font-size:14px;text-decoration:none;color:var(--foreground)}
+.menu .mi:hover{background:var(--accent)}
+.menu .mi.danger{color:var(--destructive-text)}
+.menu .ml{padding:8px 10px 6px;font-size:12px;color:var(--muted-foreground)}
+.menu hr{border:0;height:1px;background:var(--border);margin:4px -4px}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 16px}
+.empty .ei{width:44px;height:44px;border-radius:12px;background:var(--muted);display:grid;place-items:center;color:var(--muted-foreground)}
+.empty .ei svg{width:20px;height:20px}
+.skel{background:var(--muted);border-radius:8px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.5}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* PRD annotations (toggle in prototype panel) */
+.anno{display:none;font-family:var(--font-mono);font-size:10.5px;font-weight:500;color:var(--warning-text);border:1px dashed var(--warning);border-radius:5px;padding:0 5px;vertical-align:middle;white-space:nowrap;line-height:17px}
+body.annos .anno{display:inline-block}
+.note{display:none;border:1px dashed var(--warning);background:var(--warning-soft);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--foreground)}
+body.annos .note{display:block}
 
 /* ---------- public shell ---------- */
-.site-head{border-bottom:1px solid var(--line);background:var(--surface);padding-inline:16px}
-.site-head .inner{max-width:1120px;margin-inline:auto;display:flex;align-items:center;gap:16px;padding-block:14px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;text-decoration:none;color:var(--ink)}
-.brand .mark{width:30px;height:30px;border-radius:9px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:14px;font-weight:800}
-.site-head nav{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.main{max-width:1120px;margin-inline:auto;padding-inline:16px;padding-block:28px 64px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--background) 80%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--border);padding-inline:16px}
+.topbar .in{max-width:1100px;margin-inline:auto;height:60px;display:flex;align-items:center;gap:8px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;text-decoration:none;letter-spacing:-.01em}
+.logo .lm{width:28px;height:28px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center}
+.logo .lm svg{width:16px;height:16px}
+.topbar nav{margin-left:auto;display:flex;align-items:center;gap:4px}
+.page{max-width:1100px;margin-inline:auto;padding-inline:16px;padding-block:32px 96px}
+.page-narrow{max-width:720px}
+.page-h{display:flex;flex-direction:column;gap:6px;margin-bottom:24px}
+.page-h h1{font-size:28px;font-weight:600}
 
-/* ---------- buttons, fields, chips ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:10px 16px;font-weight:700;border:1px solid transparent;cursor:pointer;text-decoration:none;font-size:14px;line-height:1.2;white-space:nowrap}
-.btn-primary{background:var(--primary);color:var(--primary-ink)}
-.btn-primary:hover{filter:brightness(1.08)}
-.btn-secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
-.btn-secondary:hover{border-color:var(--ink-2)}
-.btn-ghost{background:transparent;color:var(--ink)}
-.btn-ghost:hover{background:var(--surface-2)}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-sm{padding:6px 10px;font-size:13px;border-radius:8px}
-.btn[disabled]{opacity:.6;cursor:not-allowed}
-.btn-link{background:none;border:none;padding:0;color:var(--primary-text);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-weight:600;font-size:14px}
-.field .hint{font-size:12px;color:var(--ink-2)}
-.input,.select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
-.input:focus,.select:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px var(--primary-soft)}
-.input[readonly]{background:var(--surface-2);color:var(--ink-2)}
-.field.has-error .input,.field.has-error .select{border-color:var(--danger)}
-.err{color:var(--danger);font-size:13px;font-weight:600}
-.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-@media (max-width:560px){.grid-2{grid-template-columns:1fr}}
-.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px}
-.seg button{border:none;background:transparent;padding:7px 14px;border-radius:8px;font-weight:600;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--shadow);color:var(--primary-text)}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
-.chip-open{background:var(--success-soft);color:var(--success)}
-.chip-few{background:var(--accent-soft);color:var(--accent-text)}
-.chip-full{background:var(--danger-soft);color:var(--danger)}
-.chip-closed{background:var(--surface-2);color:var(--ink-2)}
-.chip-pending{background:var(--warning-soft);color:var(--warning)}
-.chip-info{background:var(--primary-soft);color:var(--primary-text)}
-.dot{width:8px;height:8px;border-radius:99px;background:currentColor;display:inline-block}
+/* ---------- booking card ---------- */
+.booker{display:grid;grid-template-columns:300px minmax(0,1fr) 284px;background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-md);overflow:hidden;min-height:540px}
+.booker.step2{grid-template-columns:300px minmax(0,1fr)}
+.pane{padding:24px;min-width:0}
+.pane+.pane{border-left:1px solid var(--border)}
+@media (max-width:960px){.booker,.booker.step2{grid-template-columns:1fr}.pane+.pane{border-left:0;border-top:1px solid var(--border)}}
+.info h1{font-size:22px;font-weight:600;margin-top:14px}
+.info .lead{color:var(--muted-foreground);margin-top:8px}
+.meta{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.meta .m{display:flex;gap:10px;align-items:flex-start;color:var(--muted-foreground);font-weight:500}
+.meta .m svg{margin-top:2px}
+.meta .m strong{color:var(--foreground);font-weight:500}
+.tz-trigger{display:flex;align-items:center;gap:6px;border:0;background:none;padding:0;cursor:pointer;color:var(--foreground);font-weight:500;text-align:left}
+.tz-trigger:hover{text-decoration:underline;text-underline-offset:3px}
+.popover{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px}
+.cmd-input{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding:4px 8px 8px}
+.cmd-input input{border:0;outline:none;background:transparent;width:100%;height:30px}
+.cmd-list{max-height:260px;overflow:auto;padding-top:4px}
+.cmd-group{font-size:11.5px;font-weight:500;color:var(--muted-foreground);padding:8px 8px 4px}
+.cmd-item{display:flex;justify-content:space-between;gap:12px;width:100%;border:0;background:none;padding:7px 8px;border-radius:6px;cursor:pointer;text-align:left;font-size:13.5px}
+.cmd-item:hover{background:var(--accent)}
+.cmd-item[aria-selected="true"]{background:var(--brand-soft);color:var(--brand-text)}
+.picked{margin-top:22px;border-radius:12px;background:var(--brand-soft);padding:14px;display:flex;flex-direction:column;gap:4px}
+.picked .t{font-weight:600;color:var(--brand-text)}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
-.card-raised{box-shadow:var(--shadow)}
-.callout{border-radius:var(--r);padding:14px 16px;display:flex;gap:12px;align-items:flex-start}
-.callout-warn{background:var(--warning-soft);color:var(--ink)}
-.callout-warn strong{color:var(--warning)}
-.callout-info{background:var(--primary-soft)}
-.callout-danger{background:var(--danger-soft)}
-.callout-success{background:var(--success-soft)}
-.callout .ic{flex:none;width:22px;height:22px;border-radius:99px;display:grid;place-items:center;font-weight:800;font-size:13px}
-.callout-warn .ic{background:var(--warning);color:#fff}
-.callout-info .ic{background:var(--primary);color:var(--primary-ink)}
-.callout-danger .ic{background:var(--danger);color:#fff}
-.callout-success .ic{background:var(--success);color:#fff}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-h h2{font-size:16px;font-weight:600}
+.cal-h h2 span{color:var(--muted-foreground);font-weight:500}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .wd{font-size:12px;color:var(--muted-foreground);text-align:center;font-weight:500;padding-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.day{position:relative;aspect-ratio:1/1;max-height:58px;border-radius:9px;border:0;background:transparent;font-weight:500;font-size:15px;cursor:default;color:var(--muted-foreground);opacity:.55;font-variant-numeric:tabular-nums}
+.day.avail,.day.full{opacity:1;cursor:pointer}
+.day.avail{background:var(--muted);color:var(--foreground);font-weight:600}
+.day.avail:hover{background:var(--border)}
+.day.full{color:var(--muted-foreground)}
+.day.full:hover{background:var(--muted)}
+.day .dt{position:absolute;left:50%;bottom:6px;width:5px;height:5px;margin-left:-2.5px;border-radius:99px}
+.day.avail .dt{background:var(--success)}
+.day.few .dt{background:var(--warning)}
+.day.full .dt{background:var(--destructive)}
+.day.today::after{content:"";position:absolute;inset:3px;border-radius:7px;border:1px solid var(--ring);pointer-events:none}
+.day[aria-pressed="true"]{background:var(--brand);color:var(--brand-foreground)}
+.day[aria-pressed="true"] .dt{background:#fff}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;font-size:12.5px;color:var(--muted-foreground)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:7px;height:7px;border-radius:99px;display:inline-block}
 
-/* prototype annotations */
-.anno{display:none;font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--warning);background:var(--warning-soft);border:1px dashed var(--warning);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;white-space:nowrap}
-body.annos .anno{display:inline-block}
-.proto-note{display:none;border:1px dashed var(--warning);background:var(--warning-soft);border-radius:10px;padding:10px 12px;font-size:13px}
-body.annos .proto-note{display:block}
-
-/* ---------- booking ---------- */
-.stepper{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;font-weight:600;color:var(--ink-2)}
-.stepper .s{display:flex;align-items:center;gap:8px}
-.stepper .n{width:22px;height:22px;border-radius:99px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px}
-.stepper .s.cur{color:var(--ink)}
-.stepper .s.cur .n{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
-.stepper .s.done .n{background:var(--success);border-color:var(--success);color:#fff}
-.stepper .sep{width:24px;height:1.5px;background:var(--line)}
-.tzbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px}
-.tzbar .globe{width:32px;height:32px;border-radius:99px;background:var(--primary-soft);color:var(--primary-text);display:grid;place-items:center;font-weight:800}
-.tzpicker{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;box-shadow:var(--shadow)}
-.tzlist{max-height:260px;overflow:auto;display:flex;flex-direction:column;margin-top:8px}
-.tzlist button{border:none;background:none;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:12px}
-.tzlist button:hover,.tzlist button[aria-selected="true"]{background:var(--primary-soft)}
-.tzlist .grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding:8px 10px 4px}
-.daystrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
-.daypill{flex:none;scroll-snap-align:start;width:92px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
-.daypill .wd{font-size:12px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em}
-.daypill .dn{font-size:20px;font-weight:800}
-.daypill .mo{font-size:12px;color:var(--ink-2)}
-.daypill[aria-pressed="true"]{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft);background:var(--primary-soft)}
-.daypill .chip{font-size:10.5px;padding:2px 7px}
-.book-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
-@media (max-width:900px){.book-grid{grid-template-columns:1fr}}
-.slot-group h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:10px;display:flex;gap:8px;align-items:center}
-.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
-.slot{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700;font-variant-numeric:tabular-nums}
-.slot:hover{border-color:var(--primary)}
-.slot .sub{font-size:11px;font-weight:600;color:var(--ink-2)}
-.slot.last .sub{color:var(--accent-text)}
-.slot.full{background:var(--full-bg);color:var(--full-ink);border-style:dashed}
-.slot.full .sub{color:var(--danger)}
-.slot.sel{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
-.slot.sel .sub{color:var(--primary-ink)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px}
-.sugg-list{display:flex;flex-direction:column;gap:8px}
-.sugg{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);cursor:pointer;text-align:left;width:100%}
-.sugg:hover{border-color:var(--primary);background:var(--primary-soft)}
-.sugg .t{font-weight:700;font-variant-numeric:tabular-nums}
-.sugg .go{color:var(--primary-text);font-weight:700;font-size:13px;white-space:nowrap}
-.selected-slot{display:flex;gap:14px;align-items:center;background:var(--primary-soft);border-radius:var(--r);padding:14px 16px}
-.cal-ic{flex:none;width:52px;border-radius:10px;overflow:hidden;background:var(--surface);text-align:center;border:1px solid var(--line)}
-.cal-ic .m{background:var(--primary);color:var(--primary-ink);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 0}
-.cal-ic .d{font-size:20px;font-weight:800;padding:2px 0 4px}
-.skeleton{background:linear-gradient(90deg,var(--surface-2),var(--surface),var(--surface-2));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:10px;height:44px}
-@keyframes sk{to{background-position:-200% 0}}
-@media (prefers-reduced-motion:reduce){.skeleton{animation:none}}
+.times-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px}
+.times-h h3{font-size:15px;font-weight:600}
+.times-h h3 span{color:var(--muted-foreground);font-weight:500}
+.times{display:flex;flex-direction:column;gap:8px;max-height:470px;overflow-y:auto;padding-right:2px;margin-right:-4px}
+.tgroup{font-size:12px;font-weight:500;color:var(--muted-foreground);padding:6px 2px 0}
+.time{display:flex;align-items:center;justify-content:center;gap:8px;height:42px;border:1px solid var(--border);border-radius:9px;background:var(--background);font-weight:600;cursor:pointer;font-variant-numeric:tabular-nums;position:relative;flex:none;transition:border-color .15s,background-color .15s}
+.time:hover{border-color:var(--brand);color:var(--brand-text)}
+.time .tag{position:absolute;right:10px;font-size:11px;font-weight:500}
+.time.last .tag{color:var(--warning-text)}
+.time.full{background:var(--muted);border-style:dashed;color:var(--muted-foreground);font-weight:500}
+.time.full .tag{color:var(--destructive-text)}
+.time.full:hover{border-color:var(--ring);color:var(--foreground)}
+.time.cur{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-ring)}
+.sugg{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--background);cursor:pointer;text-align:left;transition:border-color .15s,background-color .15s}
+.sugg:hover{border-color:var(--brand);background:var(--brand-soft)}
+.sugg .a{font-weight:600;font-variant-numeric:tabular-nums}
+.sugg .b{font-size:12.5px;color:var(--muted-foreground)}
+.sugg svg{color:var(--muted-foreground)}
+.subject{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.subject button{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--background);cursor:pointer}
+.subject button:hover{border-color:var(--ring)}
+.subject button[aria-pressed="true"]{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-ring)}
+.subject .si{width:32px;height:32px;border-radius:8px;background:var(--muted);display:grid;place-items:center;flex:none}
+.subject button[aria-pressed="true"] .si{background:var(--brand);color:#fff}
+.subject strong{display:block;font-weight:600}
+.subject span{font-size:12.5px;color:var(--muted-foreground)}
 
 /* confirmation */
-.confirm-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
-@media (max-width:900px){.confirm-grid{grid-template-columns:1fr}}
-.bigtime{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px}
-.kv dt{color:var(--ink-2)}
-.kv dd{margin:0;font-weight:600;min-width:0;overflow-wrap:anywhere}
-.mentor{display:flex;gap:14px;align-items:center}
-.avatar{flex:none;width:48px;height:48px;border-radius:99px;background:var(--accent);color:#1B1530;display:grid;place-items:center;font-weight:800}
-.linkbox{display:flex;gap:8px;align-items:center;background:var(--surface-2);border-radius:10px;padding:8px 8px 8px 12px}
-.linkbox .mono{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.success{max-width:600px;margin-inline:auto}
+.hero-ic{width:52px;height:52px;border-radius:99px;display:grid;place-items:center;margin-inline:auto}
+.hero-ic svg{width:24px;height:24px}
+.rows{display:grid;grid-template-columns:110px minmax(0,1fr);gap:18px 16px}
+.rows dt{font-weight:500}
+.rows dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:520px){.rows{grid-template-columns:1fr;gap:4px}.rows dd{margin-bottom:12px}}
+.copybox{display:flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:8px;padding:4px 4px 4px 10px;background:var(--muted)}
+.copybox span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* auth */
-.auth-wrap{max-width:440px;margin-inline:auto}
-.center-state{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding-block:24px}
-.big-ic{width:56px;height:56px;border-radius:99px;display:grid;place-items:center;font-size:24px;font-weight:800}
+.auth{max-width:400px;margin-inline:auto;padding-top:24px}
+.auth .card-c{display:flex;flex-direction:column;gap:18px}
+.auth h1{font-size:24px;font-weight:600}
+.circle-ic{width:44px;height:44px;border-radius:99px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand-text)}
+.circle-ic svg{width:20px;height:20px}
 
-/* tabs */
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
-.tabs button{border:none;background:none;padding:10px 14px;font-weight:700;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
-.tabs button[aria-selected="true"]{color:var(--primary-text);border-color:var(--primary)}
-.bk-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
-@media (max-width:600px){.bk-card{grid-template-columns:auto minmax(0,1fr)}.bk-card .acts{grid-column:1 / -1}}
+/* my bookings */
+.blist{display:flex;flex-direction:column}
+.bitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.bitem:last-child{border-bottom:0}
+.datebox{width:52px;border:1px solid var(--border);border-radius:10px;overflow:hidden;text-align:center;background:var(--background)}
+.datebox .mo{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:var(--muted);color:var(--muted-foreground);padding:2px 0}
+.datebox .dn{font-size:19px;font-weight:600;padding:3px 0 5px;font-variant-numeric:tabular-nums}
+@media (max-width:600px){.bitem{grid-template-columns:auto minmax(0,1fr)}.bitem .acts{grid-column:1/-1}}
 
 /* admin */
-.admin{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 48px)}
-.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;display:flex;flex-direction:column;gap:4px}
-.side .brand{padding:0 8px 16px}
-.side a{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-weight:600}
-.side a:hover{background:var(--surface-2)}
-.side a[aria-current="page"]{background:var(--primary-soft);color:var(--primary-text)}
-.side .foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);font-size:13px}
-.admin-main{padding-inline:24px;padding-block:24px 64px;min-width:0;display:flex;flex-direction:column;gap:20px}
-@media (max-width:820px){.admin{grid-template-columns:1fr}.side{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line);padding:10px 12px}.side .brand{padding:0 8px 0 0}.side .foot{margin-top:0;border:none;padding:0;margin-left:auto}.admin-main{padding-inline:16px}}
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-@media (max-width:900px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-.tile .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.tile .l{font-size:13px;color:var(--ink-2);font-weight:600}
-.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
-table{border-collapse:collapse;width:100%;font-size:13.5px}
-th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
-td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
-tr:last-child td{border-bottom:none}
-td .sub{color:var(--ink-2);font-size:12px}
-.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-.filters .field{min-width:150px}
-.meter{display:flex;gap:4px;align-items:center}
-.meter i{width:18px;height:8px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line)}
-.meter i.on{background:var(--primary);border-color:var(--primary)}
-.meter.full i.on{background:var(--danger);border-color:var(--danger)}
-.capbars{display:flex;flex-direction:column;gap:6px}
-.capbar{display:grid;grid-template-columns:96px minmax(0,1fr) 64px;gap:10px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
-.capbar .track{height:14px;background:var(--surface-2);border-radius:4px;overflow:hidden;position:relative}
-.capbar .fill{height:100%;background:var(--primary);border-radius:4px}
-.capbar.full .fill{background:var(--danger)}
-.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
-.week div{border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;font-size:12px}
-.week .on{background:var(--primary-soft)}
-.week b{display:block;font-size:12px}
-.sched-day{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding-block:12px;border-bottom:1px solid var(--line)}
-.sched-day:last-child{border-bottom:none}
-@media (max-width:600px){.sched-day{grid-template-columns:1fr}}
-.outbox-msg{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface);display:flex;flex-direction:column;gap:6px}
-.outbox-msg .body{white-space:pre-wrap;font-size:14px;overflow-wrap:anywhere}
+.admin{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;background:var(--sidebar)}
+.sidebar{padding:14px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh}
+.sidebar .logo{padding:6px 8px 14px}
+.sb-group{font-size:12px;color:var(--muted-foreground);font-weight:500;padding:14px 8px 6px}
+.sb-link{display:flex;align-items:center;gap:10px;height:34px;padding:0 10px;border-radius:8px;text-decoration:none;font-weight:500;color:var(--foreground)}
+.sb-link:hover{background:var(--accent)}
+.sb-link[aria-current="page"]{background:var(--accent);font-weight:600}
+.sb-link .count{margin-left:auto;font-size:12px;color:var(--muted-foreground)}
+.sb-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px}
+.inset{background:var(--background);margin:8px 8px 8px 0;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-xs);min-width:0;display:flex;flex-direction:column}
+.inset-h{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 20px}
+.crumbs{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted-foreground)}
+.crumbs a{text-decoration:none}.crumbs a:hover{color:var(--foreground)}
+.crumbs .cur{color:var(--foreground);font-weight:500}
+.inset-c{padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.inset-c h1{font-size:24px;font-weight:600}
+@media (max-width:860px){.admin{grid-template-columns:1fr}.sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border)}.sidebar .logo{padding:6px 8px}.sb-group{display:none}.sb-user{margin:0 0 0 auto;padding:0}.sb-user .who{display:none}.inset{margin:8px}.inset-c{padding:16px}}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.stat .v{font-size:28px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search{position:relative;flex:1;min-width:220px;max-width:340px}
+.search svg{position:absolute;left:10px;top:10px;color:var(--muted-foreground)}
+.search .input{padding-left:34px}
+.toolbar .select{width:auto;height:32px;font-size:13px;border-style:dashed}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{height:40px;text-align:left;padding:0 12px;font-weight:500;color:var(--muted-foreground);white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-variant-numeric:tabular-nums}
+tbody tr{transition:background-color .1s}
+tbody tr:hover{background:color-mix(in srgb,var(--muted) 55%,transparent)}
+tbody tr:last-child td{border-bottom:0}
+td .s2{font-size:12.5px;color:var(--muted-foreground)}
+td a{text-decoration:none;font-weight:500}td a:hover{text-decoration:underline;text-underline-offset:3px}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted-foreground);font-size:11px;font-family:var(--font-sans)}
+.chart .grid{stroke:var(--border)}
+.chart .cap{fill:var(--muted)}
+.chart .bk{fill:var(--brand)}
+.chart .bk.full{fill:var(--destructive)}
+.progress{height:6px;border-radius:99px;background:var(--muted);overflow:hidden;width:100%}
+.progress i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.progress.full i{background:var(--destructive)}
+.mentor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.week div{border:1px solid var(--border);border-radius:9px;padding:10px 6px;text-align:center;font-size:12px}
+.week .on{background:var(--brand-soft);border-color:transparent;color:var(--brand-text)}
+.week b{display:block;font-size:12.5px;color:var(--foreground);margin-bottom:2px}
+.sched{display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.sched:last-child{border-bottom:0}
+@media (max-width:640px){.sched{grid-template-columns:1fr}}
+.sched-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.msg{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.msg .body{white-space:pre-wrap;font-size:13.5px;color:var(--muted-foreground);overflow-wrap:anywhere}
+.msg .body a{color:var(--brand-text);font-weight:500}
 
-/* flow map */
-.personas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+/* guide */
+.guide-hero{display:flex;flex-direction:column;gap:12px;max-width:720px;margin-bottom:28px}
+.guide-hero h1{font-size:34px;font-weight:600;letter-spacing:-.025em}
+.personas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 @media (max-width:900px){.personas{grid-template-columns:1fr}}
-.persona{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px}
-.persona ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
-.persona ol a{font-weight:600}
-.edge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
-.edge{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
-.edge .id{font-family:var(--font-mono);font-size:11px;color:var(--ink-2)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;counter-increment:s;font-size:13.5px}
+.steps li::before{content:counter(s);width:22px;height:22px;border-radius:99px;background:var(--muted);display:grid;place-items:center;font-size:11.5px;font-weight:600}
+.edges{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.edge{padding:16px;display:flex;flex-direction:column;gap:8px}
 
-/* dialog + toast */
-.scrim{position:fixed;inset:0;background:rgba(16,12,28,.5);display:grid;place-items:center;padding:16px;z-index:60}
-.dialog{background:var(--surface);border-radius:16px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-#toasts{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:70;display:flex;flex-direction:column;gap:8px;align-items:center;width:max-content;max-width:calc(100% - 32px)}
-.toast{background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;box-shadow:var(--shadow)}
-.empty{text-align:center;padding:32px 16px;color:var(--ink-2);display:flex;flex-direction:column;gap:10px;align-items:center}
+/* overlays */
+.overlay{position:fixed;inset:0;background:var(--overlay);z-index:60;display:grid;place-items:center;padding:16px;animation:fade .15s ease-out}
+@keyframes fade{from{opacity:0}}
+.dialog{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);width:100%;max-width:440px;padding:22px;display:flex;flex-direction:column;gap:10px;animation:pop .15s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.97)}}
+.dialog h2{font-size:18px;font-weight:600}
+.dialog .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap}
+.sheet-ov{position:fixed;inset:0;background:var(--overlay);z-index:60;animation:fade .15s ease-out}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--card);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:61;display:flex;flex-direction:column;animation:slide .2s ease-out}
+@keyframes slide{from{transform:translateX(24px);opacity:.4}}
+.sheet-h{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.sheet-c{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;flex:1}
+.sheet-f{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;flex-direction:column;gap:8px;width:min(360px,calc(100% - 32px))}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:12px 14px;display:grid;grid-template-columns:16px minmax(0,1fr);gap:2px 10px;animation:pop .2s ease-out}
+.toast svg{margin-top:2px;color:var(--success)}
+.toast .tt{font-weight:600;font-size:13.5px}
+.toast .td{grid-column:2;font-size:13px;color:var(--muted-foreground)}
+
+/* prototype dock */
+.dock{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70}
+.dock-btn{display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;border-radius:99px;background:#18181B;color:#FAFAFA;border:1px solid #3F3F46;box-shadow:var(--shadow-lg);cursor:pointer;font-weight:500;font-size:13px}
+.dock-btn .pill{background:#FACC15;color:#18181B;border-radius:5px;font-size:10.5px;font-weight:700;padding:1px 6px;letter-spacing:.04em}
+.dock-panel{position:absolute;left:0;bottom:48px;width:min(330px,calc(100vw - 32px));background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);padding:16px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 100px);overflow:auto}
+.dock-panel .field{gap:6px}
+.dock-panel .label{font-size:12.5px;color:var(--muted-foreground)}
+.dock-panel .select{height:32px;font-size:13px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;cursor:pointer}
+.switch input{appearance:none;width:34px;height:20px;border-radius:99px;background:var(--input);position:relative;cursor:pointer;flex:none;transition:background-color .15s}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:99px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.switch input:checked{background:var(--brand)}
+.switch input:checked::after{transform:translateX(14px)}
 </style>
 
-<div class="protobar" role="region" aria-label="Prototype controls">
-  <div class="inner">
-    <span class="tag">Prototype</span>
-    <a class="pbtn" href="#/">Flow map</a>
-    <label for="pb-persona">Persona
-      <select id="pb-persona">
-        <option value="guest">Guest parent</option>
-        <option value="parent">Signed-in parent (demo)</option>
-        <option value="pending">Pending parent</option>
-        <option value="admin">Admin</option>
-      </select>
-    </label>
-    <label for="pb-date">Today is
-      <select id="pb-date">
-        <option value="2026-10-08">Thu 8 Oct 2026</option>
-        <option value="2026-10-20">Tue 20 Oct 2026 (clocks change soon)</option>
-        <option value="2027-03-05">Fri 5 Mar 2027 (clocks go forward)</option>
-      </select>
-    </label>
-    <label for="pb-tz">Browser zone
-      <select id="pb-tz">
-        <option value="America/New_York">New York</option>
-        <option value="America/Chicago">Chicago</option>
-        <option value="America/Denver">Denver</option>
-        <option value="America/Phoenix">Phoenix</option>
-        <option value="America/Los_Angeles">Los Angeles</option>
-        <option value="America/Anchorage">Anchorage</option>
-        <option value="Pacific/Honolulu">Honolulu</option>
-        <option value="Europe/London">London</option>
-        <option value="Europe/Dublin">Dublin</option>
-        <option value="Asia/Calcutta">Asia/Calcutta (legacy name)</option>
-        <option value="">Not detected</option>
-      </select>
-    </label>
-    <label for="pb-race"><input type="checkbox" id="pb-race"> Next booking loses race</label>
-    <label for="pb-soon"><input type="checkbox" id="pb-soon"> Next booking is too soon</label>
-    <label for="pb-annos"><input type="checkbox" id="pb-annos" checked> PRD tags</label>
-    <span class="grow"></span>
-    <a class="pbtn" href="#/dev/outbox">Dev outbox <span class="count" id="pb-outbox-count">0</span></a>
-    <button class="pbtn" type="button" data-act="reset">Reset data</button>
-  </div>
-</div>
 <div id="app"></div>
-<div id="dialog-root"></div>
+<div id="overlay-root"></div>
 <div id="toasts" aria-live="polite"></div>
+
+<div class="dock" id="dock">
+  <div class="dock-panel" id="dock-panel" hidden role="dialog" aria-label="Prototype controls">
+    <div class="between"><strong>Prototype controls</strong><a class="btn btn-ghost btn-sm" href="#/" data-act="dock-close">Guide</a></div>
+    <div class="field"><label class="label" for="pb-persona">Persona</label>
+      <select class="select" id="pb-persona"><option value="guest">Guest parent</option><option value="parent">Signed-in parent (demo)</option><option value="pending">Pending parent</option><option value="admin">Admin</option></select></div>
+    <div class="field"><label class="label" for="pb-date">Today is</label>
+      <select class="select" id="pb-date"><option value="2026-10-08">Thu 8 Oct 2026</option><option value="2026-10-20">Tue 20 Oct 2026 · clocks change soon</option><option value="2027-03-05">Fri 5 Mar 2027 · clocks go forward</option></select></div>
+    <div class="field"><label class="label" for="pb-tz">Browser time zone</label>
+      <select class="select" id="pb-tz"><option value="America/New_York">New York</option><option value="America/Chicago">Chicago</option><option value="America/Denver">Denver</option><option value="America/Phoenix">Phoenix</option><option value="America/Los_Angeles">Los Angeles</option><option value="America/Anchorage">Anchorage</option><option value="Pacific/Honolulu">Honolulu</option><option value="Europe/London">London</option><option value="Europe/Dublin">Dublin</option><option value="Asia/Calcutta">Asia/Calcutta (legacy name)</option><option value="">Not detected</option></select></div>
+    <hr class="sep">
+    <label class="switch" for="pb-race">Next booking loses the race<input type="checkbox" id="pb-race"></label>
+    <label class="switch" for="pb-soon">Next booking is too soon<input type="checkbox" id="pb-soon"></label>
+    <label class="switch" for="pb-annos">Show PRD tags<input type="checkbox" id="pb-annos"></label>
+    <hr class="sep">
+    <div class="flex wrap"><a class="btn btn-outline btn-sm" href="#/dev/outbox" data-act="dock-close">Dev outbox <span class="badge badge-brand" id="pb-outbox-count">0</span></a><button class="btn btn-ghost btn-sm" type="button" data-act="reset">Reset data</button></div>
+    <p class="xs mf">Parent: demo.parent@example.com / Parent123!<br>Admin: admin@trialdesk.example / Admin123!</p>
+  </div>
+  <button class="dock-btn" type="button" data-act="dock" aria-expanded="false" aria-controls="dock-panel"><span class="pill">PROTO</span>Controls</button>
+</div>
 
 <script id="engine">
 /* ================= ENGINE: time, slots, booking, suggestions (mirrors Technical Design §7–§10) ================= */
@@ -634,198 +721,238 @@ function seed(todayIso) {
 </script>
 
 <script>
-/* ================= UI ================= */
+/* ================= ICONS (lucide paths) ================= */
+const ICONS = {
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  video: '<path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  cal: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  user: '<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  checkc: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  left: '<path d="m15 18-6-6 6-6"/>', right: '<path d="m9 18 6-6-6-6"/>', down: '<path d="m6 9 6 6 6-6"/>',
+  arrowL: '<path d="M19 12H5M12 19l-7-7 7-7"/>', arrowR: '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  xc: '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+  warn: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  mail: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
+  dash: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+  grad: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  ext: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
+  calc: '<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M8 6h8M16 14v4M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/>',
+  lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  map: '<path d="M14.1 5.55a2 2 0 0 0 1.79 0l3.66-1.83A1 1 0 0 1 21 4.62v12.76a1 1 0 0 1-.55.9l-4.55 2.27a2 2 0 0 1-1.79 0l-4.21-2.1a2 2 0 0 0-1.79 0l-3.66 1.83A1 1 0 0 1 3 19.38V6.62a1 1 0 0 1 .55-.9l4.55-2.27a2 2 0 0 1 1.79 0z"/><path d="M15 5.76v15M9 3.24v15"/>',
+  spark: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+  ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'
+};
+const ic = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ""}</svg>`;
+
+/* ================= STATE + HELPERS ================= */
 const ADMIN = { email: "admin@trialdesk.example", password: "Admin123!", name: "Ops Admin" };
 const S = {
-  session: { parent: null, admin: null },
-  browserTz: "America/New_York", chosenTz: null, tzOpen: false, tzFilter: "",
-  book: null, attempts: {}, adminFilters: { scope: "upcoming", status: "", mentor: "", q: "" }, myTab: "upcoming", lastSignupEmail: ""
+  session: { parent: null, admin: null }, browserTz: "America/New_York", chosenTz: null, tzOpen: false, tzFilter: "",
+  h24: false, book: null, attempts: {}, menu: null, sheet: null, myTab: "upcoming", lastSignupEmail: "",
+  af: { scope: "upcoming", status: "", mentor: "", q: "" }, pq: ""
 };
 const $ = s => document.querySelector(s);
 const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const initials = n => n.split(" ").map(x => x[0]).slice(0, 2).join("");
+const initials = n => String(n || "?").split(" ").map(x => x[0]).slice(0, 2).join("").toUpperCase();
 const anno = t => `<span class="anno">${esc(t)}</span>`;
+const subj = s => s === "CODING" ? "Coding" : "Maths";
 function parentTz() { return S.chosenTz || normalizeZone(S.browserTz); }
-function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; $("#toasts").appendChild(t); setTimeout(() => t.remove(), 2600); }
+function tfmt(ms, tz) { return S.h24 ? new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit" }).format(new Date(ms)) : fmtTime(ms, tz); }
+function toast(title, desc) {
+  const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status");
+  t.innerHTML = `${ic("checkc")}<div class="tt">${esc(title)}</div>${desc ? `<div class="td">${esc(desc)}</div>` : ""}`;
+  $("#toasts").appendChild(t); setTimeout(() => t.remove(), 3200);
+}
 function go(h) { if (location.hash === h) render(); else location.hash = h; }
-function route() {
-  const h = location.hash.replace(/^#/, "") || "/";
-  const [path, qs] = h.split("?");
-  return { path, parts: path.split("/").filter(Boolean), q: Object.fromEntries(new URLSearchParams(qs || "")) };
+function route() { const h = location.hash.replace(/^#/, "") || "/"; const [path, qs] = h.split("?"); return { parts: path.split("/").filter(Boolean), q: Object.fromEntries(new URLSearchParams(qs || "")) }; }
+function freshBook() { return { date: null, month: null, sel: null, step: 1, form: {}, errors: {}, sugg: null, suggFrom: null, lead: "", existing: null, submitting: false }; }
+function statusBadge(b) {
+  if (b.status === "CANCELLED") return `<span class="badge badge-destructive"><span class="d"></span>Cancelled</span>`;
+  if (b.start <= DB.now) return `<span class="badge badge-secondary">Completed</span>`;
+  return `<span class="badge badge-success"><span class="d"></span>Confirmed</span>`;
 }
-function freshBook() { return { date: null, sel: null, step: 1, form: {}, errors: {}, sugg: null, lead: "", existing: null, submitting: false }; }
+function acctBadge(st) { return st === "VERIFIED" ? `<span class="badge badge-success"><span class="d"></span>Verified</span>` : st === "PENDING" ? `<span class="badge badge-warning"><span class="d"></span>Pending</span>` : `<span class="badge badge-outline">Guest</span>`; }
 
-/* ---------- shells ---------- */
-function publicShell(inner) {
+/* ================= SHELLS ================= */
+function topbar() {
   const p = S.session.parent ? DB.parents[S.session.parent] : null;
-  const nav = p
-    ? `<a class="btn btn-ghost btn-sm" href="#/book">Book a trial</a><a class="btn btn-ghost btn-sm" href="#/my-bookings">My bookings</a><span class="small muted">${esc(p.name)}</span><button class="btn btn-secondary btn-sm" data-act="parent-logout">Sign out</button>`
-    : `<a class="btn btn-ghost btn-sm" href="#/book">Book a trial</a><a class="btn btn-secondary btn-sm" href="#/login">Sign in</a>`;
-  return `<header class="site-head"><div class="inner"><a class="brand" href="#/book"><span class="mark">TD</span>TrialDesk</a><nav aria-label="Main">${nav}</nav></div></header><main class="main">${inner}</main>`;
+  const right = p
+    ? `<a class="btn btn-ghost btn-sm" href="#/book" data-act="new-book">Book a trial</a><a class="btn btn-ghost btn-sm" href="#/my-bookings">My bookings</a>
+       <div class="menu-root" data-menu-root><button class="btn btn-ghost btn-icon" data-act="menu" data-v="user" aria-label="Account menu" aria-expanded="${S.menu === "user"}"><span class="avatar sm">${initials(p.name)}</span></button>
+       ${S.menu === "user" ? `<div class="menu" role="menu"><div class="ml"><strong style="color:var(--foreground);font-size:13.5px">${esc(p.name)}</strong><br>${esc(p.email)}</div><hr><a class="mi" role="menuitem" href="#/my-bookings">${ic("cal")}My bookings</a><a class="mi" role="menuitem" href="#/book" data-act="new-book">${ic("spark")}Book a trial</a><hr><button class="mi" role="menuitem" data-act="parent-logout">${ic("logout")}Sign out</button></div>` : ""}</div>`
+    : `<a class="btn btn-ghost btn-sm" href="#/my-bookings">My bookings</a><a class="btn btn-outline btn-sm" href="#/login">Sign in</a>`;
+  return `<header class="topbar"><div class="in"><a class="logo" href="#/book" data-act="new-book"><span class="lm">${ic("grad")}</span>TrialDesk</a><nav aria-label="Main">${right}</nav></div></header>`;
 }
-function adminShell(active, inner) {
-  const items = [["", "Dashboard"], ["bookings", "Bookings"], ["parents", "Parents"], ["mentors", "Mentors"], ["outbox", "Outbox"]];
-  return `<div class="admin"><aside class="side" aria-label="Admin navigation"><a class="brand" href="#/admin"><span class="mark">TD</span>Admin</a>
-    ${items.map(([k, l]) => `<a href="#/admin${k ? "/" + k : ""}" ${active === k ? 'aria-current="page"' : ""}>${l}</a>`).join("")}
-    <div class="foot"><div class="stack" style="gap:6px"><span class="muted">${esc(ADMIN.name)}</span><button class="btn btn-secondary btn-sm" data-act="admin-logout">Sign out</button></div></div></aside>
-    <section class="admin-main">${inner}</section></div>`;
+const pub = inner => `${topbar()}<main class="page">${inner}</main>`;
+function adminShell(active, crumbs, inner) {
+  const nav = [["", "Dashboard", "dash"], ["bookings", "Bookings", "cal"], ["parents", "Parents", "users"], ["mentors", "Mentors", "grad"], ["outbox", "Outbox", "inbox"]];
+  const link = ([k, l, i]) => `<a class="sb-link" href="#/admin${k ? "/" + k : ""}" ${active === k ? 'aria-current="page"' : ""}>${ic(i)}${l}${k === "bookings" ? `<span class="count">${confirmed().filter(b => b.start > DB.now).length}</span>` : ""}</a>`;
+  return `<div class="admin"><aside class="sidebar" aria-label="Admin"><a class="logo" href="#/admin"><span class="lm">${ic("grad")}</span>TrialDesk</a>
+    <div class="sb-group">Overview</div>${link(nav[0])}<div class="sb-group">Manage</div>${nav.slice(1, 4).map(link).join("")}<div class="sb-group">System</div>${link(nav[4])}
+    <div class="sb-user"><span class="avatar sm">OA</span><div class="who col-4" style="gap:0;min-width:0"><strong class="sm">${esc(ADMIN.name)}</strong><span class="xs mf" style="overflow:hidden;text-overflow:ellipsis">${esc(ADMIN.email)}</span></div><button class="btn btn-ghost btn-icon btn-sm" data-act="admin-logout" aria-label="Sign out" title="Sign out">${ic("logout")}</button></div></aside>
+    <section class="inset"><div class="inset-h"><nav class="crumbs" aria-label="Breadcrumb"><a href="#/admin">Admin</a>${crumbs.map((c, i) => `${ic("right")}${i === crumbs.length - 1 ? `<span class="cur">${esc(c[0])}</span>` : `<a href="${c[1]}">${esc(c[0])}</a>`}`).join("")}</nav></div>
+    <div class="inset-c">${inner}</div></section></div>${S.sheet ? sheetHtml(S.sheet) : ""}`;
 }
 
-/* ---------- flow map ---------- */
-function viewMap() {
+/* ================= GUIDE ================= */
+function viewGuide() {
   const edges = [
-    ["FR-2 · C4", "Full slot", "Day + 2 at 9:30 AM Eastern is full. Click it to see same-day suggestions.", "edge-full-slot"],
-    ["FR-11 · C5", "Fully booked day", "Day + 4 for New York has no open slots. Suggestions jump to the same time on other days.", "edge-full-day"],
-    ["C1", "Lost race", "Turn on “Next booking loses race” above, then book any slot.", "edge-race"],
-    ["C9", "Too soon", "Turn on “Next booking is too soon”, then book.", "edge-soon"],
-    ["FR-12 · C8", "Already has a trial", "Book with demo.parent@example.com; it already has an upcoming trial.", "edge-active"],
-    ["FR-13 · T1", "Clock change banner", "Set “Today is” to 20 Oct 2026. New York shows the 1 Nov banner; London the 25 Oct one.", "edge-dst"],
-    ["T8", "Zone not detected / legacy name", "Set “Browser zone” to Not detected or Asia/Calcutta.", "edge-tz"],
-    ["T9", "Travelling parent", "Book in New York, then switch Browser zone to Los Angeles and reopen the booking.", null],
-    ["C3 · FR-19", "Mentor at 2 / 2", "Admin → Mentors: one UK-shift mentor is at capacity tomorrow (IST).", "edge-cap"],
-    ["A12", "Pending account", "Sign in as pending.parent@example.com / Pending123!", "edge-pending"],
-    ["A8", "Rate limit", "Enter a wrong password 6 times on the sign-in page.", "edge-login"],
-    ["A7", "Expired link", "Verify an email from the dev outbox, then click the same link again.", "edge-outbox"],
-    ["FR-10", "Bad manage link", "Open a booking with a wrong token.", "edge-badtoken"]
+    ["FR-2 · C4", "Full time slot", "A dashed “Full” time opens same-day alternatives.", "edge-full-slot"],
+    ["FR-11 · C5", "Fully booked day", "Red-dot day: suggestions jump to the same time on other days.", "edge-full-day"],
+    ["C1", "Lost the race", "Someone else books the last mentor while you fill the form.", "edge-race"],
+    ["C9", "Too soon", "The slot crossed the 2-hour notice while the form was open.", "edge-soon"],
+    ["FR-12 · C8", "Already has a trial", "Book with an email that already has an upcoming trial.", "edge-active"],
+    ["FR-13 · T1", "Clock change", "Jump to 20 Oct 2026: New York sees the 1 Nov notice.", "edge-dst"],
+    ["T8", "Zone not detected", "The browser gives no time zone; the parent picks one.", "edge-tz"],
+    ["C3 · FR-19", "Mentor at 2 of 2", "Admin mentor cards show who is full today.", "edge-cap"],
+    ["A12", "Unverified account", "Sign in before verifying the email.", "edge-pending"],
+    ["A8", "Rate limit", "Six wrong passwords in a minute.", "edge-login"],
+    ["FR-10", "Bad manage link", "A booking link with a wrong token.", "edge-badtoken"],
+    ["A7", "Expired link", "Use a verification link twice (from the dev outbox).", "edge-outbox"]
   ];
-  return `<main class="main stack-lg">
-    <div class="stack"><span class="eyebrow">TrialDesk trial booking · clickable prototype of the PRD</span><h1>Every screen, by persona</h1>
-      <p class="muted" style="max-width:68ch">Times, shifts, the 2-per-day cap, suggestions and clock changes are computed for real, so this behaves like the spec. Use the bar above to switch persona, the demo date and the browser time zone. Yellow tags show which PRD requirement each part covers.</p></div>
+  return pub(`<div class="guide-hero"><span class="badge badge-brand" style="align-self:flex-start">${ic("map")} Prototype guide</span><h1>Every screen of the trial booking PRD</h1>
+      <p class="mf" style="font-size:15px;max-width:62ch">Time zones, mentor shifts, the 2-per-day cap, suggestions and clock changes are calculated for real. Open <strong style="color:var(--foreground)">Controls</strong> at the bottom left to switch persona, date and browser time zone.</p>
+      <div class="flex wrap"><a class="btn btn-brand btn-lg" href="#/book" data-act="as-guest">Start as a parent ${ic("arrowR")}</a><a class="btn btn-outline btn-lg" href="#/admin" data-act="as-admin">Open admin</a></div></div>
     <div class="personas">
-      <section class="persona"><span class="chip chip-info">Parent · guest</span><h2>Book without an account</h2>
-        <ol><li><a href="#/book" data-act="as-guest">Pick a day and time</a> in local time</li><li>Click a Full slot to see suggestions</li><li>Fill in parent and child details</li><li>Confirmation with class link, calendar and private manage link</li><li>Manage or cancel via the link</li></ol></section>
-      <section class="persona"><span class="chip chip-open">Parent · account</span><h2>See all my bookings</h2>
-        <ol><li><a href="#/signup">Sign up</a> with the booking email</li><li>Open the verification link in the <a href="#/dev/outbox">dev outbox</a></li><li><a href="#/login">Sign in</a> (demo.parent@example.com / Parent123!)</li><li><a href="#/my-bookings">My bookings</a>: upcoming and past</li><li><a href="#/forgot-password">Forgot password</a> → reset link</li></ol></section>
-      <section class="persona"><span class="chip chip-pending">Admin</span><h2>Run the trial schedule</h2>
-        <ol><li><a href="#/admin/login">Sign in</a> (admin@trialdesk.example / Admin123!)</li><li><a href="#/admin" data-act="as-admin">Dashboard</a>: load per IST date</li><li>Bookings: filter, search, cancel</li><li>Parents: account status and history</li><li>Mentors: shifts and full schedule</li></ol></section>
+      <div class="card"><div class="card-h"><span class="badge badge-outline" style="align-self:flex-start">Parent · guest</span><div class="card-t" style="margin-top:8px">Book without an account</div></div><div class="card-c"><ol class="steps"><li><span>Pick a day on the calendar, then a time in your zone</span></li><li><span>Full times show the nearest alternatives</span></li><li><span>Add parent and child details</span></li><li><span>Get the class link, calendar invite and a private manage link</span></li></ol></div></div>
+      <div class="card"><div class="card-h"><span class="badge badge-success" style="align-self:flex-start">Parent · account</span><div class="card-t" style="margin-top:8px">See all my bookings</div></div><div class="card-c"><ol class="steps"><li><span><a class="link" href="#/signup">Sign up</a> with the booking email</span></li><li><span>Verify from the <a class="link" href="#/dev/outbox">dev outbox</a></span></li><li><span><a class="link" href="#/login">Sign in</a> and open My bookings</span></li><li><span>Forgot password resets by email</span></li></ol></div></div>
+      <div class="card"><div class="card-h"><span class="badge badge-warning" style="align-self:flex-start">Admin</span><div class="card-t" style="margin-top:8px">Run the trial schedule</div></div><div class="card-c"><ol class="steps"><li><span><a class="link" href="#/admin/login">Sign in</a> as admin</span></li><li><span>Dashboard: load per India date</span></li><li><span>Bookings: search, filter, view, cancel</span></li><li><span>Parents and mentor schedules</span></li></ol></div></div>
     </div>
-    <section class="stack"><h2>Edge cases to try</h2><div class="edge-grid">
-      ${edges.map(([id, t, d, act]) => `<div class="edge"><span class="id">${id}</span><strong>${t}</strong><span class="small muted">${d}</span>${act ? `<button class="btn-link small" data-act="${act}" style="align-self:flex-start">Show me</button>` : ""}</div>`).join("")}
-    </div></section>
-    <section class="stack"><h2>Mentor shifts behind the times</h2>
-      <div class="table-wrap"><table><thead><tr><th>Shift</th><th>India time</th><th>Mentors</th><th>Covers</th></tr></thead><tbody>
-        <tr><td>UK shift</td><td>1:00 PM – 11:30 PM</td><td>4</td><td>UK and Ireland day and after-school, US mornings</td></tr>
-        <tr><td>US-East shift</td><td>12:30 AM – 7:30 AM</td><td>4</td><td>US East and Central after-school evenings</td></tr>
-        <tr><td>US-West shift</td><td>3:30 AM – 9:30 AM</td><td>2</td><td>US Pacific, Mountain, Alaska and Hawaii afternoons and evenings</td></tr>
-      </tbody></table></div>
-      <p class="small muted">Parents only ever see times between 8:00 AM and 9:00 PM in their own zone. Each mentor takes one day off a week.</p></section>
-  </main>`;
+    <div class="col-16" style="margin-top:36px"><div class="col-4"><h2 style="font-size:20px;font-weight:600">Edge cases</h2><p class="mf">Each one opens the exact state described in the PRD.</p></div>
+      <div class="edges">${edges.map(([id, t, d, a]) => `<div class="card edge"><span class="badge badge-outline mono" style="align-self:flex-start">${id}</span><strong>${t}</strong><span class="sm mf">${d}</span><button class="btn btn-outline btn-sm" style="align-self:flex-start;margin-top:4px" data-act="${a}">Try it ${ic("arrowR")}</button></div>`).join("")}</div></div>`);
 }
 
-/* ---------- booking ---------- */
-function stepper(n) {
-  const st = ["Pick a time", "About your child", "Confirmed"];
-  return `<div class="stepper" aria-label="Progress">${st.map((t, i) => `${i ? '<span class="sep"></span>' : ""}<span class="s ${i + 1 === n ? "cur" : i + 1 < n ? "done" : ""}"><span class="n">${i + 1 < n ? "✓" : i + 1}</span>${t}</span>`).join("")}</div>`;
+/* ================= BOOKING ================= */
+function tzPopover(tz) {
+  const f = S.tzFilter.toLowerCase(), now = DB.now;
+  const all = (Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : PINNED).filter(z => !PINNED.includes(z));
+  const match = z => !f || z.toLowerCase().includes(f) || (ZONE_NAMES[z] || "").toLowerCase().includes(f);
+  const item = z => `<button type="button" class="cmd-item" role="option" aria-selected="${z === tz}" data-act="tz-pick" data-tz="${z}"><span>${esc(ZONE_NAMES[z] || z.replace(/_/g, " ").replace("/", " / "))}</span><span class="mf xs tnum">${esc(fmtOffset(offsetMin(now, z)))}</span></button>`;
+  const pin = PINNED.filter(match), rest = all.filter(match).slice(0, 60);
+  return `<div class="popover" style="margin-top:10px"><div class="cmd-input">${ic("search")}<input id="tz-search" placeholder="Search time zone…" value="${esc(S.tzFilter)}" autocomplete="off" aria-label="Search time zones"></div>
+    <div class="cmd-list" role="listbox">${pin.length ? `<div class="cmd-group">Suggested</div>${pin.map(item).join("")}` : ""}${rest.length ? `<div class="cmd-group">All time zones</div>${rest.map(item).join("")}` : ""}${!pin.length && !rest.length ? `<p class="sm mf" style="padding:10px">No time zone matches “${esc(S.tzFilter)}”.</p>` : ""}</div></div>`;
 }
-function tzBar(tz) {
-  const now = DB.now;
-  const head = tz
-    ? `<div class="globe" aria-hidden="true">◷</div><div style="flex:1;min-width:200px"><div class="small muted">Times shown in</div><strong>${esc(zoneLabel(tz, now))}</strong>${S.chosenTz ? "" : `<span class="small muted"> · detected from your browser</span>`}${anno("FR-1")}</div><button class="btn btn-secondary btn-sm" data-act="tz-toggle" aria-expanded="${S.tzOpen}">Change</button>`
-    : `<div class="globe" aria-hidden="true">◷</div><div style="flex:1"><strong>Choose your time zone to see class times</strong><div class="small muted">We couldn't detect it from your browser.</div>${anno("FR-1 AC4")}</div>`;
-  let picker = "";
-  if (S.tzOpen || !tz) {
-    const f = S.tzFilter.toLowerCase();
-    const all = (Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : PINNED).filter(z => !PINNED.includes(z));
-    const match = z => !f || z.toLowerCase().includes(f) || (ZONE_NAMES[z] || "").toLowerCase().includes(f);
-    const btn = z => `<button type="button" role="option" aria-selected="${z === tz}" data-act="tz-pick" data-tz="${z}"><span>${esc(ZONE_NAMES[z] || z.replace(/_/g, " "))}</span><span class="small muted">${esc(fmtOffset(offsetMin(now, z)))}</span></button>`;
-    const pin = PINNED.filter(match), rest = all.filter(match).slice(0, 80);
-    picker = `<div class="tzpicker"><label class="small muted" for="tz-search">Search time zones</label><input class="input" id="tz-search" placeholder="e.g. London, Pacific, Chicago" value="${esc(S.tzFilter)}" autocomplete="off">
-      <div class="tzlist" role="listbox" aria-label="Time zones">${pin.length ? `<div class="grp">US, UK, Ireland, India</div>${pin.map(btn).join("")}` : ""}${rest.length ? `<div class="grp">All zones</div>${rest.map(btn).join("")}` : ""}${!pin.length && !rest.length ? `<p class="small muted" style="padding:8px">No zone matches “${esc(S.tzFilter)}”.</p>` : ""}</div></div>`;
-  }
-  return `<div class="stack"><div class="tzbar">${head}</div>${picker}</div>`;
-}
-function dstBanner(tz) {
-  const t = transitions(tz)[0];
-  if (!t) return "";
-  return `<div class="callout callout-warn" role="status"><span class="ic">!</span><div><strong>Clocks ${t.back ? "go back" : "go forward"} on ${esc(fmtDayLong(t.at, tz))}.</strong> Times from then are in ${esc(abbr(tz, t.at))} (${esc(fmtOffset(t.to))}). The times below already account for this.${anno("FR-13 · T1")}</div></div>`;
-}
-function badge(d) {
-  if (d.status === "OPEN") return d.open >= 3 ? `<span class="chip chip-open">Open</span>` : `<span class="chip chip-few">Few left</span>`;
-  if (d.status === "FULL") return `<span class="chip chip-full">Full</span>`;
-  return `<span class="chip chip-closed">No classes</span>`;
-}
-function suggPanel(tz, sg, lead) {
-  if (!sg) return "";
-  const head = {
-    SAME_DAY: `No mentor is free at ${fmtMinutes(sg.T)} on ${fmtDay(zonedToUtc(sg.D, 720, tz), tz)}. These times that day are open:`,
-    SAME_TIME: `${fmtDay(zonedToUtc(sg.D, 720, tz), tz)} is fully booked. ${fmtMinutes(sg.T)} is open on these days:`,
-    NEAREST: `We couldn't find ${fmtMinutes(sg.T)} on nearby days. Here are the closest good times:`,
-    NONE: `We're fully booked for the next two weeks.`
-  }[sg.strategy];
-  const step = { SAME_DAY: "Step 1 · same day", SAME_TIME: "Step 2 · same time, other days", NEAREST: "Step 3 · closest good times", NONE: "Step 4 · nothing open" }[sg.strategy];
-  return `<div class="panel" id="sugg" tabindex="-1" aria-live="polite">
-    <div class="spread"><span class="eyebrow">Other times</span><span class="anno">FR-11 · ${step}</span></div>
-    ${lead ? `<div class="callout callout-danger"><span class="ic">!</span><div><strong>${esc(lead)}</strong></div></div>` : ""}
-    <h3>${esc(head)}</h3>
-    ${sg.notes.map(n => `<p class="small" style="color:var(--warning)">${esc(n)}</p>`).join("")}
-    ${sg.items.length ? `<div class="sugg-list">${sg.items.map(x => `<button class="sugg" data-act="pick-sugg" data-s="${x.s}"><span><span class="t">${esc(fmtSlot(x.s, tz))}</span>${x.avail === 1 ? `<br><span class="small" style="color:var(--accent-text)">Last spot</span>` : ""}</span><span class="go">Choose →</span></button>`).join("")}</div>`
-      : `<p class="muted">Please check back soon, or write to us at hello@trialdesk.example and we'll find a time that works.</p>`}
+function infoPane(tz, B) {
+  const tr = tz ? transitions(tz)[0] : null;
+  return `<div class="pane info">
+    <div class="avatars" aria-hidden="true">${MENTORS.slice(0, 4).map(m => `<span class="avatar">${initials(m.name)}</span>`).join("")}<span class="avatar" style="background:var(--muted);color:var(--muted-foreground)">+6</span></div>
+    <h1>Free 1:1 trial class</h1>
+    <p class="lead">Coding or Maths with an expert mentor. Pick a time that suits your family and we'll match a mentor who's free then.</p>
+    <div class="meta">
+      <div class="m">${ic("clock")}<span>60 minutes</span></div>
+      <div class="m">${ic("video")}<span>Online. You'll get the class link right away.</span></div>
+      <div class="m">${ic("user")}<span>Mentor assigned automatically ${anno("FR-7")}</span></div>
+      <div class="m">${ic("globe")}<div style="min-width:0;flex:1">${tz ? `<button class="tz-trigger" data-act="tz-toggle" aria-expanded="${S.tzOpen}">${esc(zoneLabel(tz, DB.now))} ${ic("down")}</button>${S.chosenTz ? "" : `<div class="xs mf">Detected from your browser</div>`}` : `<strong>Choose your time zone</strong><div class="xs mf">We couldn't detect it.</div>`} ${anno("FR-1")}
+        ${S.tzOpen || !tz ? tzPopover(tz) : ""}</div></div>
+    </div>
+    ${B.step === 2 && B.sel ? `<div class="picked"><span class="xs mf" style="font-weight:500">Your trial</span><span class="t">${esc(fmtDayLong(B.sel, tz))}</span><span class="tnum" style="font-weight:600">${esc(tfmt(B.sel, tz))} – ${esc(tfmt(B.sel + HOUR, tz))} ${esc(abbr(tz, B.sel))}</span><button class="link sm" style="align-self:flex-start;margin-top:6px" data-act="change-time">Change time</button></div>` : ""}
+    ${tr ? `<div class="alert alert-warning" style="margin-top:22px">${ic("warn")}<div class="at">Clocks ${tr.back ? "go back" : "go forward"} ${esc(fmtDay(tr.at, tz))}</div><div class="ad">Times from then are in ${esc(abbr(tz, tr.at))}. The calendar already accounts for it. ${anno("FR-13")}</div></div>` : ""}
   </div>`;
+}
+function calendarPane(tz, B, map) {
+  const [y, mo] = B.month.split("-").map(Number);
+  const first = `${B.month}-01`, nDays = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const monStart = tz.startsWith("Europe/");
+  const wdFirst = parts(zonedToUtc(first, 720, tz), tz).wd; // 1..7 Mon..Sun
+  const lead = monStart ? wdFirst - 1 : wdFirst % 7;
+  const heads = monStart ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dates = [...map.keys()], minM = dates[0].slice(0, 7), maxM = dates[dates.length - 1].slice(0, 7);
+  const today = todayLocal(tz);
+  let cells = heads.map(h => `<div class="wd">${h}</div>`).join("") + Array.from({ length: lead }, () => "<div></div>").join("");
+  for (let d = 1; d <= nDays; d++) {
+    const ds = `${B.month}-${String(d).padStart(2, "0")}`, info = map.get(ds);
+    const cls = !info || info.status === "CLOSED" ? "" : info.status === "FULL" ? "full" : info.open <= 2 ? "avail few" : "avail";
+    const label = `${fmtDayLong(zonedToUtc(ds, 720, tz), tz)}${!info ? ", not bookable" : info.status === "FULL" ? ", fully booked" : info.status === "CLOSED" ? ", no classes" : `, ${info.open} times available`}`;
+    cells += `<button class="day ${cls} ${ds === today ? "today" : ""}" ${cls ? `data-act="pick-day" data-d="${ds}"` : "disabled"} aria-pressed="${ds === B.date}" aria-label="${esc(label)}">${d}${cls ? '<span class="dt"></span>' : ""}</button>`;
+  }
+  const monthName = new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(y, mo - 1, 1)));
+  return `<div class="pane"><div class="cal-h"><h2>${monthName} <span>${y}</span></h2><div class="flex">
+      <button class="btn btn-outline btn-icon btn-sm" data-act="month" data-v="-1" aria-label="Previous month" ${B.month <= minM ? "disabled" : ""}>${ic("left")}</button>
+      <button class="btn btn-outline btn-icon btn-sm" data-act="month" data-v="1" aria-label="Next month" ${B.month >= maxM ? "disabled" : ""}>${ic("right")}</button></div></div>
+    <div class="cal" role="group" aria-label="Choose a day">${cells}</div>
+    <div class="legend"><span><i style="background:var(--success)"></i>Available</span><span><i style="background:var(--warning)"></i>Few left</span><span><i style="background:var(--destructive)"></i>Fully booked</span> ${anno("FR-2")}</div>
+    <p class="xs mf" style="margin-top:10px">Bookable up to 14 days ahead, at least 2 hours from now. ${anno("FR-3")}</p></div>`;
+}
+function suggestionsHtml(tz, sg, lead, compact) {
+  const head = {
+    SAME_DAY: [`${fmtMinutes(sg.T)} is taken`, `No mentor is free then on ${fmtDay(zonedToUtc(sg.D, 720, tz), tz)}. These times that day are open:`],
+    SAME_TIME: [`${fmtDay(zonedToUtc(sg.D, 720, tz), tz)} is fully booked`, `${fmtMinutes(sg.T)} is open on these days:`],
+    NEAREST: [`${fmtMinutes(sg.T)} isn't available nearby`, `Here are the closest good times:`],
+    NONE: ["We're fully booked for the next two weeks", "Please check back soon, or email hello@trialdesk.example and we'll find a time."]
+  }[sg.strategy];
+  const step = { SAME_DAY: "step 1", SAME_TIME: "step 2", NEAREST: "step 3", NONE: "step 4" }[sg.strategy];
+  return `<div class="col" id="sugg" tabindex="-1" aria-live="polite">
+    <div class="alert ${lead ? "alert-destructive" : "alert-warning"}">${ic(lead ? "xc" : "info")}<div class="at">${esc(lead || head[0])}</div><div class="ad">${esc(lead ? head[0] + ". " + head[1] : head[1])} ${anno("FR-11 " + step)}</div></div>
+    ${sg.notes.map(n => `<p class="xs" style="color:var(--warning-text)">${esc(n)}</p>`).join("")}
+    ${sg.items.map(x => `<button class="sugg" data-act="pick-sugg" data-s="${x.s}"><span class="col-4" style="gap:1px"><span class="a">${esc(tfmt(x.s, tz))} ${esc(abbr(tz, x.s))}</span><span class="b">${esc(fmtDayLong(x.s, tz))}${x.avail === 1 ? " · last spot" : ""}</span></span>${ic("arrowR")}</button>`).join("")}
+    ${compact ? "" : `<button class="btn btn-ghost btn-sm" style="align-self:flex-start" data-act="clear-sugg">${ic("arrowL")} All times</button>`}
+  </div>`;
+}
+function timesPane(tz, B, day) {
+  const dms = zonedToUtc(day.date, 720, tz), p = parts(dms, tz);
+  const head = `<div class="times-h"><h3>${WD_NAMES[p.wd]} <span>${p.d} ${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(new Date(dms))}</span></h3>
+    <div class="tabs" role="tablist" aria-label="Clock format"><button role="tab" aria-selected="${!S.h24}" data-act="h24" data-v="0">12h</button><button role="tab" aria-selected="${S.h24}" data-act="h24" data-v="1">24h</button></div></div>`;
+  let body;
+  if (B.sugg) body = suggestionsHtml(tz, B.sugg, B.lead);
+  else if (day.status === "FULL") body = suggestionsHtml(tz, suggest(tz, day.date, day.slots[Math.floor(day.slots.length / 2)].min), "", true);
+  else if (day.status === "CLOSED") body = `<div class="empty"><div class="ei">${ic("ban")}</div><strong>No classes this day</strong><span class="sm mf">No mentor works at family-friendly hours for your time zone.</span></div>`;
+  else {
+    const groups = [["morning", "Morning"], ["afternoon", "Afternoon"], ["evening", "Evening"]];
+    body = `<div class="times">${groups.map(([k, l]) => { const g = day.slots.filter(x => timeGroup(x.s, tz) === k); if (!g.length) return "";
+      return `<div class="tgroup">${l}${k === "evening" ? " · after school" : ""}</div>` + g.map(x => { const full = x.status === "FULL";
+        const aria = `${fmtDayLong(x.s, tz)}, ${fmtTime(x.s, tz)} ${zoneLabel(tz, x.s)}${full ? ", full, show other times" : x.avail === 1 ? ", last spot" : ""}`;
+        return `<button class="time ${full ? "full" : ""} ${x.avail === 1 ? "last" : ""} ${B.suggFrom === x.s ? "cur" : ""}" data-act="${full ? "full-slot" : "pick-slot"}" data-s="${x.s}" aria-label="${esc(aria)}">${esc(tfmt(x.s, tz))}${full ? '<span class="tag">Full</span>' : x.avail === 1 ? '<span class="tag">1 left</span>' : ""}</button>`; }).join(""); }).join("")}</div>`;
+  }
+  return `<div class="pane">${head}${body}</div>`;
 }
 function viewBook() {
   const tz = parentTz();
   const B = S.book || (S.book = freshBook());
-  if (B.step === 2 && B.sel) return publicShell(viewBookDetails(tz, B));
-  if (!tz) return publicShell(`<div class="stack-lg">${stepper(1)}<h1>Book a free trial class</h1>${tzBar(null)}</div>`);
-  const days = allDays(tz);
-  if (!B.date || !days.some(d => d.date === B.date)) B.date = (days.find(d => d.status === "OPEN") || days[0]).date;
-  const day = days.find(d => d.date === B.date);
-  const anyOpen = days.some(d => d.status === "OPEN");
-  const groups = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
-  let slotsHtml;
-  if (!anyOpen) slotsHtml = suggPanel(tz, { strategy: "NONE", items: [], notes: [], T: 0, D: B.date });
-  else if (day.status === "CLOSED") slotsHtml = `<div class="empty"><strong>No classes on this day.</strong><span>None of our mentors work at family-friendly hours for your time zone on ${esc(fmtDayLong(zonedToUtc(day.date, 720, tz), tz))}.</span></div>`;
-  else slotsHtml = Object.entries(groups).map(([k, label]) => {
-    const g = day.slots.filter(x => timeGroup(x.s, tz) === k);
-    if (!g.length) return "";
-    return `<div class="slot-group"><h3>${label} ${k === "evening" ? anno("after school") : ""}</h3><div class="slots">${g.map(x => {
-      const full = x.status === "FULL", sel = B.sugg && B.suggFrom === x.s;
-      const aria = `${fmtDayLong(x.s, tz)}, ${fmtTime(x.s, tz)} ${zoneLabel(tz, x.s)}${full ? ", Full, show other times" : ""}`;
-      return `<button class="slot ${full ? "full" : ""} ${x.avail === 1 ? "last" : ""} ${sel ? "sel" : ""}" data-act="${full ? "full-slot" : "pick-slot"}" data-s="${x.s}" aria-label="${esc(aria)}">${esc(fmtTime(x.s, tz))}<span class="sub">${full ? "Full" : x.avail === 1 ? "Last spot" : abbr(tz, x.s)}</span></button>`;
-    }).join("")}</div></div>`;
-  }).join("");
-  const dayFull = day.status === "FULL";
-  const side = B.sugg ? suggPanel(tz, B.sugg, B.lead)
-    : dayFull ? suggPanel(tz, suggest(tz, day.date, day.slots[0] ? day.slots[Math.floor(day.slots.length / 2)].min : 600), "This day is fully booked.")
-    : `<div class="panel"><span class="eyebrow">What you get</span><h3>A free 60-minute 1:1 class</h3>
-       <ul class="small muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>A mentor matched to your time, assigned instantly</li><li>Class link and calendar invite right after booking</li><li>No account needed. Cancel any time before the class.</li></ul>
-       <div class="proto-note">Slots: whole class inside 8 AM–9 PM your time <b>and</b> inside a mentor's shift; ≥ 2 h notice; 14 days. Full = mentors work then but none is free (busy or already at 2 trials that India date).</div></div>`;
-  return publicShell(`<div class="stack-lg">${stepper(1)}
-    <div class="stack"><h1>Book a free trial class</h1><p class="muted">Pick a time that suits your family. We'll match a mentor who's free then.</p></div>
-    ${tzBar(tz)}${dstBanner(tz)}
-    <div class="stack"><div class="spread"><h2 id="days-h">Choose a day</h2>${anno("FR-2 · FR-3")}</div>
-      <div class="daystrip" role="group" aria-labelledby="days-h">${days.map(d => { const ms = zonedToUtc(d.date, 720, tz); const p = parts(ms, tz); return `<button class="daypill" data-act="pick-day" data-d="${d.date}" aria-pressed="${d.date === B.date}"><span class="wd">${WD_NAMES[p.wd]}</span><span class="dn">${p.d}</span><span class="mo">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" }).format(new Date(Date.parse(d.date)))}</span>${badge(d)}</button>`; }).join("")}</div></div>
-    <div class="book-grid"><div class="stack-lg"><div class="spread"><h2>${esc(fmtDayLong(zonedToUtc(day.date, 720, tz), tz))}</h2><span class="small muted">${day.open} open · ${day.slots.length - day.open} full</span></div>${slotsHtml}</div><div>${side}</div></div>
-  </div>`);
+  if (!tz) return pub(`<div class="booker step2">${infoPane(null, B)}<div class="pane"><div class="empty" style="height:100%;justify-content:center"><div class="ei">${ic("globe")}</div><strong>Choose your time zone to see class times</strong><span class="sm mf">Times are always shown in your local time. ${anno("FR-1 AC4 · T8")}</span></div></div></div>`);
+  if (B.step === 2 && B.sel) return pub(`<div class="booker step2">${infoPane(tz, B)}${formPane(tz, B)}</div>`);
+  const days = allDays(tz), map = new Map(days.map(d => [d.date, d]));
+  if (!days.some(d => d.status === "OPEN")) return pub(`<div class="booker step2">${infoPane(tz, B)}<div class="pane">${suggestionsHtml(tz, { strategy: "NONE", items: [], notes: [], T: 0, D: days[0].date }, "", true)}</div></div>`);
+  if (!B.date || !map.has(B.date)) B.date = (days.find(d => d.status === "OPEN") || days[0]).date;
+  if (!B.month) B.month = B.date.slice(0, 7);
+  return pub(`<div class="booker">${infoPane(tz, B)}${calendarPane(tz, B, map)}${timesPane(tz, B, map.get(B.date))}</div>
+    <p class="xs mf" style="text-align:center;margin-top:16px">${ic("lock")} No payment and no account needed. You can cancel any time before the class.</p>`);
 }
-function viewBookDetails(tz, B) {
-  const p = S.session.parent ? DB.parents[S.session.parent] : null;
-  const f = B.form, e = B.errors;
-  const v = (k, d = "") => esc(f[k] != null ? f[k] : d);
-  const fld = (id, label, input, hint) => `<div class="field ${e[id] ? "has-error" : ""}"><label for="f-${id}">${label}</label>${input}${e[id] ? `<span class="err" id="e-${id}">${esc(e[id])}</span>` : hint ? `<span class="hint">${hint}</span>` : ""}</div>`;
-  const ms = B.sel, pp = parts(ms, tz);
-  const existing = B.existing ? `<div class="callout callout-info"><span class="ic">i</span><div class="stack" style="gap:6px"><strong>You already have a trial on ${esc(fmtSlot(B.existing.start, B.existing.tz))}.</strong><span class="small">Each family can hold one upcoming free trial. ${p ? "" : "Use the manage link in your confirmation email to change it."}</span>${anno("FR-12 · C8")}${p ? `<a class="btn btn-secondary btn-sm" style="align-self:flex-start" href="#/booking/${B.existing.ref}">View booking</a>` : `<a class="btn-link small" href="#/dev/outbox" style="align-self:flex-start">Open the confirmation (dev outbox)</a>`}</div></div>` : "";
-  return `<div class="stack-lg">${stepper(2)}
-    <div class="book-grid"><div class="stack-lg">
-      <div class="selected-slot"><div class="cal-ic"><div class="m">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(new Date(ms))}</div><div class="d">${pp.d}</div></div>
-        <div style="flex:1"><div class="small muted">Your trial class</div><strong class="tnum">${esc(fmtSlot(ms, tz))}</strong><div class="small muted">60 minutes · ${esc(zoneLabel(tz, ms))}</div></div>
-        <button class="btn btn-secondary btn-sm" data-act="change-time">Change</button></div>
-      ${existing}
-      <form class="card stack-lg" data-form="book" novalidate>
-        <div class="spread"><h2>About you and your child</h2>${anno("FR-6")}</div>
-        <div class="grid-2">
-          ${fld("name", "Your name", `<input class="input" id="f-name" name="name" autocomplete="name" value="${v("name", p ? p.name : "")}" ${e.name ? 'aria-invalid="true" aria-describedby="e-name"' : ""}>`)}
-          ${fld("email", "Email", `<input class="input" id="f-email" name="email" type="email" autocomplete="email" value="${v("email", p ? p.email : "")}" ${p ? "readonly" : ""} ${e.email ? 'aria-invalid="true" aria-describedby="e-email"' : ""}>`, p ? "Signed in. Bookings use your account email." : "We'll send the class link here.")}
-          ${fld("phone", "Phone <span class=\"muted\">(optional)</span>", `<input class="input" id="f-phone" name="phone" type="tel" autocomplete="tel" value="${v("phone", p ? p.phone : "")}">`, "Only used if the mentor can't connect.")}
-          ${fld("child", "Child's first name", `<input class="input" id="f-child" name="child" value="${v("child")}" ${e.child ? 'aria-invalid="true" aria-describedby="e-child"' : ""}>`)}
-          ${fld("grade", "Grade", `<select class="select" id="f-grade" name="grade">${['<option value="">Choose a grade</option>'].concat(Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${String(f.grade) === String(i + 1) ? "selected" : ""}>Grade ${i + 1}</option>`)).join("")}</select>`)}
-          <div class="field ${e.subject ? "has-error" : ""}"><span style="font-weight:600;font-size:14px" id="subj-l">Subject</span><div class="seg" role="group" aria-labelledby="subj-l"><button type="button" data-act="subject" data-v="CODING" aria-pressed="${f.subject === "CODING"}">Coding</button><button type="button" data-act="subject" data-v="MATH" aria-pressed="${f.subject === "MATH"}">Maths</button></div>${e.subject ? `<span class="err">${esc(e.subject)}</span>` : ""}</div>
-        </div>
-        <div class="row"><button class="btn btn-primary" type="submit" ${B.submitting ? "disabled" : ""}>${B.submitting ? "Booking…" : "Book free trial"}</button><span class="small muted">No payment, no account needed.</span></div>
-        <div class="proto-note">Submit sends an Idempotency-Key, so a double-click creates one booking (C7). The server re-checks the slot inside a locked transaction and assigns the least-loaded free mentor (FR-7).</div>
-      </form></div>
-      <div>${B.sugg ? suggPanel(tz, B.sugg, B.lead) : `<div class="panel"><span class="eyebrow">What happens next</span><ol class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"><li>We assign a mentor who is free at this time.</li><li>You get the class link and a calendar invite.</li><li>Your mentor gets the same details in their own time zone.</li></ol></div>`}</div>
-    </div></div>`;
+function formPane(tz, B) {
+  const p = S.session.parent ? DB.parents[S.session.parent] : null, f = B.form, e = B.errors;
+  const val = (k, d = "") => esc(f[k] != null ? f[k] : d);
+  const fld = (id, label, input, desc, cls = "") => `<div class="field ${cls} ${e[id] ? "invalid" : ""}"><label class="label" for="f-${id}">${label}</label>${input}${e[id] ? `<span class="msg" id="e-${id}">${esc(e[id])}</span>` : desc ? `<span class="desc">${desc}</span>` : ""}</div>`;
+  const inv = id => e[id] ? `aria-invalid="true" aria-describedby="e-${id}"` : "";
+  const existing = B.existing ? `<div class="alert alert-info">${ic("info")}<div class="at">You already have a trial on ${esc(fmtSlot(B.existing.start, B.existing.tz))}</div><div class="ad">Each family can hold one upcoming free trial. ${p ? `<a class="link" href="#/booking/${B.existing.ref}">View booking</a>` : `Use the manage link in your confirmation email to change it. <a class="link" href="#/dev/outbox">Open dev outbox</a>`} ${anno("FR-12 · C8")}</div></div>` : "";
+  return `<div class="pane"><form class="col-24" data-form="book" novalidate>
+    <div class="between"><div class="col-4"><h2 style="font-size:18px;font-weight:600">Your details</h2><p class="sm mf">We'll send the class link and calendar invite to your email.</p></div><button type="button" class="btn btn-ghost btn-sm" data-act="change-time">${ic("arrowL")} Back</button></div>
+    ${B.sugg ? suggestionsHtml(tz, B.sugg, B.lead, true) : ""}${existing}
+    <div class="form-grid">
+      ${fld("name", "Your name", `<input class="input" id="f-name" name="name" autocomplete="name" placeholder="Jane Doe" value="${val("name", p ? p.name : "")}" ${inv("name")}>`)}
+      ${fld("email", "Email", `<input class="input" id="f-email" name="email" type="email" autocomplete="email" placeholder="jane@example.com" value="${val("email", p ? p.email : "")}" ${p ? "readonly" : ""} ${inv("email")}>`, p ? "Signed in. We use your account email." : "")}
+      ${fld("phone", 'Phone <span class="mf" style="font-weight:400">(optional)</span>', `<input class="input" id="f-phone" name="phone" type="tel" autocomplete="tel" placeholder="+1 555 010 2000" value="${val("phone", p ? p.phone : "")}" ${inv("phone")}>`, "Only if the mentor can't connect.")}
+      ${fld("child", "Child's first name", `<input class="input" id="f-child" name="child" placeholder="Sam" value="${val("child")}" ${inv("child")}>`)}
+      ${fld("grade", "Grade", `<select class="select" id="f-grade" name="grade" ${inv("grade")}><option value="">Select grade</option>${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${String(f.grade) === String(i + 1) ? "selected" : ""}>Grade ${i + 1}</option>`).join("")}</select>`, "", "full")}
+      <div class="field full ${e.subject ? "invalid" : ""}"><span class="label" id="subj-l">Subject</span><div class="subject" role="group" aria-labelledby="subj-l">
+        <button type="button" data-act="subject" data-v="CODING" aria-pressed="${f.subject === "CODING"}"><span class="si">${ic("code")}</span><span><strong>Coding</strong><span>Scratch, Python, web and games</span></span></button>
+        <button type="button" data-act="subject" data-v="MATH" aria-pressed="${f.subject === "MATH"}"><span class="si">${ic("calc")}</span><span><strong>Maths</strong><span>Number sense to algebra</span></span></button></div>${e.subject ? `<span class="msg">${esc(e.subject)}</span>` : ""}</div>
+    </div>
+    <hr class="sep">
+    <div class="between"><span class="xs mf">${ic("lock")} Free. No payment details needed.</span><button class="btn btn-brand btn-lg" type="submit" ${B.submitting ? "disabled" : ""}>${B.submitting ? "Booking…" : `Confirm booking ${ic("arrowR")}`}</button></div>
+    <div class="note">The request carries an Idempotency-Key, so a double click books once (C7). The server re-checks inside a locked transaction and assigns the least-loaded free mentor (FR-7).</div>
+  </form></div>`;
 }
 function validateBook(f) {
   const e = {};
@@ -837,235 +964,253 @@ function validateBook(f) {
   if (!f.subject) e.subject = "Choose a subject";
   return e;
 }
+function keepForm() { const f = document.querySelector('[data-form="book"]'); if (f && S.book) Object.assign(S.book.form, Object.fromEntries(new FormData(f))); }
 function submitBook(form) {
   const B = S.book, tz = parentTz();
-  const fd = Object.fromEntries(new FormData(form));
-  B.form = Object.assign(B.form, fd, { email: (fd.email || "").trim().toLowerCase() });
-  B.errors = validateBook(B.form); B.existing = null;
-  if (Object.keys(B.errors).length) { render(); const first = document.querySelector("[aria-invalid=true]"); if (first) first.focus(); return; }
+  keepForm(); B.form.email = (B.form.email || "").trim().toLowerCase();
+  B.errors = validateBook(B.form); B.existing = null; B.sugg = null;
+  if (Object.keys(B.errors).length) { render(); const x = document.querySelector('[aria-invalid="true"]'); if (x) x.focus(); return; }
   B.submitting = true; render();
   setTimeout(() => {
-    const race = $("#pb-race").checked, soon = $("#pb-soon").checked;
-    $("#pb-race").checked = false; $("#pb-soon").checked = false;
+    const race = $("#pb-race").checked, soon = $("#pb-soon").checked; $("#pb-race").checked = false; $("#pb-soon").checked = false;
     const r = createBooking({ s: B.sel, tz, email: B.form.email, name: B.form.name.trim(), phone: B.form.phone, child: B.form.child.trim(), grade: +B.form.grade, subject: B.form.subject }, { race, tooSoon: soon });
     B.submitting = false;
-    const p = parts(B.sel, tz);
     if (r.error === "ACTIVE_TRIAL_EXISTS") { B.existing = r.booking; render(); return; }
     if (r.error) {
-      B.lead = r.error === "SLOT_TOO_SOON" ? "This time is now too soon to book." : r.error === "OUTSIDE_HOURS" ? "That time is outside our class hours." : "That time was just booked.";
-      B.sugg = suggest(tz, p.date, p.min, B.sel); render(); const el = $("#sugg"); if (el) el.focus(); return;
+      const p = parts(B.sel, tz);
+      B.lead = r.error === "SLOT_TOO_SOON" ? "This time is now too soon to book" : r.error === "OUTSIDE_HOURS" ? "That time is outside class hours" : "That time was just booked";
+      B.sugg = suggest(tz, p.date, p.min, B.sel); render(); const el = $("#sugg"); if (el) { el.focus(); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } return;
     }
-    S.book = null;
-    toast("Trial booked");
+    S.book = null; toast("Trial booked", `${fmtSlot(r.booking.start, tz)} with ${mentorById(r.booking.mentorId).name}`);
     go(`#/booking/${r.booking.ref}?token=${manageToken(r.booking.ref)}`);
-  }, 650);
+  }, 700);
 }
 
-/* ---------- confirmation / manage ---------- */
+/* ================= CONFIRMATION ================= */
 function canSee(b, q) {
   if (!b) return false;
   if (q.token && q.token === manageToken(b.ref)) return "token";
   if (S.session.admin) return "admin";
   const p = S.session.parent && DB.parents[S.session.parent];
-  if (p && p.verified && p.email === b.email) return "owner";
-  return false;
+  return p && p.verified && p.email === b.email ? "owner" : false;
 }
 function viewBooking(ref, q) {
-  const b = DB.bookings.find(x => x.ref === ref);
-  const how = canSee(b, q);
-  if (!how) return publicShell(`<div class="auth-wrap card center-state"><div class="big-ic" style="background:var(--surface-2)">?</div><h2>We couldn't find this booking</h2><p class="muted">The link may be incomplete. Use the link from your confirmation email, or sign in to see your bookings.</p>${anno("FR-10 AC1 · A5")}<div class="row" style="justify-content:center"><a class="btn btn-primary" href="#/login">Sign in</a><a class="btn btn-secondary" href="#/book">Book a trial</a></div></div>`);
-  const m = mentorById(b.mentorId), tz = b.tz, cur = normalizeZone(S.browserTz);
-  const cancelled = b.status === "CANCELLED", started = b.start <= DB.now;
-  const p = DB.parents[b.email];
-  const guestPrompt = how === "token" && parentStatus(p) !== "VERIFIED" && !cancelled
-    ? `<div class="panel"><span class="eyebrow">Optional</span><h3>Create an account to see all your bookings</h3><p class="small muted">Use ${esc(b.email)}. We'll ask you to verify the email first, so only you can see your family's bookings.</p>${anno("FR-8 · FR-14")}<a class="btn btn-secondary" href="#/signup?email=${encodeURIComponent(b.email)}">Create account</a></div>` : "";
-  const status = cancelled ? `<span class="chip chip-full"><span class="dot"></span>Cancelled</span>` : started ? `<span class="chip chip-closed">Completed</span>` : `<span class="chip chip-open"><span class="dot"></span>Confirmed</span>`;
-  return publicShell(`<div class="stack-lg">${how === "token" && !cancelled ? stepper(3) : ""}
-    ${cancelled ? `<div class="callout callout-danger"><span class="ic">×</span><div class="stack" style="gap:6px"><strong>This booking was cancelled${b.cancelledBy === "ADMIN" ? " by our team" : ""}.</strong><span class="small">The time is free again for other families.</span><a class="btn btn-primary btn-sm" style="align-self:flex-start" href="#/book" data-act="new-book">Book another time</a></div></div>` : ""}
-    <div class="confirm-grid"><div class="card card-raised stack-lg">
-      <div class="spread">${status}<span class="small muted">Reference <span class="mono">${b.ref}</span></span></div>
-      <div class="stack" style="gap:6px"><span class="muted">${b.subject === "CODING" ? "Coding" : "Maths"} trial for ${esc(b.child)} · Grade ${b.grade}</span>
-        <div class="bigtime">${esc(fmtDayLong(b.start, tz))}<br>${esc(fmtTime(b.start, tz))} ${esc(abbr(tz, b.start))}</div>
-        <span class="small muted">${esc(zoneLabel(tz, b.start))} · 60 minutes ${anno("FR-8")}</span>
-        ${cur && cur !== tz ? `<div class="callout callout-info"><span class="ic">i</span><div class="small">You're currently in ${esc(ZONE_NAMES[cur] || cur)}. That's <strong>${esc(fmtSlot(b.start, cur))}</strong> for you. ${anno("T9")}</div></div>` : ""}
-      </div>
-      <dl class="kv"><dt>Mentor's time</dt><dd>${esc(fmtSlot(b.start, IST))} ${anno("display rule 3")}</dd><dt>Parent</dt><dd>${esc(b.parentName)} · ${esc(b.email)}</dd></dl>
-      <div class="mentor"><div class="avatar">${initials(m.name)}</div><div><strong>${esc(m.name)}</strong><div class="small muted">${esc(SHIFTS[m.shift].label)} · ${esc(m.bio)}</div></div></div>
-      ${cancelled ? "" : `<div class="stack"><span class="eyebrow">Class link</span><div class="linkbox"><span class="mono">${esc(b.meet)}</span><button class="btn btn-secondary btn-sm" data-act="copy" data-v="${esc(b.meet)}">Copy</button></div>
-        <div class="row"><button class="btn btn-primary" data-act="ics">Add to calendar (.ics)</button><button class="btn btn-secondary" data-act="gcal">Google Calendar</button>${started ? "" : `<button class="btn btn-ghost" data-act="cancel" data-ref="${b.ref}">Cancel trial</button>`}</div></div>`}
-    </div>
-    <div class="stack">${guestPrompt}
-      <div class="panel"><span class="eyebrow">Manage this booking</span><p class="small muted">This private link lets you view or cancel this booking without an account. Keep it to yourself.</p>${anno("FR-10 · ADR-11")}
-        <div class="linkbox"><span class="mono">…/booking/${b.ref}?token=${manageToken(b.ref).slice(0, 8)}…</span><button class="btn btn-secondary btn-sm" data-act="copy" data-v="#/booking/${b.ref}?token=${manageToken(b.ref)}">Copy</button></div>
-        <p class="small muted">We've also emailed this to ${esc(b.email)}. <a href="#/dev/outbox">See it in the dev outbox</a>.</p></div>
-      ${how === "admin" ? `<div class="proto-note">You're viewing as admin. <a href="#/admin/bookings">Back to bookings</a></div>` : ""}
-    </div></div></div>`);
+  const b = DB.bookings.find(x => x.ref === ref), how = canSee(b, q);
+  if (!how) return pub(`<div class="auth"><div class="card"><div class="card-c" style="align-items:center;text-align:center"><div class="circle-ic" style="background:var(--muted);color:var(--muted-foreground)">${ic("search")}</div><h1 style="font-size:20px">We couldn't find this booking</h1><p class="mf">The link may be incomplete. Use the link from your confirmation email, or sign in to see your bookings. ${anno("FR-10 · A5")}</p><div class="flex"><a class="btn btn-primary" href="#/login">Sign in</a><a class="btn btn-outline" href="#/book" data-act="new-book">Book a trial</a></div></div></div></div>`);
+  const m = mentorById(b.mentorId), tz = b.tz, cur = normalizeZone(S.browserTz), p = DB.parents[b.email];
+  const cancelled = b.status === "CANCELLED", done = b.start <= DB.now;
+  const hero = cancelled ? [`xc`, "var(--destructive-soft)", "var(--destructive-text)", "This trial was cancelled", b.cancelledBy === "ADMIN" ? "Our team cancelled this class. The time is free for other families." : "The time is free for other families."]
+    : done ? ["checkc", "var(--muted)", "var(--muted-foreground)", "This trial has taken place", "We hope your child enjoyed it."]
+    : ["check", "var(--success-soft)", "var(--success-text)", "Your trial is booked", `We've emailed the details to ${b.email}.`];
+  const guest = how === "token" && parentStatus(p) !== "VERIFIED" && !cancelled;
+  return pub(`<div class="success col-16">
+    <div class="card"><div class="card-c col-24" style="padding:28px">
+      <div class="col" style="text-align:center;align-items:center"><div class="hero-ic" style="background:${hero[1]};color:${hero[2]}">${ic(hero[0])}</div><h1 style="font-size:22px;font-weight:600;margin-top:6px">${hero[3]}</h1><p class="mf">${esc(hero[4])}</p></div>
+      ${cur && cur !== tz && !cancelled ? `<div class="alert alert-info">${ic("globe")}<div class="at">You're in ${esc(ZONE_NAMES[cur] || cur)} right now</div><div class="ad">That's ${esc(fmtSlot(b.start, cur))} for you. ${anno("T9")}</div></div>` : ""}
+      <hr class="sep">
+      <dl class="rows">
+        <dt>What</dt><dd>${subj(b.subject)} trial for ${esc(b.child)} <span class="mf">· Grade ${b.grade}</span></dd>
+        <dt>When</dt><dd><div style="font-weight:600">${esc(fmtDayLong(b.start, tz))}</div><div class="tnum">${esc(fmtTime(b.start, tz))} – ${esc(fmtTime(b.start + HOUR, tz))} ${esc(abbr(tz, b.start))} <span class="mf">· ${esc(zoneLabel(tz, b.start))}</span></div><div class="sm mf">Mentor's time: ${esc(fmtSlot(b.start, IST))} ${anno("display rule 3")}</div></dd>
+        <dt>Mentor</dt><dd><div class="flex" style="align-items:flex-start"><span class="avatar">${initials(m.name)}</span><div class="col-4" style="gap:2px"><span style="font-weight:600">${esc(m.name)} <span class="badge badge-outline" style="margin-left:4px">${SHIFTS[m.shift].label}</span></span><span class="sm mf">${esc(m.bio)}</span></div></div></dd>
+        <dt>Parent</dt><dd>${esc(b.parentName)} <span class="mf">· ${esc(b.email)}</span></dd>
+        ${cancelled ? "" : `<dt>Where</dt><dd><div class="copybox"><span class="mono xs">${esc(b.meet)}</span><button class="btn btn-ghost btn-icon btn-sm" data-act="copy" data-v="${esc(b.meet)}" aria-label="Copy class link">${ic("copy")}</button></div></dd>`}
+        <dt>Reference</dt><dd class="mono">${b.ref}</dd>
+      </dl>
+      <hr class="sep">
+      <div class="between">${cancelled ? `<a class="btn btn-brand" href="#/book" data-act="new-book">Book another time</a>` : `<div class="flex wrap"><button class="btn btn-outline" data-act="gcal">${ic("cal")} Google Calendar</button><button class="btn btn-outline" data-act="ics">${ic("ext")} Apple / Outlook (.ics)</button></div>${done ? "" : `<button class="btn btn-destructive-ghost" data-act="cancel" data-ref="${b.ref}">Cancel trial</button>`}`}</div>
+    </div></div>
+    <div class="card"><div class="card-c col" style="padding:18px 22px"><div class="flex">${ic("link")}<strong>Manage this booking</strong> ${anno("FR-10 · ADR-11")}</div><p class="sm mf">This private link lets you view or cancel without an account. We've also emailed it to you (<a class="link" href="#/dev/outbox">dev outbox</a>).</p>
+      <div class="copybox"><span class="mono xs">…/booking/${b.ref}?token=${manageToken(b.ref).slice(0, 10)}…</span><button class="btn btn-ghost btn-icon btn-sm" data-act="copy" data-v="#/booking/${b.ref}?token=${manageToken(b.ref)}" aria-label="Copy manage link">${ic("copy")}</button></div></div></div>
+    ${guest ? `<div class="card" style="background:var(--brand-soft);border-color:transparent"><div class="card-c between" style="padding:18px 22px"><div class="col-4"><strong>See all your bookings in one place</strong><span class="sm mf">Create an account with ${esc(b.email)}. ${anno("FR-8 · FR-14")}</span></div><a class="btn btn-primary" href="#/signup?email=${encodeURIComponent(b.email)}">Create account</a></div></div>` : ""}
+    ${how === "admin" ? `<div class="note">Viewing as admin. <a href="#/admin/bookings">Back to bookings</a></div>` : ""}
+  </div>`);
 }
 
-/* ---------- account ---------- */
-function authCard(title, sub, body, tag) { return publicShell(`<div class="auth-wrap stack-lg"><div class="stack"><h1>${title}</h1>${sub ? `<p class="muted">${sub}</p>` : ""}${tag ? anno(tag) : ""}</div>${body}</div>`); }
+/* ================= ACCOUNT ================= */
+function authPage(icon, title, desc, body, foot, tag) {
+  return pub(`<div class="auth"><div class="card"><div class="card-c" style="padding:28px">
+    <div class="col">${icon ? `<div class="circle-ic">${ic(icon)}</div>` : ""}<h1>${title}</h1>${desc ? `<p class="mf">${desc}</p>` : ""}${tag ? anno(tag) : ""}</div>${body}</div></div>${foot ? `<p class="sm mf" style="text-align:center;margin-top:16px">${foot}</p>` : ""}</div>`);
+}
 function viewSignup(q) {
-  if (q.sent) return authCard("Check your email", "", `<div class="card center-state"><div class="big-ic" style="background:var(--primary-soft);color:var(--primary-text)">✉</div><p>If ${esc(S.lastSignupEmail)} can be used, we've sent a link to verify it. The link works for 24 hours.</p><p class="small muted">After verifying, sign in to see every booking made with this email.</p><a class="btn btn-secondary" href="#/dev/outbox">Open dev outbox</a>${anno("FR-14 AC2 · A3")}</div>`);
-  return authCard("Create your account", "See all your trial bookings in one place. Use the email you booked with.", `<form class="card stack" data-form="signup" novalidate>
-      <div class="field"><label for="su-name">Your name</label><input class="input" id="su-name" name="name" autocomplete="name"></div>
-      <div class="field"><label for="su-email">Email</label><input class="input" id="su-email" name="email" type="email" autocomplete="email" value="${esc(q.email || "")}"></div>
-      <div class="field"><label for="su-pw">Password</label><input class="input" id="su-pw" name="password" type="password" autocomplete="new-password"><span class="hint">At least 8 characters.</span></div>
-      <span class="err" id="su-err" hidden></span>
-      <button class="btn btn-primary" type="submit">Create account</button>
-      <p class="small muted">Already have an account? <a href="#/login">Sign in</a></p></form>`, "FR-14");
+  if (q.sent) return authPage("mail", "Check your email", `If ${esc(S.lastSignupEmail)} can be used, we've sent a link to verify it. The link works for 24 hours.`, `<a class="btn btn-outline btn-block" href="#/dev/outbox">Open dev outbox</a>`, `Wrong email? <a class="link" href="#/signup">Start again</a>`, "FR-14 AC2 · A3");
+  return authPage(null, "Create an account", "See every trial you've booked. Use the email you booked with.", `<form class="col-16" data-form="signup" novalidate>
+    <div id="su-err"></div>
+    <div class="field"><label class="label" for="su-name">Name</label><input class="input" id="su-name" name="name" autocomplete="name" placeholder="Jane Doe"></div>
+    <div class="field"><label class="label" for="su-email">Email</label><input class="input" id="su-email" name="email" type="email" autocomplete="email" placeholder="jane@example.com" value="${esc(q.email || "")}"></div>
+    <div class="field"><label class="label" for="su-pw">Password</label><input class="input" id="su-pw" name="password" type="password" autocomplete="new-password"><span class="desc">At least 8 characters.</span></div>
+    <button class="btn btn-primary btn-block" type="submit">Create account</button></form>`, `Already have an account? <a class="link" href="#/login">Sign in</a>`, "FR-14");
 }
 function viewVerify(q) {
   const r = useToken(q.token, "VERIFY_EMAIL");
-  if (!r) return authCard("This link has expired", "", `<div class="card stack"><p>Verification links work once and for 24 hours. Request a new one below.</p>${anno("A7")}<form class="row" data-form="resend"><input class="input" style="flex:1;min-width:200px" name="email" type="email" aria-label="Email" placeholder="you@example.com"><button class="btn btn-primary" type="submit">Send new link</button></form></div>`);
+  if (!r) return authPage("warn", "This link has expired", "Verification links work once and for 24 hours. We can send you a new one.", `<form class="col" data-form="resend"><div class="field"><label class="label" for="rv-email">Email</label><input class="input" id="rv-email" name="email" type="email" placeholder="you@example.com"></div><button class="btn btn-primary btn-block" type="submit">Send a new link</button></form>`, "", "A7");
   DB.parents[r.email].verified = true;
-  return authCard("Email verified", "", `<div class="card center-state"><div class="big-ic" style="background:var(--success-soft);color:var(--success)">✓</div><p>${esc(r.email)} is verified. You can sign in now, and you'll see every booking made with this email.</p><a class="btn btn-primary" href="#/login?email=${encodeURIComponent(r.email)}">Sign in</a>${anno("A1")}</div>`);
+  return authPage("checkc", "Email verified", `${esc(r.email)} is verified. Sign in to see every booking made with this email.`, `<a class="btn btn-primary btn-block" href="#/login?email=${encodeURIComponent(r.email)}">Sign in</a>`, "", "A1");
 }
 function viewLogin(q) {
-  return authCard("Sign in", "See and manage all your trial bookings.", `<form class="card stack" data-form="login" novalidate>
-      <div id="login-msg">${q.msg ? q.msg : ""}</div>
-      <div class="field"><label for="li-email">Email</label><input class="input" id="li-email" name="email" type="email" autocomplete="email" value="${esc(q.email || "")}"></div>
-      <div class="field"><label for="li-pw">Password</label><input class="input" id="li-pw" name="password" type="password" autocomplete="current-password"></div>
-      <button class="btn btn-primary" type="submit">Sign in</button>
-      <div class="spread small"><a href="#/forgot-password">Forgot password?</a><span class="muted">New here? <a href="#/signup">Create an account</a></span></div>
-      <div class="proto-note">Demo: demo.parent@example.com / Parent123! · pending.parent@example.com / Pending123! (not verified)</div></form>`, "FR-15");
+  return authPage(null, "Welcome back", "Sign in to see and manage your trial bookings.", `<form class="col-16" data-form="login" novalidate>
+    <div id="login-msg"></div>
+    <div class="field"><label class="label" for="li-email">Email</label><input class="input" id="li-email" name="email" type="email" autocomplete="email" placeholder="jane@example.com" value="${esc(q.email || "")}"></div>
+    <div class="field"><div class="between"><label class="label" for="li-pw">Password</label><a class="sm mf" href="#/forgot-password" style="text-underline-offset:3px">Forgot password?</a></div><input class="input" id="li-pw" name="password" type="password" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    <div class="note">demo.parent@example.com / Parent123! · pending.parent@example.com / Pending123! (unverified)</div></form>`, `Don't have an account? <a class="link" href="#/signup">Sign up</a>`, "FR-15");
 }
 function loginMsg(kind, email) {
-  if (kind === "bad") return `<div class="callout callout-danger"><span class="ic">!</span><div><strong>Email or password is incorrect.</strong>${anno("FR-15 AC1")}</div></div>`;
-  if (kind === "rate") return `<div class="callout callout-danger"><span class="ic">!</span><div><strong>Too many attempts. Try again in a minute.</strong>${anno("A8")}</div></div>`;
-  if (kind === "pending") return `<div class="callout callout-warn"><span class="ic">!</span><div class="stack" style="gap:6px"><strong>Please verify your email first.</strong><span class="small">We sent a link to ${esc(email)} when you signed up.</span><button class="btn-link small" style="align-self:flex-start" data-act="resend" data-email="${esc(email)}">Send a new link</button>${anno("A12")}</div></div>`;
+  if (kind === "bad") return `<div class="alert alert-destructive">${ic("xc")}<div class="at">Email or password is incorrect</div><div class="ad">Check both and try again. ${anno("FR-15 AC1")}</div></div>`;
+  if (kind === "rate") return `<div class="alert alert-destructive">${ic("lock")}<div class="at">Too many attempts</div><div class="ad">Try again in a minute. ${anno("A8")}</div></div>`;
+  if (kind === "pending") return `<div class="alert alert-warning">${ic("mail")}<div class="at">Please verify your email first</div><div class="ad">We sent a link to ${esc(email)} when you signed up. <button type="button" class="link" data-act="resend" data-email="${esc(email)}">Send a new link</button> ${anno("A12")}</div></div>`;
   return "";
 }
 function viewForgot(q) {
-  if (q.sent) return authCard("Check your email", "", `<div class="card center-state"><div class="big-ic" style="background:var(--primary-soft);color:var(--primary-text)">✉</div><p>If an account exists for that email, we've sent a reset link. It works for 1 hour.</p><a class="btn btn-secondary" href="#/dev/outbox">Open dev outbox</a>${anno("FR-16")}</div>`);
-  return authCard("Reset your password", "We'll email you a link to set a new one.", `<form class="card stack" data-form="forgot"><div class="field"><label for="fp-email">Email</label><input class="input" id="fp-email" name="email" type="email" autocomplete="email"></div><button class="btn btn-primary" type="submit">Send reset link</button></form>`);
+  if (q.sent) return authPage("mail", "Check your email", "If an account exists for that email, we've sent a reset link. It works for 1 hour.", `<a class="btn btn-outline btn-block" href="#/dev/outbox">Open dev outbox</a>`, `<a class="link" href="#/login">Back to sign in</a>`, "FR-16");
+  return authPage(null, "Reset your password", "Enter your email and we'll send you a link to set a new password.", `<form class="col-16" data-form="forgot"><div class="field"><label class="label" for="fp-email">Email</label><input class="input" id="fp-email" name="email" type="email" autocomplete="email" placeholder="jane@example.com"></div><button class="btn btn-primary btn-block" type="submit">Send reset link</button></form>`, `<a class="link" href="#/login">Back to sign in</a>`);
 }
 function viewReset(q) {
   const r = DB.tokens[q.token];
-  if (!r || r.used || r.purpose !== "RESET_PASSWORD" || r.exp < DB.now) return authCard("This link has expired", "", `<div class="card stack"><p>Reset links work once and for 1 hour.</p><a class="btn btn-primary" href="#/forgot-password">Request a new link</a>${anno("A7")}</div>`);
-  return authCard("Set a new password", `For ${esc(r.email)}`, `<form class="card stack" data-form="reset" data-token="${esc(q.token)}" novalidate><div class="field"><label for="rp-pw">New password</label><input class="input" id="rp-pw" name="password" type="password" autocomplete="new-password"><span class="hint">At least 8 characters. Signing in elsewhere will end.</span></div><span class="err" id="rp-err" hidden></span><button class="btn btn-primary" type="submit">Save password</button>${anno("FR-16 · A9")}</form>`);
+  if (!r || r.used || r.purpose !== "RESET_PASSWORD" || r.exp < DB.now) return authPage("warn", "This link has expired", "Reset links work once and for 1 hour.", `<a class="btn btn-primary btn-block" href="#/forgot-password">Request a new link</a>`, "", "A7");
+  return authPage(null, "Set a new password", `For ${esc(r.email)}. You'll be signed out everywhere else.`, `<form class="col-16" data-form="reset" data-token="${esc(q.token)}" novalidate><div id="rp-err"></div><div class="field"><label class="label" for="rp-pw">New password</label><input class="input" id="rp-pw" name="password" type="password" autocomplete="new-password"><span class="desc">At least 8 characters.</span></div><button class="btn btn-primary btn-block" type="submit">Save password</button></form>`, "", "FR-16 · A9");
 }
 function viewMyBookings() {
-  const p = DB.parents[S.session.parent];
-  const mine = DB.bookings.filter(b => b.email === p.email);
+  const p = DB.parents[S.session.parent], mine = DB.bookings.filter(b => b.email === p.email);
   const up = mine.filter(b => b.status === "CONFIRMED" && b.start > DB.now).sort((a, b) => a.start - b.start);
   const past = mine.filter(b => !(b.status === "CONFIRMED" && b.start > DB.now)).sort((a, b) => b.start - a.start);
   const list = S.myTab === "upcoming" ? up : past;
-  const card = b => { const m = mentorById(b.mentorId); const ms = b.start, tz = b.tz;
-    return `<div class="card bk-card"><div class="cal-ic"><div class="m">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(new Date(ms))}</div><div class="d">${parts(ms, tz).d}</div></div>
-      <div class="stack" style="gap:2px;min-width:0"><strong class="tnum">${esc(fmtSlot(ms, tz))}</strong><span class="small muted">${b.subject === "CODING" ? "Coding" : "Maths"} · ${esc(b.child)}, Grade ${b.grade} · with ${esc(m.name)}</span>
-        <span>${b.status === "CANCELLED" ? `<span class="chip chip-full">Cancelled</span>` : ms <= DB.now ? `<span class="chip chip-closed">Completed</span>` : `<span class="chip chip-open">Confirmed</span>`}</span></div>
-      <div class="row acts"><a class="btn btn-secondary btn-sm" href="#/booking/${b.ref}">View</a>${b.status === "CONFIRMED" && ms > DB.now ? `<button class="btn btn-ghost btn-sm" data-act="cancel" data-ref="${b.ref}">Cancel</button>` : ""}</div></div>`; };
-  return publicShell(`<div class="stack-lg"><div class="spread"><div class="stack" style="gap:4px"><h1>My bookings</h1><p class="muted">Every trial booked with ${esc(p.email)}, including ones booked before you signed up. ${anno("FR-17 · A1")}</p></div><a class="btn btn-primary" href="#/book" data-act="new-book">Book a trial</a></div>
-    <div class="tabs" role="tablist"><button role="tab" aria-selected="${S.myTab === "upcoming"}" data-act="my-tab" data-v="upcoming">Upcoming (${up.length})</button><button role="tab" aria-selected="${S.myTab === "past"}" data-act="my-tab" data-v="past">Past and cancelled (${past.length})</button></div>
-    <div class="stack">${list.length ? list.map(card).join("") : `<div class="empty"><strong>No ${S.myTab === "upcoming" ? "upcoming" : "past"} bookings.</strong>${S.myTab === "upcoming" ? `<a class="btn btn-primary" href="#/book" data-act="new-book">Book a free trial</a>` : ""}</div>`}</div></div>`);
+  const item = b => { const m = mentorById(b.mentorId), tz = b.tz;
+    return `<div class="bitem"><div class="datebox"><div class="mo">${new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(new Date(b.start))}</div><div class="dn">${parts(b.start, tz).d}</div></div>
+      <div class="col-4" style="gap:2px;min-width:0"><div class="flex wrap"><strong>${subj(b.subject)} trial · ${esc(b.child)}</strong>${statusBadge(b)}</div><span class="sm mf tnum">${esc(fmtDayLong(b.start, tz))} · ${esc(fmtTime(b.start, tz))} ${esc(abbr(tz, b.start))}</span><span class="sm mf">with ${esc(m.name)}</span></div>
+      <div class="flex acts"><a class="btn btn-outline btn-sm" href="#/booking/${b.ref}">View</a>${b.status === "CONFIRMED" && b.start > DB.now ? `<button class="btn btn-destructive-ghost btn-sm" data-act="cancel" data-ref="${b.ref}">Cancel</button>` : ""}</div></div>`; };
+  return pub(`<div class="page-narrow" style="margin-inline:auto"><div class="page-h"><div class="between"><h1>My bookings</h1><a class="btn btn-brand" href="#/book" data-act="new-book">${ic("spark")} Book a trial</a></div><p class="mf">Every trial booked with ${esc(p.email)}, including ones from before you signed up. ${anno("FR-17 · A1")}</p></div>
+    <div class="col-16"><div class="tabs" role="tablist"><button role="tab" aria-selected="${S.myTab === "upcoming"}" data-act="my-tab" data-v="upcoming">Upcoming <span class="mf">${up.length}</span></button><button role="tab" aria-selected="${S.myTab === "past"}" data-act="my-tab" data-v="past">Past and cancelled <span class="mf">${past.length}</span></button></div>
+    <div class="card">${list.length ? `<div class="blist">${list.map(item).join("")}</div>` : `<div class="empty"><div class="ei">${ic("cal")}</div><strong>No ${S.myTab === "upcoming" ? "upcoming" : "past"} trials</strong>${S.myTab === "upcoming" ? `<span class="sm mf">Book a free class and it will show up here.</span><a class="btn btn-brand btn-sm" href="#/book" data-act="new-book">Book a trial</a>` : ""}</div>`}</div></div></div>`);
 }
 
-/* ---------- admin ---------- */
+/* ================= ADMIN ================= */
 function viewAdminLogin(q) {
-  return publicShell(`<div class="auth-wrap stack-lg"><div class="stack"><span class="eyebrow">Staff only</span><h1>Admin sign in</h1>${anno("FR-18")}</div>
-    <form class="card stack" data-form="admin-login" novalidate><div id="al-msg">${q.msg === "bad" ? loginMsg("bad") : q.msg === "rate" ? loginMsg("rate") : ""}</div>
-      <div class="field"><label for="al-email">Email</label><input class="input" id="al-email" name="email" type="email" autocomplete="username" value="${esc(ADMIN.email)}"></div>
-      <div class="field"><label for="al-pw">Password</label><input class="input" id="al-pw" name="password" type="password" autocomplete="current-password"></div>
-      <button class="btn btn-primary" type="submit">Sign in</button><div class="proto-note">Demo password: Admin123!</div></form></div>`);
+  return pub(`<div class="auth"><div class="card"><div class="card-c" style="padding:28px"><div class="col"><span class="badge badge-outline" style="align-self:flex-start">${ic("lock")} Staff only</span><h1>Admin sign in</h1><p class="mf">Manage trials, parents and mentor schedules. ${anno("FR-18")}</p></div>
+    <form class="col-16" data-form="admin-login" novalidate><div id="al-msg"></div>
+      <div class="field"><label class="label" for="al-email">Email</label><input class="input" id="al-email" name="email" type="email" autocomplete="username" value="${esc(ADMIN.email)}"></div>
+      <div class="field"><label class="label" for="al-pw">Password</label><input class="input" id="al-pw" name="password" type="password" autocomplete="current-password" placeholder="Admin123!"></div>
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button></form></div></div></div>`);
 }
 function istDates(n) { const t = localDate(DB.now, IST); return Array.from({ length: n }, (_, i) => addDays(t, i)); }
 function capacityOn(d) { const wd = parts(zonedToUtc(d, 720, IST), IST).wd; return MENTORS.filter(m => m.off !== wd).length * CFG.cap; }
 function bookedOn(d) { return confirmed().filter(b => b.istDate === d).length; }
+function capChart(ds) {
+  const W = 720, H = 220, L = 30, B = 26, T = 8, max = 20, bw = (W - L) / ds.length;
+  const y = v => T + (H - T - B) * (1 - v / max);
+  let g = [0, 5, 10, 15, 20].map(v => `<line class="grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join("");
+  ds.forEach((d, i) => { const c = capacityOn(d), b = bookedOn(d), x = L + i * bw + bw * 0.18, w = bw * 0.64;
+    g += `<g><title>${fmtDay(zonedToUtc(d, 720, IST), IST)}: ${b} of ${c} booked</title><rect class="cap" x="${x}" y="${y(c)}" width="${w}" height="${y(0) - y(c)}" rx="4"/><rect class="bk ${b >= c ? "full" : ""}" x="${x}" y="${y(b)}" width="${w}" height="${Math.max(0, y(0) - y(b))}" rx="4"/><text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${+d.slice(8)}</text></g>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Trials booked versus capacity per India date">${g}</svg>`;
+}
 function viewAdminDash() {
   const ds = istDates(14), today = ds[0];
   const next7 = confirmed().filter(b => b.start > DB.now && b.start < DB.now + 7 * DAY).length;
-  const totCap = ds.reduce((a, d) => a + capacityOn(d), 0), totB = ds.reduce((a, d) => a + bookedOn(d), 0);
-  const fullDates = ds.filter(d => bookedOn(d) >= capacityOn(d));
-  return adminShell("", `<div class="spread"><div class="stack" style="gap:4px"><h1>Dashboard</h1><p class="muted">All dates are India dates, because the 2-per-day limit counts on the mentor's calendar. ${anno("FR-19")}</p></div></div>
-    <div class="tiles"><div class="tile"><div class="l">Trials today (India)</div><div class="v">${bookedOn(today)}</div></div><div class="tile"><div class="l">Next 7 days</div><div class="v">${next7}</div></div>
-      <div class="tile"><div class="l">Capacity used, 14 days</div><div class="v">${Math.round((totB / totCap) * 100)}%</div><div class="small muted tnum">${totB} of ${totCap} trials</div></div><div class="tile"><div class="l">Fully booked India dates</div><div class="v">${fullDates.length}</div></div></div>
-    <div class="card stack"><div class="spread"><h2>Load per India date</h2><span class="small muted">booked / capacity (mentors working that day × 2)</span></div>
-      <div class="capbars">${ds.map(d => { const c = capacityOn(d), b = bookedOn(d); return `<div class="capbar ${b >= c ? "full" : ""}"><span>${esc(fmtDay(zonedToUtc(d, 720, IST), IST))}</span><div class="track" role="img" aria-label="${b} of ${c} booked"><div class="fill" style="width:${Math.min(100, (b / c) * 100)}%"></div></div><span class="tnum">${b} / ${c}</span></div>`; }).join("")}</div></div>
-    <div class="card stack"><div class="spread"><h2>Next up</h2><a class="btn btn-secondary btn-sm" href="#/admin/bookings">All bookings</a></div>${bookingTable(confirmed().filter(b => b.start > DB.now).sort((a, b) => a.start - b.start).slice(0, 6), false)}</div>`);
+  const totCap = ds.reduce((a, d) => a + capacityOn(d), 0), totB = ds.reduce((a, d) => a + bookedOn(d), 0), full = ds.filter(d => bookedOn(d) >= capacityOn(d));
+  const stat = (l, v, f, b) => `<div class="card stat"><div class="between"><span class="sm mf" style="font-weight:500">${l}</span>${b || ""}</div><div class="v">${v}</div><span class="xs mf">${f}</span></div>`;
+  return adminShell("", [["Dashboard"]], `<div class="between"><div class="col-4"><h1>Dashboard</h1><p class="mf">Dates are India dates: the 2-per-day limit counts on the mentor's calendar. ${anno("FR-19")}</p></div><a class="btn btn-outline btn-sm" href="#/admin/bookings">${ic("cal")} All bookings</a></div>
+    <div class="stats">${stat("Trials today", bookedOn(today), esc(fmtDayLong(DB.now, IST)), `<span class="badge badge-outline">India</span>`)}${stat("Next 7 days", next7, "Confirmed, all mentors")}
+      ${stat("Capacity used", Math.round(totB / totCap * 100) + "%", `${totB} of ${totCap} trials in 14 days`, `<span class="badge ${totB / totCap > .7 ? "badge-warning" : "badge-success"}">${totB / totCap > .7 ? "Busy" : "Healthy"}</span>`)}${stat("Fully booked days", full.length, full.length ? "Consider adding shifts" : "None in the next 14 days", full.length ? `<span class="badge badge-destructive">Action</span>` : "")}</div>
+    <div class="card"><div class="card-h"><div class="between"><div class="col-4"><div class="card-t">Trials per India date</div><div class="card-d">Booked vs capacity (mentors working that day × 2)</div></div><div class="legend" style="margin:0"><span><i style="background:var(--brand)"></i>Booked</span><span><i style="background:var(--muted);border:1px solid var(--border)"></i>Capacity</span><span><i style="background:var(--destructive)"></i>Full</span></div></div></div><div class="card-c">${capChart(ds)}</div></div>
+    <div class="col"><div class="between"><h2 style="font-size:16px;font-weight:600">Up next</h2></div>${bookingTable(confirmed().filter(b => b.start > DB.now).sort((a, b) => a.start - b.start).slice(0, 6))}</div>`);
 }
-function bookingTable(rows, actions = true) {
-  if (!rows.length) return `<div class="empty"><strong>No bookings match these filters.</strong></div>`;
-  return `<div class="table-wrap"><table><thead><tr><th>Reference</th><th>India time</th><th>Parent's time</th><th>Child</th><th>Parent</th><th>Mentor</th><th>Status</th>${actions ? "<th></th>" : ""}</tr></thead><tbody>
-    ${rows.map(b => { const m = mentorById(b.mentorId); return `<tr><td><a class="mono" href="#/booking/${b.ref}">${b.ref}</a></td><td>${esc(fmtSlot(b.start, IST).replace(" IST (India)", ""))}</td><td>${esc(fmtSlot(b.start, b.tz))}<div class="sub">${esc(ZONE_NAMES[b.tz] || b.tz)}</div></td>
-      <td>${esc(b.child)}<div class="sub">Grade ${b.grade} · ${b.subject === "CODING" ? "Coding" : "Maths"}</div></td><td><a href="#/admin/parents/${encodeURIComponent(b.email)}">${esc(b.parentName)}</a><div class="sub">${esc(b.email)}</div></td>
-      <td><a href="#/admin/mentors/${m.id}">${esc(m.name)}</a><div class="sub">${SHIFTS[m.shift].label}</div></td>
-      <td>${b.status === "CANCELLED" ? `<span class="chip chip-full">Cancelled</span>` : b.start <= DB.now ? `<span class="chip chip-closed">Completed</span>` : `<span class="chip chip-open">Confirmed</span>`}</td>
-      ${actions ? `<td>${b.status === "CONFIRMED" && b.start > DB.now ? `<button class="btn btn-ghost btn-sm" data-act="cancel" data-ref="${b.ref}" data-by="ADMIN">Cancel</button>` : ""}</td>` : ""}</tr>`; }).join("")}</tbody></table></div>`;
+function rowMenu(b) {
+  const open = S.menu === "row:" + b.ref;
+  return `<div class="menu-root" data-menu-root><button class="btn btn-ghost btn-icon btn-sm" data-act="menu" data-v="row:${b.ref}" aria-label="Actions for ${b.ref}" aria-expanded="${open}">${ic("more")}</button>
+    ${open ? `<div class="menu" role="menu"><button class="mi" role="menuitem" data-act="sheet" data-ref="${b.ref}">${ic("info")}View details</button><a class="mi" role="menuitem" href="#/booking/${b.ref}">${ic("ext")}Open booking page</a><button class="mi" role="menuitem" data-act="copy" data-v="${esc(b.meet)}">${ic("copy")}Copy class link</button>${b.status === "CONFIRMED" && b.start > DB.now ? `<hr><button class="mi danger" role="menuitem" data-act="cancel" data-ref="${b.ref}" data-by="ADMIN">${ic("xc")}Cancel booking</button>` : ""}</div>` : ""}</div>`;
+}
+function bookingTable(rows) {
+  if (!rows.length) return `<div class="card"><div class="empty"><div class="ei">${ic("search")}</div><strong>No bookings match</strong><span class="sm mf">Try a different filter or search.</span></div></div>`;
+  return `<div class="tbl-wrap"><table><thead><tr><th>Booking</th><th>India time</th><th>Parent's time</th><th>Child</th><th>Parent</th><th>Mentor</th><th>Status</th><th><span class="sr" style="position:absolute;left:-9999px">Actions</span></th></tr></thead><tbody>
+    ${rows.map(b => { const m = mentorById(b.mentorId); return `<tr><td><button class="link mono" style="text-decoration:none" data-act="sheet" data-ref="${b.ref}">${b.ref}</button></td><td><div style="font-weight:500">${esc(fmtDay(b.start, IST))}</div><div class="s2">${esc(fmtTime(b.start, IST))}</div></td><td><div>${esc(fmtTime(b.start, b.tz))} ${esc(abbr(b.tz, b.start))}</div><div class="s2">${esc(ZONE_NAMES[b.tz] || b.tz)}</div></td>
+      <td><div>${esc(b.child)}</div><div class="s2">Grade ${b.grade} · ${subj(b.subject)}</div></td><td><a href="#/admin/parents/${encodeURIComponent(b.email)}">${esc(b.parentName)}</a><div class="s2">${esc(b.email)}</div></td>
+      <td><div class="flex"><span class="avatar sm">${initials(m.name)}</span><a href="#/admin/mentors/${m.id}">${esc(m.name)}</a></div></td><td>${statusBadge(b)}</td><td style="width:44px">${rowMenu(b)}</td></tr>`; }).join("")}</tbody></table></div>`;
+}
+function sheetHtml(ref) {
+  const b = DB.bookings.find(x => x.ref === ref); if (!b) return "";
+  const m = mentorById(b.mentorId), msgs = DB.outbox.filter(o => o.ref === ref);
+  return `<div class="sheet-ov" data-act="sheet-close"></div><aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+    <div class="sheet-h"><div class="col-4"><span class="mono xs mf">${b.ref}</span><h2 id="sh-t" style="font-size:18px;font-weight:600">${subj(b.subject)} trial · ${esc(b.child)}</h2><div>${statusBadge(b)}</div></div><button class="btn btn-ghost btn-icon btn-sm" data-act="sheet-close" aria-label="Close">${ic("x")}</button></div>
+    <div class="sheet-c">
+      <dl class="rows" style="grid-template-columns:96px minmax(0,1fr)">
+        <dt>India time</dt><dd class="tnum">${esc(fmtSlot(b.start, IST))}</dd>
+        <dt>Parent's time</dt><dd class="tnum">${esc(fmtSlot(b.start, b.tz))}<div class="sm mf">${esc(zoneLabel(b.tz, b.start))}</div></dd>
+        <dt>Child</dt><dd>${esc(b.child)} · Grade ${b.grade}</dd>
+        <dt>Parent</dt><dd><a class="link" href="#/admin/parents/${encodeURIComponent(b.email)}">${esc(b.parentName)}</a><div class="sm mf">${esc(b.email)} · ${acctBadge(parentStatus(DB.parents[b.email]))}</div></dd>
+        <dt>Mentor</dt><dd><a class="link" href="#/admin/mentors/${m.id}">${esc(m.name)}</a><div class="sm mf">${SHIFTS[m.shift].label} · ${dayCount(m, b.istDate)} of 2 that day</div></dd>
+        <dt>Class link</dt><dd><div class="copybox"><span class="mono xs">${esc(b.meet)}</span><button class="btn btn-ghost btn-icon btn-sm" data-act="copy" data-v="${esc(b.meet)}" aria-label="Copy">${ic("copy")}</button></div></dd>
+      </dl>
+      <div class="col"><strong class="sm">Messages sent</strong>${msgs.length ? msgs.map(o => `<div class="msg"><div class="between"><span class="badge badge-outline mono">${o.kind}</span><span class="xs mf">${esc(o.to)}</span></div><div class="body">${esc(o.body).replace(/(#\/[^\s]+)/g, '<a href="$1">$1</a>')}</div></div>`).join("") : `<span class="sm mf">Seeded booking: no messages recorded.</span>`}</div>
+    </div>
+    <div class="sheet-f"><a class="btn btn-outline" href="#/booking/${b.ref}">${ic("ext")} Booking page</a>${b.status === "CONFIRMED" && b.start > DB.now ? `<button class="btn btn-destructive" data-act="cancel" data-ref="${b.ref}" data-by="ADMIN">Cancel booking</button>` : ""}</div></aside>`;
 }
 function viewAdminBookings() {
-  const F = S.adminFilters, q = F.q.trim().toLowerCase();
+  const F = S.af, q = F.q.trim().toLowerCase();
   const rows = DB.bookings.filter(b => (F.scope === "upcoming" ? b.start > DB.now : F.scope === "past" ? b.start <= DB.now : true)
-    && (!F.status || b.status === F.status) && (!F.mentor || b.mentorId === F.mentor)
-    && (!q || [b.ref, b.email, b.parentName, b.child].some(x => String(x).toLowerCase().includes(q)))).sort((a, b) => a.start - b.start);
-  return adminShell("bookings", `<div class="stack" style="gap:4px"><h1>Bookings</h1><p class="muted">${rows.length} shown</p></div>
-    <div class="filters">
-      <div class="field"><label for="af-scope">When</label><select class="select" id="af-scope" data-filter="scope"><option value="upcoming">Upcoming</option><option value="past">Past</option><option value="all">All</option></select></div>
-      <div class="field"><label for="af-status">Status</label><select class="select" id="af-status" data-filter="status"><option value="">Any</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option></select></div>
-      <div class="field"><label for="af-mentor">Mentor</label><select class="select" id="af-mentor" data-filter="mentor"><option value="">All mentors</option>${MENTORS.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select></div>
-      <div class="field" style="flex:1;min-width:220px"><label for="af-q">Search</label><input class="input" id="af-q" data-filter="q" placeholder="Reference, parent, email or child" value="${esc(F.q)}"></div></div>
+    && (!F.status || b.status === F.status) && (!F.mentor || b.mentorId === F.mentor) && (!q || [b.ref, b.email, b.parentName, b.child].some(x => String(x).toLowerCase().includes(q)))).sort((a, b) => a.start - b.start);
+  return adminShell("bookings", [["Bookings"]], `<div class="col-4"><h1>Bookings</h1><p class="mf">Search, filter and manage every trial.</p></div>
+    <div class="toolbar"><div class="search">${ic("search")}<input class="input" id="af-q" data-filter="q" placeholder="Search reference, parent, email, child…" value="${esc(F.q)}" aria-label="Search bookings"></div>
+      <select class="select" data-filter="scope" aria-label="When"><option value="upcoming">Upcoming</option><option value="past">Past</option><option value="all">All dates</option></select>
+      <select class="select" data-filter="status" aria-label="Status"><option value="">Any status</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option></select>
+      <select class="select" data-filter="mentor" aria-label="Mentor"><option value="">All mentors</option>${MENTORS.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("")}</select>
+      <span class="sm mf" style="margin-left:auto">${rows.length} result${rows.length === 1 ? "" : "s"}</span></div>
     ${bookingTable(rows)}`);
 }
 function viewAdminParents() {
-  const list = Object.values(DB.parents).filter(p => !p.email.startsWith("ghost")).sort((a, b) => a.name.localeCompare(b.name));
-  return adminShell("parents", `<div class="stack" style="gap:4px"><h1>Parents</h1><p class="muted">Guest = booked without an account. Pending = signed up, email not verified. ${anno("FR-19 · §9.2")}</p></div>
-    <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Account</th><th>Bookings</th><th>Upcoming</th><th>Zone</th></tr></thead><tbody>
-    ${list.map(p => { const st = parentStatus(p); const bs = DB.bookings.filter(b => b.email === p.email);
-      return `<tr><td><a href="#/admin/parents/${encodeURIComponent(p.email)}">${esc(p.name)}</a></td><td>${esc(p.email)}</td><td>${st === "VERIFIED" ? `<span class="chip chip-open">Verified</span>` : st === "PENDING" ? `<span class="chip chip-pending">Pending</span>` : `<span class="chip chip-closed">Guest</span>`}</td><td class="tnum">${bs.length}</td><td class="tnum">${bs.filter(b => b.status === "CONFIRMED" && b.start > DB.now).length}</td><td>${esc(ZONE_NAMES[p.tz] || p.tz)}</td></tr>`; }).join("")}</tbody></table></div>`);
+  const q = S.pq.trim().toLowerCase();
+  const list = Object.values(DB.parents).filter(p => !p.email.startsWith("ghost") && (!q || (p.name + p.email).toLowerCase().includes(q))).sort((a, b) => a.name.localeCompare(b.name));
+  return adminShell("parents", [["Parents"]], `<div class="col-4"><h1>Parents</h1><p class="mf">Guest booked without an account · Pending signed up, email not verified · Verified can see their bookings. ${anno("PRD §9.2")}</p></div>
+    <div class="toolbar"><div class="search">${ic("search")}<input class="input" id="pq" data-filter="pq" placeholder="Search name or email…" value="${esc(S.pq)}" aria-label="Search parents"></div><span class="sm mf" style="margin-left:auto">${list.length} parents</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Parent</th><th>Account</th><th>Bookings</th><th>Upcoming</th><th>Time zone</th></tr></thead><tbody>
+    ${list.map(p => { const bs = DB.bookings.filter(b => b.email === p.email);
+      return `<tr><td><div class="flex"><span class="avatar sm">${initials(p.name)}</span><div><a href="#/admin/parents/${encodeURIComponent(p.email)}">${esc(p.name)}</a><div class="s2">${esc(p.email)}</div></div></div></td><td>${acctBadge(parentStatus(p))}</td><td>${bs.length}</td><td>${bs.filter(b => b.status === "CONFIRMED" && b.start > DB.now).length}</td><td><span class="s2">${esc(ZONE_NAMES[p.tz] || p.tz)}</span></td></tr>`; }).join("")}</tbody></table></div>`);
 }
 function viewAdminParent(email) {
   const p = DB.parents[email];
-  if (!p) return adminShell("parents", `<div class="empty"><strong>Parent not found.</strong><a href="#/admin/parents">Back to parents</a></div>`);
-  const st = parentStatus(p);
-  return adminShell("parents", `<a href="#/admin/parents" class="small">← Parents</a><div class="stack" style="gap:4px"><h1>${esc(p.name)}</h1><p class="muted">${esc(p.email)}${p.phone ? " · " + esc(p.phone) : ""} · ${esc(zoneLabel(p.tz, DB.now))}</p></div>
-    <div class="row">${st === "VERIFIED" ? `<span class="chip chip-open">Verified account</span>` : st === "PENDING" ? `<span class="chip chip-pending">Pending verification</span>` : `<span class="chip chip-closed">Guest (no account)</span>`}</div>
-    <h2>Bookings</h2>${bookingTable(DB.bookings.filter(b => b.email === email).sort((a, b) => b.start - a.start))}`);
+  if (!p) return adminShell("parents", [["Parents", "#/admin/parents"], ["Not found"]], `<div class="card"><div class="empty"><strong>Parent not found</strong></div></div>`);
+  const bs = DB.bookings.filter(b => b.email === email).sort((a, b) => b.start - a.start);
+  return adminShell("parents", [["Parents", "#/admin/parents"], [p.name]], `<div class="card"><div class="card-c between"><div class="flex" style="gap:14px"><span class="avatar lg">${initials(p.name)}</span><div class="col-4" style="gap:2px"><h1 style="font-size:20px">${esc(p.name)}</h1><span class="sm mf">${esc(p.email)}${p.phone ? " · " + esc(p.phone) : ""}</span><span class="sm mf">${esc(zoneLabel(p.tz, DB.now))}</span></div></div>${acctBadge(parentStatus(p))}</div></div>
+    <h2 style="font-size:16px;font-weight:600">Bookings <span class="mf" style="font-weight:400">${bs.length}</span></h2>${bookingTable(bs)}`);
 }
 function shiftText(m) { const s = SHIFTS[m.shift]; return `${fmtMinutes(s.start)} – ${fmtMinutes(s.end)}`; }
-function meter(n, max) { return `<span class="meter ${n >= max ? "full" : ""}" role="img" aria-label="${n} of ${max} trials">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}<span class="small tnum" style="margin-left:4px">${n} / ${max}</span></span>`; }
 function viewAdminMentors() {
   const today = localDate(DB.now, IST), wd = parts(DB.now, IST).wd;
-  return adminShell("mentors", `<div class="stack" style="gap:4px"><h1>Mentors</h1><p class="muted">Today in India: ${esc(fmtDayLong(DB.now, IST))}</p></div>
-    <div class="table-wrap"><table><thead><tr><th>Mentor</th><th>Shift (India time)</th><th>Day off</th><th>Today</th><th>Upcoming</th></tr></thead><tbody>
-    ${MENTORS.map(m => `<tr><td><a href="#/admin/mentors/${m.id}">${esc(m.name)}</a><div class="sub">${esc(m.bio)}</div></td><td>${SHIFTS[m.shift].label}<div class="sub">${shiftText(m)}</div></td><td>${WD_NAMES[m.off]}</td>
-      <td>${m.off === wd ? `<span class="chip chip-closed">Day off</span>` : meter(dayCount(m, today), CFG.cap)}</td><td class="tnum">${confirmed().filter(b => b.mentorId === m.id && b.start > DB.now).length}</td></tr>`).join("")}</tbody></table></div>`);
+  return adminShell("mentors", [["Mentors"]], `<div class="col-4"><h1>Mentors</h1><p class="mf">Today in India: ${esc(fmtDayLong(DB.now, IST))}. Each mentor takes up to 2 trials per India date. ${anno("C3")}</p></div>
+    <div class="mentor-grid">${MENTORS.map(m => { const n = dayCount(m, today), off = m.off === wd, up = confirmed().filter(b => b.mentorId === m.id && b.start > DB.now).length;
+      return `<div class="card"><div class="card-c col-16"><div class="flex" style="gap:12px"><span class="avatar">${initials(m.name)}</span><div class="col-4" style="gap:0;min-width:0"><a href="#/admin/mentors/${m.id}" style="font-weight:600;text-decoration:none">${esc(m.name)}</a><span class="xs mf">${SHIFTS[m.shift].label} · ${shiftText(m)} IST</span></div></div>
+        <div class="col-4"><div class="between sm"><span class="mf">Today</span>${off ? `<span class="badge badge-secondary">Day off</span>` : `<span class="tnum" style="font-weight:500">${n} / 2${n >= 2 ? ' <span class="badge badge-destructive" style="margin-left:4px">Full</span>' : ""}</span>`}</div><div class="progress ${n >= 2 ? "full" : ""}"><i style="width:${off ? 0 : n / 2 * 100}%"></i></div></div>
+        <div class="between sm"><span class="mf">${up} upcoming · off ${WD_NAMES[m.off]}</span><a class="btn btn-outline btn-sm" href="#/admin/mentors/${m.id}">Schedule</a></div></div></div>`; }).join("")}</div>`);
 }
 function viewAdminMentor(id) {
   const m = mentorById(id);
-  if (!m) return adminShell("mentors", `<div class="empty"><strong>Mentor not found.</strong></div>`);
+  if (!m) return adminShell("mentors", [["Mentors", "#/admin/mentors"], ["Not found"]], `<div class="card"><div class="empty"><strong>Mentor not found</strong></div></div>`);
   const ds = istDates(14);
-  return adminShell("mentors", `<a href="#/admin/mentors" class="small">← Mentors</a>
-    <div class="mentor"><div class="avatar">${initials(m.name)}</div><div><h1>${esc(m.name)}</h1><p class="muted">${SHIFTS[m.shift].label} · ${esc(m.bio)}</p></div></div>
-    <div class="card stack"><div class="spread"><h2>Weekly shift</h2><span class="small muted">India Standard Time (UTC+05:30)</span></div>
-      <div class="week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<div class="${d === m.off ? "" : "on"}"><b>${WD_NAMES[d]}</b>${d === m.off ? "Off" : shiftText(m)}</div>`).join("")}</div></div>
-    <div class="card"><div class="spread" style="margin-bottom:8px"><h2>Schedule, next 14 India dates</h2>${anno("FR-19 · C3")}</div>
-      ${ds.map(d => { const wd = parts(zonedToUtc(d, 720, IST), IST).wd; const bs = confirmed().filter(b => b.mentorId === m.id && b.istDate === d).sort((a, b) => a.start - b.start);
-        return `<div class="sched-day"><div class="stack" style="gap:4px"><strong>${esc(fmtDay(zonedToUtc(d, 720, IST), IST))}</strong>${wd === m.off ? `<span class="chip chip-closed" style="align-self:flex-start">Day off</span>` : meter(bs.length, CFG.cap)}</div>
-          <div class="stack" style="gap:8px">${bs.length ? bs.map(b => `<div class="spread"><div><strong class="tnum">${esc(fmtTime(b.start, IST))}</strong> · ${esc(b.child)} (Grade ${b.grade}, ${b.subject === "CODING" ? "Coding" : "Maths"})<div class="small muted">Parent's time: ${esc(fmtSlot(b.start, b.tz))} · ${esc(b.parentName)}</div></div><a class="btn btn-secondary btn-sm" href="#/booking/${b.ref}">Open</a></div>`).join("") : `<span class="small muted">${wd === m.off ? "" : "No trials booked."}</span>`}</div></div>`; }).join("")}</div>`);
+  return adminShell("mentors", [["Mentors", "#/admin/mentors"], [m.name]], `<div class="card"><div class="card-c flex" style="gap:14px"><span class="avatar lg">${initials(m.name)}</span><div class="col-4" style="gap:2px"><h1 style="font-size:20px">${esc(m.name)}</h1><span class="sm mf">${esc(m.bio)}</span></div><span class="badge badge-brand" style="margin-left:auto">${SHIFTS[m.shift].label}</span></div></div>
+    <div class="card"><div class="card-h"><div class="card-t">Weekly shift</div><div class="card-d">India Standard Time (UTC+05:30)</div></div><div class="card-c"><div class="week">${[1, 2, 3, 4, 5, 6, 7].map(d => `<div class="${d === m.off ? "" : "on"}"><b>${WD_NAMES[d]}</b>${d === m.off ? "Off" : shiftText(m).replace(" – ", "–")}</div>`).join("")}</div></div></div>
+    <div class="card"><div class="card-h"><div class="card-t">Schedule ${anno("FR-19 · C3")}</div><div class="card-d">Next 14 India dates</div></div><div class="card-c" style="padding-top:8px">
+      ${ds.map(d => { const wd = parts(zonedToUtc(d, 720, IST), IST).wd, off = wd === m.off; const bs = confirmed().filter(b => b.mentorId === m.id && b.istDate === d).sort((a, b) => a.start - b.start);
+        return `<div class="sched"><div class="col-4"><strong>${esc(fmtDay(zonedToUtc(d, 720, IST), IST))}</strong>${off ? `<span class="badge badge-secondary" style="align-self:flex-start">Day off</span>` : `<div class="between xs mf"><span>${bs.length} / 2 trials</span></div><div class="progress ${bs.length >= 2 ? "full" : ""}"><i style="width:${bs.length / 2 * 100}%"></i></div>`}</div>
+          <div class="col">${bs.length ? bs.map(b => `<div class="sched-item"><div class="col-4" style="gap:0"><span><strong class="tnum">${esc(fmtTime(b.start, IST))}</strong> · ${esc(b.child)} <span class="mf">(Grade ${b.grade}, ${subj(b.subject)})</span></span><span class="xs mf">Parent's time ${esc(fmtSlot(b.start, b.tz))} · ${esc(b.parentName)}</span></div><button class="btn btn-ghost btn-sm" data-act="sheet" data-ref="${b.ref}">Details</button></div>`).join("") : off ? "" : `<span class="sm mf" style="padding-top:2px">No trials booked</span>`}</div></div>`; }).join("")}</div></div>`);
 }
 function outboxList(limit) {
   const msgs = DB.outbox.slice(0, limit);
-  if (!msgs.length) return `<div class="empty"><strong>No messages yet.</strong></div>`;
-  return `<div class="stack">${msgs.map(o => `<article class="outbox-msg"><div class="spread"><span class="chip chip-info mono">${o.kind}</span><span class="small muted">to ${esc(o.to)}</span></div><strong>${esc(o.subject)}</strong>
-    <div class="body">${esc(o.body).replace(/(#\/[^\s]+)/g, '<a href="$1">$1</a>').replace(/(https:\/\/meet\.example\.com\/[^\s]+)/g, '<span class="mono">$1</span>')}</div></article>`).join("")}</div>`;
+  if (!msgs.length) return `<div class="card"><div class="empty"><div class="ei">${ic("inbox")}</div><strong>No messages yet</strong><span class="sm mf">Book a trial or sign up to see emails here.</span></div></div>`;
+  return `<div class="col">${msgs.map(o => `<article class="msg"><div class="between"><span class="badge badge-outline mono">${o.kind}</span><span class="xs mf">To ${esc(o.to)}</span></div><strong>${esc(o.subject)}</strong><div class="body">${esc(o.body).replace(/(#\/[^\s]+)/g, '<a href="$1">$1</a>')}</div></article>`).join("")}</div>`;
 }
-function viewAdminOutbox() { return adminShell("outbox", `<div class="stack" style="gap:4px"><h1>Outbox</h1><p class="muted">Every message the system would email: booking confirmations and cancellations for parents and mentors, and account emails. ${anno("FR-9")}</p></div>${outboxList(80)}`); }
-function viewDevOutbox() {
-  return publicShell(`<div class="stack-lg"><div class="stack" style="gap:4px"><span class="eyebrow">Development only</span><h1>Dev outbox</h1><p class="muted">This app doesn't send real email. Messages land here so you can click verification, reset and manage links. ${anno("FR-20")}</p></div>${outboxList(60)}</div>`);
-}
+function viewAdminOutbox() { return adminShell("outbox", [["Outbox"]], `<div class="col-4"><h1>Outbox</h1><p class="mf">Every email the system would send: confirmations, cancellations and account emails. ${anno("FR-9")}</p></div>${outboxList(80)}`); }
+function viewDevOutbox() { return pub(`<div class="page-narrow" style="margin-inline:auto"><div class="page-h"><span class="badge badge-warning" style="align-self:flex-start">Development only</span><h1>Dev outbox</h1><p class="mf">This app doesn't send real email. Messages land here so you can open verification, reset and manage links. ${anno("FR-20")}</p></div>${outboxList(60)}</div>`); }
 
-/* ---------- dialog ---------- */
+/* ================= DIALOG ================= */
 function confirmDialog(title, body, okLabel, onOk) {
-  const root = $("#dialog-root");
-  root.innerHTML = `<div class="scrim" data-act="dlg-close"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t"><h2 id="dlg-t">${title}</h2><p class="muted">${body}</p><div class="row" style="justify-content:flex-end"><button class="btn btn-secondary" data-act="dlg-close">Keep it</button><button class="btn btn-danger" id="dlg-ok">${okLabel}</button></div></div></div>`;
+  const root = $("#overlay-root");
+  root.innerHTML = `<div class="overlay" data-act="dlg-close"><div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d"><h2 id="dlg-t">${title}</h2><p class="mf" id="dlg-d">${body}</p><div class="foot"><button class="btn btn-outline" data-act="dlg-close">Keep trial</button><button class="btn btn-destructive" id="dlg-ok">${okLabel}</button></div></div></div>`;
   $("#dlg-ok").onclick = () => { root.innerHTML = ""; onOk(); };
   $("#dlg-ok").focus();
 }
 
-/* ---------- render ---------- */
+/* ================= RENDER ================= */
 function render() {
-  const r = route(), [a, b, c] = r.parts;
-  let html;
-  if (!a) html = viewMap();
+  const r = route(), [a, b, c] = r.parts; let html = "";
+  if (!a) html = viewGuide();
   else if (a === "book") html = viewBook();
   else if (a === "booking") html = viewBooking(b, r.q);
   else if (a === "signup") html = viewSignup(r.q);
@@ -1073,138 +1218,154 @@ function render() {
   else if (a === "login") html = viewLogin(r.q);
   else if (a === "forgot-password") html = viewForgot(r.q);
   else if (a === "reset-password") html = viewReset(r.q);
-  else if (a === "my-bookings") html = S.session.parent ? viewMyBookings() : (setTimeout(() => go("#/login?next=my-bookings"), 0), "");
+  else if (a === "my-bookings") { if (S.session.parent) html = viewMyBookings(); else { setTimeout(() => go("#/login"), 0); html = pub(""); } }
   else if (a === "dev" && b === "outbox") html = viewDevOutbox();
   else if (a === "admin" && b === "login") html = viewAdminLogin(r.q);
   else if (a === "admin") {
-    if (!S.session.admin) { setTimeout(() => go("#/admin/login"), 0); html = ""; }
+    if (!S.session.admin) { setTimeout(() => go("#/admin/login"), 0); html = pub(""); }
     else if (!b) html = viewAdminDash();
     else if (b === "bookings") html = viewAdminBookings();
     else if (b === "parents") html = c ? viewAdminParent(decodeURIComponent(c)) : viewAdminParents();
     else if (b === "mentors") html = c ? viewAdminMentor(c) : viewAdminMentors();
     else if (b === "outbox") html = viewAdminOutbox();
   }
-  $("#app").innerHTML = html || viewMap();
+  $("#app").innerHTML = html || viewGuide();
   $("#pb-outbox-count").textContent = DB.outbox.length;
-  const F = S.adminFilters;
-  for (const k of ["scope", "status", "mentor"]) { const el = document.querySelector(`[data-filter="${k}"]`); if (el) el.value = F[k]; }
+  for (const k of ["scope", "status", "mentor"]) { const el = document.querySelector(`[data-filter="${k}"]`); if (el) el.value = S.af[k]; }
 }
-window.addEventListener("hashchange", () => { $("#dialog-root").innerHTML = ""; render(); window.scrollTo(0, 0); });
+window.addEventListener("hashchange", () => { $("#overlay-root").innerHTML = ""; S.menu = null; S.sheet = null; render(); window.scrollTo(0, 0); });
 
-/* ---------- events ---------- */
+/* ================= EVENTS ================= */
 const actions = {
+  dock(el) { const p = $("#dock-panel"); p.hidden = !p.hidden; el.setAttribute("aria-expanded", String(!p.hidden)); },
+  "dock-close"() { $("#dock-panel").hidden = true; },
   reset() { seed($("#pb-date").value); S.book = null; S.attempts = {}; toast("Demo data reset"); render(); },
+  menu(el) { S.menu = S.menu === el.dataset.v ? null : el.dataset.v; render(); },
+  sheet(el) { S.menu = null; S.sheet = el.dataset.ref; render(); },
+  "sheet-close"() { S.sheet = null; render(); },
   "tz-toggle"() { S.tzOpen = !S.tzOpen; S.tzFilter = ""; render(); if (S.tzOpen) $("#tz-search").focus(); },
-  "tz-pick"(el) { S.chosenTz = el.dataset.tz; S.tzOpen = false; S.tzFilter = ""; if (S.book) { S.book.date = null; S.book.sugg = null; } toast(`Times now in ${ZONE_NAMES[el.dataset.tz] || el.dataset.tz}`); render(); },
-  "pick-day"(el) { S.book.date = el.dataset.d; S.book.sugg = null; S.book.lead = ""; render(); },
-  "pick-slot"(el) { Object.assign(S.book, { sel: +el.dataset.s, step: 2, sugg: null, lead: "", errors: {}, existing: null }); render(); window.scrollTo(0, 0); },
-  "full-slot"(el) { const tz = parentTz(), s = +el.dataset.s, p = parts(s, tz); S.book.sugg = suggest(tz, p.date, p.min, s); S.book.suggFrom = s; S.book.lead = ""; render(); const x = $("#sugg"); if (x) x.focus(); },
-  "pick-sugg"(el) { const s = +el.dataset.s, tz = parentTz(); Object.assign(S.book, { sel: s, step: 2, sugg: null, lead: "", existing: null, date: localDate(s, tz) }); toast(`Selected ${fmtSlot(s, tz)}`); render(); window.scrollTo(0, 0); },
-  "change-time"() { Object.assign(S.book, { step: 1, sugg: null, lead: "" }); const f = document.querySelector('[data-form="book"]'); if (f) Object.assign(S.book.form, Object.fromEntries(new FormData(f))); render(); },
-  subject(el) { const f = document.querySelector('[data-form="book"]'); if (f) Object.assign(S.book.form, Object.fromEntries(new FormData(f))); S.book.form.subject = el.dataset.v; delete S.book.errors.subject; render(); },
+  "tz-pick"(el) { S.chosenTz = el.dataset.tz; S.tzOpen = false; S.tzFilter = ""; if (S.book) Object.assign(S.book, { date: null, month: null, sugg: null }); toast("Time zone updated", `Times are now in ${ZONE_NAMES[el.dataset.tz] || el.dataset.tz}`); render(); },
+  month(el) { const B = S.book, [y, m] = B.month.split("-").map(Number), d = new Date(Date.UTC(y, m - 1 + +el.dataset.v, 1)); B.month = d.toISOString().slice(0, 7); render(); },
+  "pick-day"(el) { Object.assign(S.book, { date: el.dataset.d, sugg: null, suggFrom: null, lead: "" }); render(); },
+  h24(el) { S.h24 = el.dataset.v === "1"; render(); },
+  "pick-slot"(el) { Object.assign(S.book, { sel: +el.dataset.s, step: 2, sugg: null, suggFrom: null, lead: "", errors: {}, existing: null }); render(); window.scrollTo(0, 0); },
+  "full-slot"(el) { const tz = parentTz(), s = +el.dataset.s, p = parts(s, tz); Object.assign(S.book, { sugg: suggest(tz, p.date, p.min, s), suggFrom: s, lead: "" }); render(); const x = $("#sugg"); if (x) x.focus(); },
+  "clear-sugg"() { Object.assign(S.book, { sugg: null, suggFrom: null, lead: "" }); render(); },
+  "pick-sugg"(el) { keepForm(); const s = +el.dataset.s, tz = parentTz(); Object.assign(S.book, { sel: s, step: 2, sugg: null, suggFrom: null, lead: "", existing: null, date: localDate(s, tz), month: localDate(s, tz).slice(0, 7) }); toast("Time selected", fmtSlot(s, tz)); render(); window.scrollTo(0, 0); },
+  "change-time"() { keepForm(); Object.assign(S.book, { step: 1, sugg: null, suggFrom: null, lead: "" }); render(); },
+  subject(el) { keepForm(); S.book.form.subject = el.dataset.v; delete S.book.errors.subject; render(); },
   "new-book"() { S.book = null; },
-  copy(el) { try { navigator.clipboard.writeText(el.dataset.v).then(() => toast("Link copied"), () => toast("Link copied")); } catch { toast("Link copied"); } },
-  ics() { toast("Downloads an .ics file in the real app (blocked in this prototype)"); },
-  gcal() { toast("Opens Google Calendar with the class pre-filled"); },
+  copy(el) { S.menu = null; try { navigator.clipboard.writeText(el.dataset.v).catch(() => {}); } catch (e) {} toast("Copied to clipboard"); render(); },
+  ics() { toast("Calendar file", "Downloads an .ics invite in the real app (blocked in this preview)."); },
+  gcal() { toast("Google Calendar", "Opens Google Calendar with the class pre-filled."); },
   cancel(el) {
-    const ref = el.dataset.ref, by = el.dataset.by || (S.session.admin && location.hash.startsWith("#/admin") ? "ADMIN" : "PARENT");
-    const b = DB.bookings.find(x => x.ref === ref);
-    confirmDialog("Cancel this trial?", `${esc(b.child)}'s class on ${esc(fmtSlot(b.start, by === "ADMIN" ? IST : b.tz))} will be cancelled and the ${by === "ADMIN" ? "parent and mentor" : "mentor"} will be told. The time becomes free for other families.`, "Cancel trial", () => {
-      const r = cancelBooking(ref, by); toast(r.error === "ALREADY_STARTED" ? "This class has already started and can't be cancelled." : "Trial cancelled"); render();
+    S.menu = null;
+    const ref = el.dataset.ref, by = el.dataset.by || (S.session.admin && !S.session.parent ? "ADMIN" : "PARENT"), b = DB.bookings.find(x => x.ref === ref);
+    confirmDialog("Cancel this trial?", `${esc(b.child)}'s class on ${esc(fmtSlot(b.start, by === "ADMIN" ? IST : b.tz))} will be cancelled. We'll let the ${by === "ADMIN" ? "parent and the mentor" : "mentor"} know, and the time becomes free for other families.`, "Cancel trial", () => {
+      const r = cancelBooking(ref, by); if (r.error === "ALREADY_STARTED") toast("Can't cancel", "This class has already started."); else toast("Trial cancelled", `${b.ref} · messages sent`); render();
     });
+    render();
   },
-  "dlg-close"(el, e) { if (el.classList.contains("scrim") && e.target !== el) return; $("#dialog-root").innerHTML = ""; },
-  "parent-logout"() { S.session.parent = null; toast("Signed out"); go("#/book"); },
-  "admin-logout"() { S.session.admin = null; toast("Signed out"); go("#/admin/login"); },
+  "dlg-close"(el, e) { if (el.classList.contains("overlay") && e.target !== el) return; $("#overlay-root").innerHTML = ""; },
+  "parent-logout"() { S.session.parent = null; S.menu = null; $("#pb-persona").value = "guest"; toast("Signed out"); go("#/book"); },
+  "admin-logout"() { S.session.admin = null; $("#pb-persona").value = "guest"; toast("Signed out"); go("#/admin/login"); },
   "my-tab"(el) { S.myTab = el.dataset.v; render(); },
-  resend(el) { const p = DB.parents[el.dataset.email]; if (parentStatus(p) === "PENDING") { const t = issueToken(p.email, "VERIFY_EMAIL", 24); outbox("VERIFY_EMAIL", p.email, "Verify your email", `Here's a new link to verify your email.\nVerify: #/verify-email?token=${t}`); } toast("If that account is waiting for verification, we've sent a new link"); render(); },
+  resend(el) { const p = DB.parents[el.dataset.email]; if (parentStatus(p) === "PENDING") { const t = issueToken(p.email, "VERIFY_EMAIL", 24); outbox("VERIFY_EMAIL", p.email, "Verify your email", `Here's a new link to verify your email.\nVerify: #/verify-email?token=${t}`); } toast("Check your email", "If that account is waiting for verification, we've sent a new link."); render(); },
   "as-guest"() { setPersona("guest"); },
   "as-admin"() { setPersona("admin"); },
-  "edge-full-slot"() { setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); S.book.date = addDays(todayLocal("America/New_York"), 2); go("#/book"); },
+  "edge-full-slot"() { setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); S.book.date = addDays(todayLocal("America/New_York"), 2); go("#/book"); toast("Day + 2 selected", "Dashed times are full. Click one."); },
   "edge-full-day"() { setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); S.book.date = addDays(todayLocal("America/New_York"), 4); go("#/book"); },
-  "edge-race"() { $("#pb-race").checked = true; setPersona("guest", true); S.book = freshBook(); go("#/book"); toast("Race is on: pick any open slot and book"); },
-  "edge-soon"() { $("#pb-soon").checked = true; setPersona("guest", true); S.book = freshBook(); go("#/book"); toast("Too-soon is on: pick any open slot and book"); },
-  "edge-active"() { setPersona("guest", true); S.book = freshBook(); S.book.form = { email: "demo.parent@example.com", name: "Emma Clarke", child: "Freddie", grade: "4", subject: "CODING" }; go("#/book"); toast("Pick a slot; the form is pre-filled with demo.parent@example.com"); },
+  "edge-race"() { $("#pb-race").checked = true; setPersona("guest", true); S.book = freshBook(); go("#/book"); toast("Race is on", "Pick any open time and book it."); },
+  "edge-soon"() { $("#pb-soon").checked = true; setPersona("guest", true); S.book = freshBook(); go("#/book"); toast("Too-soon is on", "Pick any open time and book it."); },
+  "edge-active"() { setPersona("guest", true); S.book = freshBook(); S.book.form = { email: "demo.parent@example.com", name: "Emma Clarke", child: "Freddie", grade: "4", subject: "CODING" }; go("#/book"); toast("Form pre-filled", "Pick a time; this email already has a trial."); },
   "edge-dst"() { $("#pb-date").value = "2026-10-20"; seed("2026-10-20"); setPersona("guest", true); S.chosenTz = "America/New_York"; S.book = freshBook(); go("#/book"); },
   "edge-tz"() { $("#pb-tz").value = ""; S.browserTz = ""; S.chosenTz = null; setPersona("guest", true); go("#/book"); },
   "edge-cap"() { setPersona("admin"); go("#/admin/mentors"); },
   "edge-pending"() { setPersona("pending"); },
-  "edge-login"() { setPersona("guest", true); go("#/login?email=demo.parent%40example.com"); },
+  "edge-login"() { setPersona("guest", true); go("#/login?email=demo.parent%40example.com"); toast("Try it", "Enter a wrong password six times."); },
   "edge-outbox"() { go("#/dev/outbox"); },
-  "edge-badtoken"() { const b = DB.bookings.find(x => x.status === "CONFIRMED"); go(`#/booking/${b.ref}?token=wrong`); }
+  "edge-badtoken"() { const b = DB.bookings.find(x => x.status === "CONFIRMED"); setPersona("guest", true); go(`#/booking/${b.ref}?token=wrong`); }
 };
 function setPersona(v, stay) {
   $("#pb-persona").value = v;
   S.session.parent = v === "parent" ? "demo.parent@example.com" : null;
   S.session.admin = v === "admin" ? true : null;
-  S.book = null;
+  S.book = null; S.menu = null;
   if (stay) return;
   go(v === "admin" ? "#/admin" : v === "parent" ? "#/my-bookings" : v === "pending" ? "#/login?email=pending.parent%40example.com" : "#/book");
 }
 document.addEventListener("click", e => {
-  const el = e.target.closest("[data-act]");
-  if (!el) return;
-  const fn = actions[el.dataset.act];
-  if (!fn) return;
-  if (el.tagName === "BUTTON" || el.dataset.act === "dlg-close") e.preventDefault();
+  if (S.menu && !e.target.closest("[data-menu-root]")) { S.menu = null; if (!e.target.closest("[data-act]")) { render(); return; } }
+  if (!$("#dock-panel").hidden && !e.target.closest("#dock")) $("#dock-panel").hidden = true;
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const fn = actions[el.dataset.act]; if (!fn) return;
+  if (el.tagName === "BUTTON" || el.classList.contains("overlay") || el.classList.contains("sheet-ov")) e.preventDefault();
   fn(el, e);
 });
+function liveInput(id, setter) { const i = $("#" + id); const pos = i.selectionStart; setter(i.value); render(); const n = $("#" + id); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }
 document.addEventListener("input", e => {
-  if (e.target.id === "tz-search") { S.tzFilter = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#tz-search"); i.focus(); i.setSelectionRange(pos, pos); }
-  if (e.target.dataset.filter === "q") { S.adminFilters.q = e.target.value; const pos = e.target.selectionStart; render(); const i = $("#af-q"); i.focus(); i.setSelectionRange(pos, pos); }
+  const t = e.target;
+  if (t.id === "tz-search") liveInput("tz-search", v => S.tzFilter = v);
+  else if (t.dataset.filter === "q") liveInput("af-q", v => S.af.q = v);
+  else if (t.dataset.filter === "pq") liveInput("pq", v => S.pq = v);
 });
 document.addEventListener("change", e => {
   const t = e.target;
-  if (t.dataset.filter && t.dataset.filter !== "q") { S.adminFilters[t.dataset.filter] = t.value; render(); }
+  if (t.dataset.filter && !["q", "pq"].includes(t.dataset.filter)) { S.af[t.dataset.filter] = t.value; render(); }
   if (t.id === "pb-persona") setPersona(t.value);
-  if (t.id === "pb-date") { seed(t.value); S.book = null; toast(`Today is now ${t.options[t.selectedIndex].text}`); render(); }
-  if (t.id === "pb-tz") { S.browserTz = t.value; S.chosenTz = null; S.tzOpen = false; if (S.book) { S.book.date = null; S.book.sugg = null; } render(); }
+  if (t.id === "pb-date") { seed(t.value); S.book = null; toast("Date changed", `Today is ${t.options[t.selectedIndex].text.split(" · ")[0]}`); render(); }
+  if (t.id === "pb-tz") { S.browserTz = t.value; S.chosenTz = null; S.tzOpen = false; if (S.book) Object.assign(S.book, { date: null, month: null, sugg: null }); render(); }
   if (t.id === "pb-annos") document.body.classList.toggle("annos", t.checked);
 });
 const forms = {
   book: f => submitBook(f),
   signup(f) {
-    const d = Object.fromEntries(new FormData(f)), email = (d.email || "").trim().toLowerCase(), err = $("#su-err");
-    const msg = !d.name || d.name.trim().length < 2 ? "Please enter your name" : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Please enter a valid email" : (d.password || "").length < 8 ? "Use at least 8 characters" : d.password.toLowerCase() === email ? "Password can't be your email" : "";
-    if (msg) { err.textContent = msg; err.hidden = false; return; }
+    const d = Object.fromEntries(new FormData(f)), email = (d.email || "").trim().toLowerCase();
+    const msg = !d.name || d.name.trim().length < 2 ? "Please enter your name" : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Please enter a valid email" : (d.password || "").length < 8 ? "Use at least 8 characters for your password" : d.password.toLowerCase() === email ? "Your password can't be your email" : "";
+    if (msg) { $("#su-err").innerHTML = `<div class="alert alert-destructive">${ic("xc")}<div class="at">${esc(msg)}</div></div>`; return; }
     signup(d.name.trim(), email, d.password); S.lastSignupEmail = email; go("#/signup?sent=1");
   },
   login(f) {
-    const d = Object.fromEntries(new FormData(f)), email = (d.email || "").trim().toLowerCase();
-    const k = email || "_"; const at = S.attempts[k] = (S.attempts[k] || []).filter(t => Date.now() - t < 60000);
-    const box = $("#login-msg");
+    const d = Object.fromEntries(new FormData(f)), email = (d.email || "").trim().toLowerCase(), k = email || "_";
+    const at = S.attempts[k] = (S.attempts[k] || []).filter(t => Date.now() - t < 60000), box = $("#login-msg");
     if (at.length >= 5) { box.innerHTML = loginMsg("rate"); return; }
     const p = DB.parents[email];
     if (!p || !p.password || p.password !== d.password) { at.push(Date.now()); box.innerHTML = loginMsg("bad"); return; }
     if (!p.verified) { box.innerHTML = loginMsg("pending", email); return; }
-    S.session.parent = email; S.attempts[k] = []; $("#pb-persona").value = email === "demo.parent@example.com" ? "parent" : "guest";
-    toast(`Signed in as ${p.name}`); go("#/my-bookings");
+    S.session.parent = email; S.session.admin = null; S.attempts[k] = []; $("#pb-persona").value = email === "demo.parent@example.com" ? "parent" : "guest";
+    toast("Signed in", `Welcome back, ${p.name.split(" ")[0]}`); go("#/my-bookings");
   },
-  resend(f) { const email = (new FormData(f).get("email") || "").trim().toLowerCase(); actions.resend({ dataset: { email } }); },
+  resend(f) { actions.resend({ dataset: { email: (new FormData(f).get("email") || "").trim().toLowerCase() } }); },
   forgot(f) {
     const email = (new FormData(f).get("email") || "").trim().toLowerCase(), p = DB.parents[email];
     if (p && p.password) { const t = issueToken(email, "RESET_PASSWORD", 1); outbox("RESET_PASSWORD", email, "Reset your password", `Use this link to set a new password. It works for 1 hour.\nReset: #/reset-password?token=${t}`); }
     go("#/forgot-password?sent=1");
   },
   reset(f) {
-    const pw = new FormData(f).get("password") || "", r = useToken(f.dataset.token, "RESET_PASSWORD");
-    if (pw.length < 8) { const e = $("#rp-err"); e.textContent = "Use at least 8 characters"; e.hidden = false; if (r) r.used = false; return; }
-    if (!r) { render(); return; }
+    const pw = new FormData(f).get("password") || "";
+    if (pw.length < 8) { $("#rp-err").innerHTML = `<div class="alert alert-destructive">${ic("xc")}<div class="at">Use at least 8 characters</div></div>`; return; }
+    const r = useToken(f.dataset.token, "RESET_PASSWORD"); if (!r) { render(); return; }
     const p = DB.parents[r.email]; p.password = pw; p.verified = true; if (S.session.parent === r.email) S.session.parent = null;
-    toast("Password updated. Please sign in."); go(`#/login?email=${encodeURIComponent(r.email)}`);
+    toast("Password updated", "Sign in with your new password."); go(`#/login?email=${encodeURIComponent(r.email)}`);
   },
   "admin-login"(f) {
-    const d = Object.fromEntries(new FormData(f)); const k = "admin"; const at = S.attempts[k] = (S.attempts[k] || []).filter(t => Date.now() - t < 60000);
+    const d = Object.fromEntries(new FormData(f)), at = S.attempts.admin = (S.attempts.admin || []).filter(t => Date.now() - t < 60000);
     if (at.length >= 5) { $("#al-msg").innerHTML = loginMsg("rate"); return; }
-    if (d.email.trim().toLowerCase() !== ADMIN.email || d.password !== ADMIN.password) { at.push(Date.now()); $("#al-msg").innerHTML = loginMsg("bad"); return; }
-    S.session.admin = true; $("#pb-persona").value = "admin"; go("#/admin");
+    if ((d.email || "").trim().toLowerCase() !== ADMIN.email || d.password !== ADMIN.password) { at.push(Date.now()); $("#al-msg").innerHTML = loginMsg("bad"); return; }
+    S.session.admin = true; S.session.parent = null; $("#pb-persona").value = "admin"; toast("Signed in", "Welcome to the admin console"); go("#/admin");
   }
 };
 document.addEventListener("submit", e => { const f = e.target; if (!f.dataset.form) return; e.preventDefault(); forms[f.dataset.form](f); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#dialog-root").innerHTML) $("#dialog-root").innerHTML = ""; });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if ($("#overlay-root").innerHTML) { $("#overlay-root").innerHTML = ""; return; }
+  if (S.sheet) { S.sheet = null; render(); return; }
+  if (S.menu) { S.menu = null; render(); return; }
+  if (S.tzOpen) { S.tzOpen = false; render(); return; }
+  if (!$("#dock-panel").hidden) $("#dock-panel").hidden = true;
+});
 
-/* ---------- boot ---------- */
-document.body.classList.add("annos");
+/* ================= BOOT ================= */
 seed($("#pb-date").value);
 S.browserTz = $("#pb-tz").value;
 render();
