@@ -5,6 +5,7 @@ import { Button } from "./components/ui/button";
 import { Link } from "react-router-dom";
 import { Compass } from "lucide-react";
 import { BookPage } from "./features/booking/BookPage";
+import { BookingPage } from "./features/booking-view/BookingPage";
 
 function NotFound() {
   return (
@@ -19,5 +20,6 @@ function NotFound() {
 export const router = createBrowserRouter([
   { path: "/", element: <Navigate to="/book" replace /> },
   { path: "/book", element: <BookPage /> },
+  { path: "/booking/:reference", element: <BookingPage /> },
   { path: "*", element: <NotFound /> }
 ]);
