@@ -100,17 +100,17 @@ packages/shared: zod schemas, DTO types, error codes, time module (Luxon)
 | Concern | Choice | Reason |
 |---|---|---|
 | Language | TypeScript 5 (strict) | Shared types across web/api |
-| Frontend | React 18 + Vite 5, react-router 6 | Required stack |
+| Frontend | React 19 + Vite 7, react-router 6 | Required stack |
 | Server state | TanStack Query 5 | Caching, refetch on focus, mutation states |
-| Forms | react-hook-form + zod | One schema for client + server |
-| UI | Tailwind 3 + shadcn/ui (Radix) + lucide-react + sonner | Accessible, we own the code |
-| Backend | Express 4 | Small, well known |
+| Forms | Controlled inputs validated with the shared zod schema | One schema for client + server, no extra form library |
+| UI | Tailwind 4 + shadcn-style components (Radix) + lucide-react + sonner | Accessible, we own the code |
+| Backend | Express 5 | Small, well known; async errors handled natively |
 | DB / ORM | PostgreSQL 16 + Prisma 5 | Transactions, locks, constraints |
 | Time | Luxon 3 | IANA zones, DST-aware |
 | Passwords | `@node-rs/argon2` (argon2id) | Modern hash; prebuilt binaries (no node-gyp) |
 | Cookies | `cookie-parser` | Read session cookies |
 | Misc | pino, helmet, cors, express-rate-limit, nanoid, ics | Logging, security, ids, calendar files |
-| Tests | Vitest, supertest, Testing Library, fast-check | One runner; property tests |
+| Tests | Vitest, supertest, Testing Library, fast-check; headless-Chrome checks during development | One runner; property tests |
 
 ## 5. Decisions (ADRs)
 
