@@ -140,4 +140,13 @@ describe("rate limiting", () => {
     for (let i = 0; i < 6; i++) codes.push((await request(limited.app).post("/api/auth/parent/login").send({ email: "x@example.com", password: "bad-pass1" })).status);
     expect(codes).toEqual([401, 401, 401, 401, 401, 429]);
   });
+
+  it("treats IPv6 addresses in the same network as one client", async () => {
+    const fresh = makeTestApp({ env: { RATE_LIMIT_ENABLED: "true" } });
+    const codes = [];
+    for (let i = 1; i <= 6; i++) {
+      codes.push((await request(fresh.app).post("/api/auth/parent/login").set("X-Forwarded-For", `2001:db8:abcd:12::${i}`).send({ email: "v6@example.com", password: "bad-pass1" })).status);
+    }
+    expect(codes.at(-1)).toBe(429);
+  });
 });
