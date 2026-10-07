@@ -61,7 +61,7 @@ This follows Codeyoung's real flow (subject, grade, parent contact, slot picker,
 | FR-1 | Detect the parent's IANA time zone from the browser. Allow changing it through a searchable picker (US, UK/Ireland, India pinned at top). Remember the choice locally. |
 | FR-2 | Show slots for the next **14 days**, grouped by the parent's local date, then by Morning / Afternoon / Evening. Every slot shows its local time and zone abbreviation. Slots with no free mentor are still shown as **"Full"** (greyed, but clickable to get suggestions), so parents understand why a time they expected isn't bookable. |
 | FR-3 | Trial classes are **60 minutes**, start on a **30-minute grid**, need at least **2 hours'** notice, and can be booked at most **14 days** ahead. All configurable. |
-| FR-13 | **Reasonable hours on both sides** (see §6.1). A slot is only ever offered or suggested if the whole class falls inside **mentor operating hours (08:00–22:00 in the mentor's zone, i.e. IST)** *and* **parent-friendly hours (08:00–21:00 in the parent's zone)**. Both windows are evaluated per calendar day using real zone rules, so DST shifts are handled automatically. Mentor availability rules outside operating hours are rejected. |
+| FR-13 | **Reasonable hours on both sides** (see §6.1). *Parent side:* a slot is only offered or suggested if the whole class falls inside **child-friendly hours, 08:00–21:00 in the parent's zone**, evaluated per local day (DST-aware). *Mentor side:* mentors are only offered times inside **the shift they signed up for**. Mentors work **region-aligned shifts** in IST, including a US night shift, as Codeyoung and its peers do. There is no global IST cap that would cut off US evenings. |
 | FR-4 | A slot is available only if at least one mentor: (a) is working for the whole class according to their availability hours, (b) has no overlapping confirmed class, (c) has fewer than 2 confirmed trials on that **IST calendar date**. |
 | FR-5 | Booking form: parent name, email, phone (optional), child name, grade (1–12), subject (Coding / Math). Subject is recorded for the mentor but not used for matching. |
 | FR-6 | On submit, the system assigns an eligible mentor atomically and generates a dummy class link and a booking reference like `CY-7K3P9Q`. |
@@ -81,29 +81,51 @@ This follows Codeyoung's real flow (subject, grade, parent contact, slot picker,
 5. If the parent's current browser zone differs from the booked zone, also show the time in the current zone.
 6. Zone abbreviations come from our own label helper, not straight from the browser. For example, US-English browsers print London summer time as "GMT+1"; we show "BST".
 
-### 6.1 Reasonable hours (no absurd times for anyone)
+### 6.1 Reasonable hours: how it works in this industry, and our model
 
-Two windows must **both** contain the whole 60-minute class:
+**What the research shows.** Indian ed-tech companies serving US/UK kids don't squeeze classes into Indian daytime. They hire mentors into **region-aligned shifts** so classes land at child-friendly hours *for the family*:
 
-| Side | Window (configurable) | Evaluated in |
+- Codeyoung advertises US-shift mentor roles at **2:30 AM–7:30 AM IST** (= 5:00–10:00 PM EDT, US after-school evening).
+- Cuemath asks tutors to commit ≥ 4 h inside a **12:00 AM–7:00 AM IST** US shift.
+- PlanetSpark and BrightChamps hire "night shift / US students" and "US East Coast timings" teachers the same way.
+
+Generic schedulers (Calendly, Cal.com) follow the same principle. Each host declares working hours *in their own zone*; the invitee sees only those hours, converted into the invitee's zone. Limits like "max N bookings per day" sit on top.
+
+So "reasonable" means two different things:
+
+| Side | What "reasonable" means | How we enforce it |
 |---|---|---|
-| Mentor operating hours | 08:00–22:00 | Mentor's zone (IST) |
-| Parent-friendly hours | 08:00–21:00 | Parent's zone, recomputed per day (DST-aware) |
+| **Parent / child** | Not before 8 AM or after 9 PM *where the child lives* | Global window `08:00–21:00` parent-local, recomputed for each local date (DST-aware) |
+| **Mentor** | Only the hours *they agreed to work*, which may be an IST night shift | Each mentor's own availability rules (their shift). No global IST cap. Wellbeing is protected by the shift itself plus the 2-trials-per-day limit |
 
-What this gives each parent region. Computed from real zone rules; class starts, 30-min steps:
+**Shifts (seed data, all in IST; none cross IST midnight, so the per-IST-day cap stays clean):**
 
-| Parent zone | Before clock change (e.g. 20 Oct 2026) | After clock change (e.g. 10 Nov 2026) |
+| Shift | IST hours | Serves |
 |---|---|---|
-| UK / Ireland | 08:00–16:30 BST / IST-Irish (= 12:30–21:00 India) | 08:00–15:30 GMT (= 13:30–21:00 India) |
-| US Eastern | 08:00–11:30 AM EDT | 08:00–10:30 AM EST |
-| US Central | 08:00–10:30 AM CDT | 08:00–09:30 AM CST |
-| US Mountain (Denver) | 08:00–09:30 AM MDT | 08:00–08:30 AM and 7:30–8:00 PM MST |
-| Arizona (no DST) | 08:00–08:30 AM and 7:30–8:00 PM MST | same (Arizona doesn't change; India doesn't change) |
-| US Pacific | 08:00–08:30 AM and 7:30–8:00 PM PDT | 6:30–8:00 PM PST |
-| Alaska | 6:30–8:00 PM AKDT | 5:30–8:00 PM AKST |
-| Hawaii | 4:30–8:00 PM HST | 4:30–8:00 PM HST |
+| UK shift | 13:00–23:30 | UK/Ireland daytime + after-school; US mornings |
+| US-East shift | 00:30–07:30 | US East/Central after-school evenings (matches Codeyoung's real 2:30–7:30 AM IST shift) |
+| US-West shift | 03:30–09:30 | US Pacific/Mountain/Alaska/Hawaii afternoons and evenings |
 
-**Product finding to flag:** with mentors limited to 08:00–22:00 IST, US East/Central parents only get **morning** slots. On weekdays that clashes with school, so US demand will lean heavily on **weekends**. If US conversion matters, the business can extend mentor operating hours (a config change). The suggestion engine and windows don't need code changes.
+**What each parent zone gets.** Class start times, computed with real zone rules, combining all shifts and the 08:00–21:00 parent window:
+
+| Parent zone | 20 Oct 2026 (before clocks change) | 10 Nov 2026 (after) |
+|---|---|---|
+| UK / Ireland | 8:30 AM–6:00 PM BST, plus 8:00 PM | 8:00 AM–5:00 PM GMT, plus 7:00–8:00 PM |
+| US Eastern | 8:00 AM–1:00 PM and **3:00–8:00 PM EDT** | 8:00 AM–12:00 PM and **2:00–8:00 PM EST** |
+| US Central | 8:00 AM–12:00 PM and **2:00–8:00 PM CDT** | 8:00–11:00 AM and **1:00–8:00 PM CST** |
+| US Mountain (Denver) | 8:00–11:00 AM and **1:00–8:00 PM MDT** | 8:00–10:00 AM and **12:00–8:00 PM MST** |
+| Arizona (no DST) | 8:00–10:00 AM and **12:00–8:00 PM MST** | same |
+| US Pacific | 8:00–10:00 AM and **12:00–8:00 PM PDT** | 8:00–9:00 AM and **11:00 AM–7:00 PM PST** |
+| Alaska | 8:00–9:00 AM and 11:00 AM–7:00 PM AKDT | 8:00 AM and 10:00 AM–6:00 PM AKST |
+| Hawaii | 9:00 AM–5:00 PM HST | 9:00 AM–5:00 PM HST |
+
+Every region now gets **after-school evening** slots, the times parents actually want. The mentor-side cost is a night shift that mentors opt into, which is how the industry already runs.
+
+**Notes**
+
+- Clock changes still move the *edges* (e.g. US Pacific loses its 7:30 PM start after 1 Nov because the US-West shift ends at 9:30 AM IST). This is computed per day, never hard-coded.
+- The 2-trials-per-day cap counts per **IST calendar date**. We schedule shifts so none cross IST midnight; that's why the US-East shift starts at 00:30, not 23:30.
+- Ops can change shifts per mentor without code changes.
 
 ### 6.2 Suggestions when the chosen time isn't available
 
@@ -140,7 +162,8 @@ Rules that apply to every step:
 | T10 | Parent's device clock is wrong | The server decides "now"; the past and too-soon slots are filtered server-side. |
 | T11 | A clock change moves slots in or out of the reasonable window (LA loses 8 AM slots after 1 Nov; London loses 4 PM after 25 Oct) | Windows recomputed per day; the DST banner explains the shift. |
 | T12 | "Same time on other days" across a DST change | Matches the parent's local clock time; the IST time shown to the mentor changes accordingly. |
-| T13 | Absurd hours (3 AM for a US parent, 1 AM for a mentor) | Never offered or suggested; booking API rejects them with `OUTSIDE_HOURS`. |
+| T13 | Absurd hours for the family (e.g. 3 AM for a US parent) | Never offered or suggested; booking API rejects them with `OUTSIDE_HOURS`. |
+| T14 | Time outside every mentor's declared shift | Never offered; booking API rejects it (no staffed mentor). Mentors are never assigned outside their own shift. |
 
 ### 7.2 Capacity, availability and concurrency
 
@@ -184,5 +207,5 @@ Rules that apply to every step:
 - A mentor's "day" for the 2-trial limit is their **local (IST) calendar day**.
 - Trial length is 60 minutes; no buffer between classes (configurable later).
 - All mentors are in India, but the system treats every mentor's zone generically.
-- Mentor operating hours are 08:00–22:00 IST; parent-friendly hours are 08:00–21:00 local. Both are business settings, not code.
-- Seed data uses mentor shifts inside operating hours that cover UK daytime, US mornings and US West/Hawaii evenings.
+- Mentors work region-aligned shifts they opted into, including IST night shifts for US families (industry norm, see §6.1). Parent-friendly hours are 08:00–21:00 local. Both are settings/data, not code.
+- Mentor shifts don't cross IST midnight, so "per day" for the 2-trial cap is the IST calendar date.

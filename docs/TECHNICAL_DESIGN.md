@@ -85,8 +85,9 @@ Holding a slot while a parent types details needs expiry and cleanup. Instead th
 ### ADR-5: Store instants in UTC, zones as IANA names
 All instants are `timestamptz`. Zones are IANA names (`America/New_York`), never offsets. Bookings snapshot both parent and mentor zones so historical displays stay correct.
 
-### ADR-6: Reasonable hours as two per-day windows, enforced on the server
-A slot must sit inside the mentor's operating window (08:00–22:00 mentor-local) **and** the parent's friendly window (08:00–21:00 parent-local). We considered a static per-region list of allowed hours ("US gets 8–11 AM"), but that list is wrong for half the year because of DST. Computing both windows per local date with real zone rules stays correct through every clock change. Enforcing them in slot generation *and* in the booking endpoint means the UI can't be bypassed. Trade-off, documented in the PRD (§6.1): US East/Central parents only get morning slots, so the windows are configuration, not code.
+### ADR-6: Reasonable hours = parent window + mentor shifts (no global IST cap)
+*Considered:* a global mentor window of 08:00–22:00 IST. That leaves US East/Central families with **mornings only** (school time on weekdays), and it's not how the industry works. Codeyoung's own US-shift mentors work 2:30–7:30 AM IST, and Cuemath's US shift is 12–7 AM IST.
+*Decided:* the same model as Calendly/Cal.com. Each mentor declares a **shift** (availability rules in their own zone), and is only ever booked inside it. The only global guard is the **parent-friendly window (08:00–21:00 parent-local)**, so no family is offered an absurd time. Both are evaluated per local date with real zone rules, so DST is automatic. They're enforced in slot generation *and* in `POST /bookings`, so the UI can't be bypassed. Mentor wellbeing comes from opt-in shifts plus the 2-trials/day cap.
 
 ### ADR-7: Show "Full" slots instead of hiding them
 Hiding unavailable times makes parents wonder whether the calendar is broken. Showing them greyed (only where some mentor is normally working) explains *why* the time isn't bookable, and gives a natural entry point to suggestions.
@@ -172,7 +173,7 @@ ALTER TABLE "AvailabilityRule"
   ADD CONSTRAINT rule_weekday CHECK (weekday BETWEEN 1 AND 7);
 ```
 
-Rules can't span midnight (a 22:00–01:00 shift would be two rules). Rules must also sit inside the mentor operating window (08:00–22:00 by default). This is checked in the service layer because the window is configuration, and slot generation clips to it again as a safety net.
+Rules can't span midnight (a 22:00–01:00 shift would be two rules). Seeded shifts are arranged so none cross the mentor's local midnight, which keeps the per-local-day capacity count intuitive (see PRD §6.1).
 
 ## 6. Time handling
 
@@ -196,18 +197,17 @@ Rules can't span midnight (a 22:00–01:00 shift would be two rules). Rules must
 
 `GET /api/slots?tz=America/New_York&from=2026-10-30&days=7`
 
-### 7.1 Reasonable-hours windows
+### 7.1 Reasonable-hours rules
 
-Every candidate class `[s, s + 60 min)` must lie fully inside **both**:
+Every candidate class `[s, s + 60 min)` must satisfy **both**:
 
-- **Mentor operating window**: `MENTOR_HOURS_START`–`MENTOR_HOURS_END` (08:00–22:00) on the mentor's local date, in the mentor's zone;
-- **Parent-friendly window**: `PARENT_HOURS_START`–`PARENT_HOURS_END` (08:00–21:00) on the parent's local date, in the parent's zone.
+- **Parent-friendly window**: inside `PARENT_HOURS_START`–`PARENT_HOURS_END` (08:00–21:00) on the parent's local date, built with `dayWindow(date, parentZone, …)` **per date**, so DST moves it automatically;
+- **Mentor shift**: inside at least one mentor's availability rule (their declared shift, in their own zone). There is deliberately **no global mentor-hours cap**; see ADR-6.
 
-Both are built with `dayWindow(date, zone, startMin, endMin)` **for each local date separately**. A DST change therefore moves the window in UTC automatically, with no offset maths. The windows are applied in three places, defence in depth:
+Enforced in two places:
 
-1. rule validation (an availability rule outside operating hours is rejected on create/seed);
-2. slot generation (rule intervals are clipped to the operating window; grid starts are filtered by the parent window);
-3. booking (`POST /bookings` re-checks both and returns `422 OUTSIDE_HOURS`, so a hand-crafted request can't book 3 AM).
+1. slot generation (grid starts outside the parent window are never produced; "staffed" requires a shift);
+2. booking (`POST /bookings` re-checks both and returns `422 OUTSIDE_HOURS`, so a hand-crafted request can't book 3 AM; and a mentor is only assigned if the class is inside *their* shift).
 
 A side effect we want: the parent window starts at 08:00, so the DST-ambiguous (1:00–2:00 AM) and non-existent (2:00–3:00 AM) local times can never be offered to a parent.
 
@@ -215,7 +215,7 @@ A side effect we want: the parent window starts at 08:00, so the DST-ambiguous (
 
 1. `normalizeZone(tz)`. Window = parent-local start of `from` → start of `from + days`, clipped to `[now + MIN_NOTICE, now + HORIZON]`.
 2. Query 1: active mentors + rules. Query 2: confirmed bookings overlapping the window ± 1 day (for IST-date counting).
-3. Per mentor: expand rules to UTC intervals and clip them to that date's operating window. Build `bookedCount[mentorId][mentorLocalDate]` and busy intervals.
+3. Per mentor: expand rules (shifts) to UTC intervals. Build `bookedCount[mentorId][mentorLocalDate]` and busy intervals.
 4. For each 30-min grid start `s` inside the parent-friendly window of its parent-local date:
    - `staffed` = mentors whose (clipped) availability contains the class;
    - `available` = staffed mentors with no overlapping booking **and** `bookedCount[m][mentorLocalDate(s)] < maxDailyTrials`.
@@ -285,7 +285,7 @@ POST /api/bookings   Idempotency-Key: <uuid>
 
 1. If a booking with this idempotencyKey exists → return it (same 201 body).
 2. Validate body (zod), normalizeZone, slot on grid, now+notice ≤ start ≤ now+horizon,
-   class inside mentor operating window and parent-friendly window.
+   class inside the parent-friendly window and inside at least one mentor's shift.
    → 422 VALIDATION / SLOT_TOO_SOON / OUTSIDE_HOURS
 3. candidates = AssignmentStrategy.rank(eligibleMentors(start))      -- outside the tx
 4. for m in candidates:                       -- one SHORT transaction per attempt
@@ -390,7 +390,6 @@ selectTime ──pick slot──▶ details ──submit──▶ submitting
 | `SLOT_STEP_MINUTES` | `30` | Grid step |
 | `CLASS_DURATION_MINUTES` | `60` | Trial length |
 | `DEFAULT_MAX_DAILY_TRIALS` | `2` | Per-mentor cap (per IST day) |
-| `MENTOR_HOURS_START` / `MENTOR_HOURS_END` | `08:00` / `22:00` | Mentor operating window, mentor-local |
 | `PARENT_HOURS_START` / `PARENT_HOURS_END` | `08:00` / `21:00` | Parent-friendly window, parent-local |
 | `SUGGESTIONS_SAME_DAY` / `_SAME_TIME` / `_NEAREST` | `4` / `3` / `4` | Max suggestions per strategy |
 | `MEETING_BASE_URL` | `https://meet.codeyoung-demo.com/trial` | Dummy link base |
@@ -399,10 +398,15 @@ Parsed with zod on boot. The process exits with a clear message if any value is 
 
 ## 13. Seed data
 
-10 mentors in `Asia/Kolkata`, all shifts inside 08:00–22:00 IST:
+10 mentors in `Asia/Kolkata`, on region-aligned shifts (IST, none crossing midnight):
 
-- **6 afternoon–evening shift** (13:00–22:00 IST → UK daytime, US East/Central mornings);
-- **4 morning shift** (08:00–14:00 IST → US West, Alaska and Hawaii evenings, UK mornings).
+| Shift | IST hours | Mentors | Serves |
+|---|---|---|---|
+| UK shift | 13:00–23:30 | 4 | UK/Ireland day + after-school; US mornings |
+| US-East shift | 00:30–07:30 | 4 | US East/Central after-school evenings |
+| US-West shift | 03:30–09:30 | 2 | US Pacific/Mountain/Alaska/Hawaii afternoons and evenings |
+
+Weekend rules differ slightly (e.g. UK shift starts at 09:00 IST on Sat/Sun, so UK weekend-morning demand is covered) to show that rules are per weekday.
 
 Bookings are seeded relative to *today* so reviewers see each edge state without setting anything up:
 
@@ -416,7 +420,7 @@ Bookings are seeded relative to *today* so reviewers see each edge state without
 | Level | What | Examples |
 |---|---|---|
 | Unit | Pure time + domain logic | DST day lengths (2026-11-01 NY = 25 h, 2027-03-14 NY = 23 h); 18:00 IST → 8:30 AM EDT on 31 Oct and 7:30 AM EST on 2 Nov; London BST→GMT on 25 Oct; Phoenix unaffected; Dublin label never "IST"; alias normalisation; rule expansion across dates; assignment ranking |
-| Unit: windows & suggestions | `dayWindow`, slot filtering, `rankSuggestions` | Coverage per zone matches PRD §6.1 on 20 Oct and 10 Nov 2026 (e.g. LA: 8:00/8:30 AM + 7:30/8:00 PM PDT → only 6:30–8:00 PM PST); no slot ever outside either window (property test over all zones × 60 days); SAME_DAY ranks by closeness to T; full day → SAME_TIME; same local 9:00 AM before/after 1 Nov maps to different UTC; T missing everywhere → NEAREST with ≤ 2 per day; nothing open → NONE |
+| Unit: windows & suggestions | `dayWindow`, slot filtering, `rankSuggestions` | Coverage per zone matches PRD §6.1 on 20 Oct and 10 Nov 2026 (e.g. New York evenings 3:00–8:00 PM EDT → 2:00–8:00 PM EST; LA loses its 8:00 PM start after 1 Nov); no slot ever outside the parent window or a mentor's shift; a mentor is never assigned outside their own shift (property test over all zones × 60 days); SAME_DAY ranks by closeness to T; full day → SAME_TIME; same local 9:00 AM before/after 1 Nov maps to different UTC; T missing everywhere → NEAREST with ≤ 2 per day; nothing open → NONE |
 | Integration | API + real Postgres + `FixedClock` | Happy path; 2/day cap; `OUTSIDE_HOURS` on a hand-crafted 3 AM booking; 409 body contains suggestions; **10 concurrent POSTs with one free mentor → 1 × 201, 9 × 409**; 30 parallel bookings → no mentor > 2/day, no overlaps; idempotent replay; active-trial rule; too-soon; cancel frees capacity; exclusion constraint rejects direct overlapping insert |
 | Frontend | React Testing Library | Slot labels in chosen zone; FULL slots render greyed and open suggestions; each suggestion strategy shows its headline; form validation messages |
 | E2E (optional) | Playwright | Book → confirm → mentor view shows IST |
