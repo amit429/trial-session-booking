@@ -1,10 +1,10 @@
 import { DateTime } from "luxon";
 
-export type Instant = Date | number;
+export type Instant = Date | number | string;
 export type Interval = { start: Date; end: Date };
 
-const toDt = (instant: Instant, zone: string) =>
-  DateTime.fromMillis(typeof instant === "number" ? instant : instant.getTime(), { zone });
+const toMillis = (instant: Instant) => (typeof instant === "number" ? instant : typeof instant === "string" ? Date.parse(instant) : instant.getTime());
+const toDt = (instant: Instant, zone: string) => DateTime.fromMillis(toMillis(instant), { zone });
 
 /** Wall-clock time on a local date. Minutes may be 1440 (= next day's midnight). */
 export function zonedTime(isoDate: string, minutes: number, zone: string): DateTime {
