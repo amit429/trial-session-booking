@@ -696,21 +696,26 @@ Tables use shadcn `Table` with simple server-side pagination; no table library.
 
 ## 13. Design system
 
-- **Base:** Tailwind CSS + shadcn/ui (Radix): accessible primitives, components live in our repo, CSS-variable tokens.
-- **Tokens:**
+The clickable prototype (`docs/ui-prototype.html`) is the visual reference. It follows shadcn/ui defaults so the real app can use the stock components with few changes.
 
-| Token | Value | Use |
-|---|---|---|
-| `--primary` | `#6D28D9` violet | Buttons, selected slot |
-| `--accent` | `#FACC15` yellow | Highlights, "Few left" |
-| `--success` | `#16A34A` | Open, confirmation |
-| `--warning` | `#D97706` | DST banner, Pending badge |
-| `--destructive` | `#DC2626` | Errors, cancel |
-| neutrals | slate | Text, borders, Full slots |
-| radius / spacing | 12 px / 4 px scale | — |
-| font | Plus Jakarta Sans → system-ui, `tabular-nums` for times | — |
+- **Base:** Tailwind CSS + shadcn/ui (Radix). Components live in our repo and are themed through CSS-variable tokens; light and dark themes.
+- **Type:** Geist (shadcn's default) with Geist Mono for references and links; 14 px base, `tabular-nums` for every time and count.
+- **Colour:** zinc neutrals with **one brand accent (violet)**, used only for selection and the main parent CTA.
 
-- The admin area uses the same tokens with a denser layout (14 px tables, sidebar).
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--background` / `--foreground` | `#FFFFFF` / `#09090B` | `#09090B` / `#FAFAFA` | Surfaces, text |
+| `--muted` / `--muted-foreground` | `#F4F4F5` / `#71717A` | `#1F1F23` / `#A1A1AA` | Secondary text, available days, Full slots |
+| `--border` | `#E4E4E7` | `#27272A` | Borders, separators |
+| `--primary` | `#18181B` | `#FAFAFA` | Default buttons (sign in, save) |
+| `--brand` | `#7C3AED` | `#8B5CF6` | Selected day, "Confirm booking", focus ring |
+| `--success` / `--warning` / `--destructive` | green / amber / red (soft backgrounds for badges and alerts) | same hues, lighter | Available · Few left · Full / errors |
+| radius | 8 px controls, 14–16 px cards | | |
+
+- **Components used:** Button (primary, brand, outline, ghost, destructive), Input, Select, Label, Card, Badge, Alert, Tabs, Calendar, Command (time-zone search), Popover, DropdownMenu, AlertDialog (cancel), Sheet (admin booking details), Sidebar + Breadcrumb (admin), Table, Progress, Sonner toasts, Avatar.
+- **Parent booking layout:** one card with three panes, the pattern parents know from Cal.com/Calendly. Pane 1 holds class details and the time-zone picker. Pane 2 is a month calendar with availability dots: green Available, amber Few left, red Fully booked. Pane 3 lists the day's times with a 12h/24h toggle; Full times are dashed. Suggestions replace the time list in place. Step 2 swaps the calendar and times for the details form, and the chosen time stays pinned in pane 1. Panes stack below 960 px.
+- **Calendar week start:** Sunday for US zones, Monday for European zones.
+- **Admin layout:** shadcn dashboard pattern: sidebar with grouped nav, inset content with breadcrumb, stat cards, bar chart (booked vs capacity per IST date), data tables with search and filter toolbar, row action menus, booking-detail sheet.
 - **Not chosen:** MUI / Ant Design (heavier, harder to give a friendly consumer look).
 
 ## 14. Configuration and local setup
