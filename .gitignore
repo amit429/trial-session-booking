@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*.local
+*.log
+.DS_Store
+.superpowers/
+# assignment brief stays out of the public repo
+*.pdf
