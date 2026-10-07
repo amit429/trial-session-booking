@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { CreateBookingRequest } from "@trial/shared";
+import { CancelRequest, CreateBookingRequest } from "@trial/shared";
+import type { Request } from "express";
+import { icsFile } from "../services/calendarService";
+import type { Viewer } from "../services/bookingService";
 import { z } from "zod";
 import type { Container } from "../container";
 import { AppError } from "../http/errors";
@@ -17,6 +20,32 @@ export function bookingRoutes(c: Container) {
     const body = parse(CreateBookingRequest, req.body);
     const sessionEmail = req.auth?.parent?.email;
     res.status(201).json(await c.bookings.create(body, key.data, sessionEmail));
+  });
+
+  const viewer = (req: Request, token?: unknown): Viewer => ({
+    token: typeof token === "string" && token ? token : undefined,
+    parentId: req.auth?.parent?.emailVerifiedAt ? req.auth.parent.id : undefined,
+    isAdmin: !!req.auth?.admin
+  });
+
+  r.get("/bookings/:reference", async (req, res) => {
+    const b = await c.bookings.getForViewer(req.params.reference, viewer(req, req.query.token));
+    res.json(c.bookings.toDto(b));
+  });
+
+  r.post("/bookings/:reference/cancel", async (req, res) => {
+    const { token } = parse(CancelRequest, req.body ?? {});
+    const v = viewer(req, token);
+    const by = v.isAdmin && !v.token ? "ADMIN" : "PARENT";
+    res.json(c.bookings.toDto(await c.bookings.cancel(req.params.reference, v, by)));
+  });
+
+  r.get("/bookings/:reference/calendar.ics", async (req, res) => {
+    const b = await c.bookings.getForViewer(req.params.reference, viewer(req, req.query.token));
+    res
+      .type("text/calendar; charset=utf-8")
+      .attachment(`trial-${b.reference}.ics`)
+      .send(icsFile({ ...b, mentorName: b.mentor.name, cancelled: b.status === "CANCELLED" }, c.clock.now()));
   });
 
   return r;
