@@ -5,16 +5,17 @@ import helmet from "helmet";
 import { pinoHttp } from "pino-http";
 import type { Container } from "@/container";
 import { errorHandler, notFoundHandler } from "@/http/errors";
-import { healthRoutes } from "@/modules/health/health.routes";
 import { originCheck } from "@/http/middleware/origin-check";
 import { loadSession } from "@/http/middleware/session";
-import { adminRoutes } from "@/modules/admin/admin.routes";
-import { authRoutes } from "@/modules/auth/auth.routes";
-import { bookingRoutes } from "@/modules/bookings/bookings.routes";
-import { devRoutes } from "@/modules/dev/dev.routes";
-import { meRoutes } from "@/modules/me/me.routes";
-import { slotRoutes } from "@/modules/slots/slots.routes";
+import { adminRoutes } from "@/modules/admin";
+import { authRoutes } from "@/modules/auth";
+import { bookingRoutes } from "@/modules/bookings";
+import { devRoutes } from "@/modules/dev";
+import { healthRoutes } from "@/modules/health";
+import { meRoutes } from "@/modules/me";
+import { slotRoutes } from "@/modules/slots";
 
+/** Express app: security and parsing middleware, sessions, then one router per feature module under /api. */
 export function createApp(c: Container, extra?: Router) {
   const app = express();
   app.disable("x-powered-by");
@@ -28,13 +29,7 @@ export function createApp(c: Container, extra?: Router) {
   const api = express.Router();
   api.use(originCheck(c.config.appBaseUrl));
   api.use(loadSession(c));
-  api.use(healthRoutes(c));
-  api.use(slotRoutes(c));
-  api.use(bookingRoutes(c));
-  api.use(authRoutes(c));
-  api.use(meRoutes(c));
-  api.use(adminRoutes(c));
-  api.use(devRoutes(c));
+  for (const routes of [healthRoutes, slotRoutes, bookingRoutes, authRoutes, meRoutes, adminRoutes, devRoutes]) api.use(routes(c));
   if (extra) api.use(extra);
   api.use(notFoundHandler);
 

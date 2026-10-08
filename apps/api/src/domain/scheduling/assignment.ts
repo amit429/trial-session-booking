@@ -1,5 +1,6 @@
-import { localDate, localDayWindow } from "@shared";
-import { availableMentorsAt, type EngineBooking, type EngineConfig, type EngineMentor } from "@/domain/scheduling/slot-engine";
+import { MINUTE_MS, localDate, localDayWindow } from "@shared";
+import { availableMentorsAt } from "./slot-engine";
+import type { EngineBooking, EngineConfig, EngineMentor } from "./types";
 
 type Context = { mentors: EngineMentor[]; bookings: EngineBooking[]; config: EngineConfig; now: Date };
 
@@ -10,8 +11,8 @@ type Context = { mentors: EngineMentor[]; bookings: EngineBooking[]; config: Eng
  * 3. id (deterministic).
  */
 export function rankMentors(candidates: EngineMentor[], start: Date, ctx: Context): EngineMentor[] {
-  const step = ctx.config.stepMinutes * 60_000;
-  const earliest = ctx.now.getTime() + ctx.config.minNoticeMinutes * 60_000;
+  const step = ctx.config.stepMinutes * MINUTE_MS;
+  const earliest = ctx.now.getTime() + ctx.config.minNoticeMinutes * MINUTE_MS;
   const scored = candidates.map(m => {
     const date = localDate(start, m.timezone);
     const load = ctx.bookings.filter(b => b.mentorId === m.id && b.mentorLocalDate === date).length;

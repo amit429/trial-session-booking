@@ -1,31 +1,10 @@
-import { addDays, dayWindow, expandRules, gridStarts, localDate, localDayWindow, type Interval, type WeeklyRule } from "@shared";
+import { DAY_MS, MINUTE_MS, addDays, dayWindow, expandRules, gridStarts, localDate, localDayWindow, type Interval } from "@shared";
 
 /** Pure availability engine (Technical Design §8). No I/O: callers load mentors and bookings. */
 
-export type EngineConfig = {
-  minNoticeMinutes: number;
-  horizonDays: number;
-  stepMinutes: number;
-  durationMinutes: number;
-  maxDailyTrials: number;
-  parentStartMinute: number;
-  parentEndMinute: number;
-};
-export type EngineMentor = { id: string; timezone: string; maxDailyTrials: number; rules: WeeklyRule[] };
-export type EngineBooking = { mentorId: string; startUtc: Date; endUtc: Date; mentorLocalDate: string };
-export type SlotStatus = "OPEN" | "FULL";
-export type Slot = { startUtc: Date; endUtc: Date; status: SlotStatus; availableMentors: number; availableMentorIds: string[] };
-export type DayStatus = "OPEN" | "FULL" | "CLOSED";
-export type Day = { date: string; status: DayStatus; slots: Slot[] };
-export type EngineInput = {
-  parentTz: string;
-  fromDate: string;
-  days: number;
-  now: Date;
-  config: EngineConfig;
-  mentors: EngineMentor[];
-  bookings: EngineBooking[];
-};
+import type { Day, DayStatus, EngineBooking, EngineConfig, EngineInput, EngineMentor, Slot } from "./types";
+
+export type { Day, DayStatus, EngineBooking, EngineConfig, EngineInput, EngineMentor, Slot, SlotStatus } from "./types";
 
 type Prepared = {
   mentor: EngineMentor;
@@ -34,10 +13,9 @@ type Prepared = {
   perDay: Map<string, number>;
 };
 
-const MIN = 60_000;
 
 function prepare(mentors: EngineMentor[], bookings: EngineBooking[], from: Date, to: Date): Prepared[] {
-  const pad = 2 * 86_400_000;
+  const pad = 2 * DAY_MS;
   return mentors.map(mentor => {
     const mine = bookings.filter(b => b.mentorId === mentor.id);
     const perDay = new Map<string, number>();
@@ -62,14 +40,14 @@ export function horizonEnd(parentTz: string, now: Date, config: EngineConfig): D
 
 export function isInParentWindow(start: Date, parentTz: string, config: EngineConfig): boolean {
   const w = dayWindow(localDate(start, parentTz), parentTz, config.parentStartMinute, config.parentEndMinute);
-  return start >= w.start && start.getTime() + config.durationMinutes * MIN <= w.end.getTime();
+  return start >= w.start && start.getTime() + config.durationMinutes * MINUTE_MS <= w.end.getTime();
 }
 
 export function buildSlots(input: EngineInput): Day[] {
   const { parentTz, fromDate, days, now, config } = input;
   const limit = horizonEnd(parentTz, now, config);
-  const earliest = now.getTime() + config.minNoticeMinutes * MIN;
-  const duration = config.durationMinutes * MIN;
+  const earliest = now.getTime() + config.minNoticeMinutes * MINUTE_MS;
+  const duration = config.durationMinutes * MINUTE_MS;
   const rangeStart = localDayWindow(fromDate, parentTz).start;
   const rangeEnd = localDayWindow(addDays(fromDate, days), parentTz).start;
   const prepared = prepare(input.mentors, input.bookings, rangeStart, rangeEnd);
@@ -104,14 +82,14 @@ export function buildSlots(input: EngineInput): Day[] {
 /** Mentors on shift for [start, start + duration), regardless of bookings. */
 export function staffedMentorsAt(start: Date, mentors: EngineMentor[], config: EngineConfig): EngineMentor[] {
   const s = start.getTime();
-  const e = s + config.durationMinutes * MIN;
+  const e = s + config.durationMinutes * MINUTE_MS;
   return prepare(mentors, [], start, new Date(e)).filter(p => isStaffed(p, s, e)).map(p => p.mentor);
 }
 
 /** Mentors who can take a class at `start` right now: on shift, free and under their daily cap. */
 export function availableMentorsAt(start: Date, mentors: EngineMentor[], bookings: EngineBooking[], config: EngineConfig): EngineMentor[] {
   const s = start.getTime();
-  const e = s + config.durationMinutes * MIN;
+  const e = s + config.durationMinutes * MINUTE_MS;
   return prepare(mentors, bookings, start, new Date(e))
     .filter(p => isStaffed(p, s, e) && isFree(p, s, e) && isUnderCap(p, s))
     .map(p => p.mentor);

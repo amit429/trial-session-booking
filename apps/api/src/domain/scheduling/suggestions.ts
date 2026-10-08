@@ -1,16 +1,15 @@
-import { formatClockMinutes, formatDay, localClockMinutes, type Transition } from "@shared";
-import type { Day, Slot } from "@/domain/scheduling/slot-engine";
+import { DAY_MS, formatClockMinutes, formatDay, localClockMinutes, type SuggestionNote, type SuggestionStrategy, type Transition } from "@shared";
+import type { Day, Slot } from "./types";
 
-export type SuggestionStrategy = "SAME_DAY" | "SAME_TIME" | "NEAREST" | "NONE";
 export type SuggestionLimits = { sameDay: number; sameTime: number; nearest: number };
 export type Suggestions = {
   strategy: SuggestionStrategy;
   requested: { date: string; time: string; timezone: string };
   suggestions: Slot[];
-  notes: { type: "DST_SHIFT"; message: string }[];
+  notes: SuggestionNote[];
 };
 
-const dayNumber = (iso: string) => Math.round(Date.parse(iso) / 86_400_000);
+const dayNumber = (iso: string) => Math.round(Date.parse(iso) / DAY_MS);
 
 /**
  * The 4-step cascade (PRD §8): same day → same clock time on nearby days → closest good times → nothing.

@@ -43,6 +43,16 @@ describe("manage a booking with its private link", () => {
     expect(slots.body.days[0].slots.find((s: { startUtc: string }) => s.startUtc === "2026-10-21T19:00:00.000Z").availableMentors).toBe(4);
   });
 
+  it("two simultaneous cancels notify people only once", async () => {
+    const { ref, token } = await book();
+    const [a, b] = await Promise.all([
+      request(app).post(`/api/bookings/${ref}/cancel`).send({ token }),
+      request(app).post(`/api/bookings/${ref}/cancel`).send({ token })
+    ]);
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(await db.outboxMessage.count({ where: { kind: "BOOKING_CANCELLED_PARENT" } })).toBe(1);
+  });
+
   it("refuses to cancel a class that has started", async () => {
     const { ref, token } = await book();
     clock.set(new Date("2026-10-21T19:05:00Z"));

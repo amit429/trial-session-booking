@@ -1,210 +1,169 @@
-import { Prisma, type Booking, type Mentor, type Parent } from "@prisma/client";
-import {
-  localClockMinutes,
-  localDate,
-  type AccountStatus,
-  type AdminBookingDto,
-  type BookingDto,
-  type CreateBookingRequest
-} from "@shared";
+import type { Prisma } from "@prisma/client";
+import { MINUTE_MS, dateOnlyToUtc, localClockMinutes, localDate, type BookingDto, type CreateBookingRequest } from "@shared";
 import type { Deps } from "@/container";
-import { rankMentors } from "@/domain/scheduling/assignment";
 import { meetingSuffix, newReference } from "@/domain/booking/reference";
+import { rankMentors } from "@/domain/scheduling/assignment";
 import { availableMentorsAt, horizonEnd, isInParentWindow, staffedMentorsAt } from "@/domain/scheduling/slot-engine";
-import { manageToken, verifyManageToken } from "@/domain/security/tokens";
+import type { EngineMentor } from "@/domain/scheduling/types";
+import { manageToken } from "@/domain/security/tokens";
 import { AppError, notFound } from "@/http/errors";
-import { googleCalendarUrl } from "@/modules/bookings/calendar";
-import type { OutboxService } from "@/modules/outbox/outbox.service";
-import type { SlotService } from "@/modules/slots/slots.service";
-import type { SuggestionService } from "@/modules/slots/suggestions.service";
+import type { OutboxService } from "@/modules/outbox";
+import type { SlotService, SuggestionService } from "@/modules/slots";
+import { canView, type Viewer } from "./booking-access";
+import { toBookingDto } from "./bookings.mapper";
+import { classEnd, type BookingsRepository, type FullBooking } from "./bookings.repository";
 
-export type FullBooking = Booking & { mentor: Mentor; parent: Parent };
-export type Viewer = { token?: string; parentId?: string; isAdmin?: boolean };
-
-/** Thrown inside a candidate's transaction to roll it back and try the next mentor. */
+/** Roll back this candidate's transaction and try the next mentor. */
 class TryNextMentor extends Error {}
 /** A concurrent request with the same idempotency key committed first. */
 class AlreadyCreated extends Error {}
 
-const TX = { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted, maxWait: 15_000, timeout: 15_000 };
-const isoDate = (d: Date) => d.toISOString().slice(0, 10);
-const dateOnly = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+type SlotErrorCode = "SLOT_TOO_SOON" | "OUTSIDE_HOURS" | "SLOT_UNAVAILABLE";
+const MAX_REFERENCE_RETRIES = 3;
 
-export function accountStatus(p: Pick<Parent, "passwordHash" | "emailVerifiedAt">): AccountStatus {
-  return !p.passwordHash ? "GUEST" : p.emailVerifiedAt ? "VERIFIED" : "PENDING";
+const isOverlapViolation = (err: unknown) => /booking_no_overlap_per_mentor|23P01/.test(describe(err));
+const isUniqueViolationOn = (err: unknown, field: string) => describe(err).includes("P2002") && describe(err).includes(field);
+function describe(err: unknown) {
+  const e = err as { code?: string; message?: string; meta?: unknown };
+  return `${e?.code ?? ""} ${e?.message ?? ""} ${JSON.stringify(e?.meta ?? {})}`;
 }
 
 export class BookingService {
   constructor(
     private deps: Deps,
+    private repo: BookingsRepository,
     private slots: SlotService,
     private suggestions: SuggestionService,
     private outbox: OutboxService
   ) {}
 
-  manageUrl(b: Pick<Booking, "id" | "reference">) {
+  manageUrl(b: { id: string; reference: string }) {
     return `${this.deps.config.appBaseUrl}/booking/${b.reference}?token=${manageToken(this.deps.config.appSecret, b.id)}`;
   }
 
-  toDto(b: FullBooking, withManage = true): BookingDto {
-    return {
-      reference: b.reference,
-      status: b.status,
-      startUtc: b.startUtc.toISOString(),
-      endUtc: b.endUtc.toISOString(),
-      parentTimezone: b.parentTimezone,
-      mentorTimezone: b.mentorTimezone,
-      meetingUrl: b.meetingUrl,
-      ...(withManage ? { manageUrl: this.manageUrl(b) } : {}),
-      googleCalendarUrl: googleCalendarUrl({ ...b, mentorName: b.mentor.name }),
-      subject: b.subject,
-      child: { name: b.childName, grade: b.childGrade },
-      parent: { name: b.parent.name, email: b.parent.email },
-      parentAccount: accountStatus(b.parent),
-      mentor: { id: b.mentor.id, name: b.mentor.name, bio: b.mentor.bio, shiftLabel: b.mentor.shiftLabel, timezone: b.mentor.timezone },
-      cancelledAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
-      cancelledBy: (b.cancelledBy as "PARENT" | "ADMIN" | null) ?? null,
-      createdAt: b.createdAt.toISOString()
-    };
+  toDto(b: FullBooking): BookingDto {
+    return toBookingDto(b, this.manageUrl(b));
   }
 
-  toAdminDto(b: FullBooking): AdminBookingDto {
-    return { ...this.toDto(b), id: b.id, mentorLocalDate: isoDate(b.mentorLocalDate), parentStatus: accountStatus(b.parent) };
-  }
-
-  private async slotError(code: "SLOT_TOO_SOON" | "OUTSIDE_HOURS" | "SLOT_UNAVAILABLE", start: Date, tz: string) {
-    const suggestions = await this.suggestions.suggest(tz, localDate(start, tz), localClockMinutes(start, tz), start);
-    return new AppError(code, code === "SLOT_UNAVAILABLE" ? 409 : 422, undefined, { suggestions });
-  }
-
-  private findByKey(key: string) {
-    return this.deps.db.booking.findUnique({ where: { idempotencyKey: key }, include: { mentor: true, parent: true } });
-  }
-
-  /** Atomic create (Technical Design §9.1). One short transaction per candidate mentor (ADR-8). */
+  /** Atomic create (Technical Design §9.1): validate the time, then one short transaction per candidate mentor (ADR-8). */
   async create(req: CreateBookingRequest, idempotencyKey: string, sessionEmail?: string): Promise<BookingDto> {
-    const replay = await this.findByKey(idempotencyKey);
+    const replay = await this.repo.findByIdempotencyKey(idempotencyKey);
     if (replay) return this.toDto(replay);
-
     if (sessionEmail && sessionEmail !== req.parent.email) {
       throw new AppError("VALIDATION", 422, "Please use your account email.", { fieldErrors: { "parent.email": "Please use your account email" } });
     }
 
-    const { config, clock } = this.deps;
-    const cfg = config.scheduling;
-    const tz = req.timezone;
     const start = new Date(req.startUtc);
-    const end = new Date(start.getTime() + cfg.durationMinutes * 60_000);
-    const now = clock.now();
+    const candidates = await this.rankedCandidates(start, req.timezone);
+    for (const mentor of candidates) {
+      const outcome = await this.tryMentor(mentor, start, req, idempotencyKey);
+      if (outcome) return this.toDto(outcome);
+    }
+    throw await this.slotError("SLOT_UNAVAILABLE", start, req.timezone);
+  }
 
+  /** Checks the time is bookable at all, then orders the mentors who are free (least loaded first). */
+  private async rankedCandidates(start: Date, tz: string): Promise<EngineMentor[]> {
+    const cfg = this.deps.config.scheduling;
+    const now = this.deps.clock.now();
     if (start >= horizonEnd(tz, now, cfg)) {
       throw new AppError("VALIDATION", 422, undefined, { fieldErrors: { startUtc: "Please pick a time from the list" } });
     }
-    if (start.getTime() < now.getTime() + cfg.minNoticeMinutes * 60_000) throw await this.slotError("SLOT_TOO_SOON", start, tz);
+    if (start.getTime() < now.getTime() + cfg.minNoticeMinutes * MINUTE_MS) throw await this.slotError("SLOT_TOO_SOON", start, tz);
 
-    const data = await this.slots.engineData(start, end);
+    const data = await this.slots.engineData(start, classEnd(start, cfg.durationMinutes));
     if (!isInParentWindow(start, tz, cfg) || !staffedMentorsAt(start, data.mentors, cfg).length) {
       throw await this.slotError("OUTSIDE_HOURS", start, tz);
     }
-
-    const candidates = rankMentors(availableMentorsAt(start, data.mentors, data.bookings, cfg), start, { ...data, config: cfg, now });
-
-    for (const candidate of candidates) {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          const booking = await this.deps.db.$transaction(async tx => {
-            // Parent: create if new, then lock. Same-email requests serialize here.
-            await tx.$executeRaw`INSERT INTO "Parent" (id, name, email, phone, timezone, "createdAt")
-              VALUES (gen_random_uuid(), ${req.parent.name}, ${req.parent.email}, ${req.parent.phone ?? null}, ${tz}, now())
-              ON CONFLICT (email) DO NOTHING`;
-            const [parent] = await tx.$queryRaw<{ id: string; passwordHash: string | null }[]>`
-              SELECT id::text, "passwordHash" FROM "Parent" WHERE email = ${req.parent.email} FOR UPDATE`;
-            if (await tx.booking.findUnique({ where: { idempotencyKey }, select: { id: true } })) throw new AlreadyCreated();
-            const active = await tx.booking.findFirst({
-              where: { parentId: parent.id, status: "CONFIRMED", startUtc: { gt: now } },
-              orderBy: { startUtc: "asc" }
-            });
-            if (active) {
-              throw new AppError("ACTIVE_TRIAL_EXISTS", 409, undefined, { reference: active.reference, startUtc: active.startUtc.toISOString(), timezone: active.parentTimezone });
-            }
-            if (!parent.passwordHash) {
-              await tx.parent.update({ where: { id: parent.id }, data: { name: req.parent.name, phone: req.parent.phone ?? null, timezone: tz } });
-            }
-
-            // Mentor: lock, then re-check against committed state.
-            await tx.$queryRaw`SELECT id FROM "Mentor" WHERE id = ${candidate.id}::uuid FOR UPDATE`;
-            const mentorDate = localDate(start, candidate.timezone);
-            const [overlap, dayCount] = await Promise.all([
-              tx.booking.count({ where: { mentorId: candidate.id, status: "CONFIRMED", startUtc: { lt: end }, endUtc: { gt: start } } }),
-              tx.booking.count({ where: { mentorId: candidate.id, status: "CONFIRMED", mentorLocalDate: dateOnly(mentorDate) } })
-            ]);
-            if (overlap > 0 || dayCount >= candidate.maxDailyTrials) throw new TryNextMentor();
-
-            const reference = newReference();
-            const created = await tx.booking.create({
-              data: {
-                reference,
-                parentId: parent.id,
-                mentorId: candidate.id,
-                childName: req.child.name,
-                childGrade: req.child.grade,
-                subject: req.subject,
-                startUtc: start,
-                endUtc: end,
-                mentorLocalDate: dateOnly(mentorDate),
-                parentTimezone: tz,
-                mentorTimezone: candidate.timezone,
-                meetingUrl: `${config.meetingBaseUrl}/${reference}-${meetingSuffix()}`,
-                idempotencyKey
-              },
-              include: { mentor: true, parent: true }
-            });
-            await this.outbox.bookingConfirmed(tx, created, this.manageUrl(created));
-            return created;
-          }, TX);
-          return this.toDto(booking);
-        } catch (err) {
-          if (err instanceof TryNextMentor) break;
-          if (err instanceof AlreadyCreated) return this.toDto((await this.findByKey(idempotencyKey))!);
-          if (err instanceof AppError) throw err;
-          const text = `${(err as Error)?.message ?? ""} ${JSON.stringify((err as { meta?: unknown })?.meta ?? {})}`;
-          if (text.includes("booking_no_overlap_per_mentor") || text.includes("23P01")) break;
-          if (text.includes("idempotencyKey")) {
-            const winner = await this.findByKey(idempotencyKey);
-            if (winner) return this.toDto(winner);
-          }
-          if (text.includes("reference")) continue; // reference collision: new reference, same mentor
-          throw err;
-        }
-      }
-    }
-    throw await this.slotError("SLOT_UNAVAILABLE", start, tz);
+    return rankMentors(availableMentorsAt(start, data.mentors, data.bookings, cfg), start, { ...data, config: cfg, now });
   }
 
-  /** Booking visible to a token holder, its verified owner, or an admin. Anything else is 404. */
+  /** One candidate: the booking, or null to try the next mentor. Throws ACTIVE_TRIAL_EXISTS. */
+  private async tryMentor(mentor: EngineMentor, start: Date, req: CreateBookingRequest, idempotencyKey: string): Promise<FullBooking | null> {
+    for (let attempt = 0; attempt < MAX_REFERENCE_RETRIES; attempt++) {
+      try {
+        return await this.repo.transaction(tx => this.bookInTransaction(tx, mentor, start, req, idempotencyKey));
+      } catch (err) {
+        if (err instanceof TryNextMentor || isOverlapViolation(err)) return null;
+        if (err instanceof AlreadyCreated || isUniqueViolationOn(err, "idempotencyKey")) {
+          const winner = await this.repo.findByIdempotencyKey(idempotencyKey);
+          if (winner) return winner;
+        }
+        if (isUniqueViolationOn(err, "reference")) continue;
+        throw err;
+      }
+    }
+    return null;
+  }
+
+  private async bookInTransaction(tx: Prisma.TransactionClient, mentor: EngineMentor, start: Date, req: CreateBookingRequest, idempotencyKey: string) {
+    const { config, clock } = this.deps;
+    const now = clock.now();
+    const end = classEnd(start, config.scheduling.durationMinutes);
+    const contact = { ...req.parent, timezone: req.timezone };
+
+    const parent = await this.repo.lockParent(tx, contact);
+    if (await this.repo.findByIdempotencyKey(idempotencyKey, tx)) throw new AlreadyCreated();
+    const active = await this.repo.findUpcomingForParent(tx, parent.id, now);
+    if (active) {
+      throw new AppError("ACTIVE_TRIAL_EXISTS", 409, undefined, { reference: active.reference, startUtc: active.startUtc.toISOString(), timezone: active.parentTimezone });
+    }
+    await this.repo.updateParentContact(tx, parent.id, contact, !parent.passwordHash);
+
+    await this.repo.lockMentor(tx, mentor.id);
+    const mentorDate = dateOnlyToUtc(localDate(start, mentor.timezone));
+    const [overlap, dayCount] = await Promise.all([
+      this.repo.countOverlapping(tx, mentor.id, start, end),
+      this.repo.countOnMentorDate(tx, mentor.id, mentorDate)
+    ]);
+    if (overlap > 0 || dayCount >= mentor.maxDailyTrials) throw new TryNextMentor();
+
+    const reference = newReference();
+    const created = await this.repo.create(tx, {
+      reference,
+      parentId: parent.id,
+      mentorId: mentor.id,
+      childName: req.child.name,
+      childGrade: req.child.grade,
+      subject: req.subject,
+      startUtc: start,
+      endUtc: end,
+      mentorLocalDate: mentorDate,
+      parentTimezone: req.timezone,
+      mentorTimezone: mentor.timezone,
+      meetingUrl: `${config.meetingBaseUrl}/${reference}-${meetingSuffix()}`,
+      idempotencyKey
+    });
+    await this.outbox.bookingConfirmed(tx, created, this.manageUrl(created));
+    return created;
+  }
+
+  private async slotError(code: SlotErrorCode, start: Date, tz: string) {
+    const suggestions = await this.suggestions.suggest(tz, localDate(start, tz), localClockMinutes(start, tz), start);
+    return new AppError(code, code === "SLOT_UNAVAILABLE" ? 409 : 422, undefined, { suggestions });
+  }
+
+  /** The booking if this viewer may see it; otherwise 404 (never 403, so existence isn't revealed). */
   async getForViewer(reference: string, viewer: Viewer): Promise<FullBooking> {
-    const b = await this.deps.db.booking.findUnique({ where: { reference }, include: { mentor: true, parent: true } });
-    if (!b) throw notFound("We couldn't find this booking.");
-    const ok =
-      viewer.isAdmin ||
-      (viewer.token && verifyManageToken(this.deps.config.appSecret, b.id, viewer.token)) ||
-      (viewer.parentId && viewer.parentId === b.parentId && !!b.parent.emailVerifiedAt);
-    if (!ok) throw notFound("We couldn't find this booking.");
+    const b = await this.repo.findByReference(reference);
+    if (!b || !canView(b, viewer, this.deps.config.appSecret)) throw notFound("We couldn't find this booking.");
     return b;
   }
 
   async cancel(reference: string, viewer: Viewer, by: "PARENT" | "ADMIN"): Promise<FullBooking> {
     const b = await this.getForViewer(reference, viewer);
     if (b.status === "CANCELLED") return b;
-    if (b.startUtc <= this.deps.clock.now()) throw new AppError("ALREADY_STARTED", 422);
-    return this.deps.db.$transaction(async tx => {
-      const updated = await tx.booking.update({
-        where: { id: b.id },
-        data: { status: "CANCELLED", cancelledAt: this.deps.clock.now(), cancelledBy: by },
-        include: { mentor: true, parent: true }
-      });
-      await this.outbox.bookingCancelled(tx, updated, by);
+    const now = this.deps.clock.now();
+    if (b.startUtc <= now) throw new AppError("ALREADY_STARTED", 422);
+    const cancelled = await this.repo.transaction(async tx => {
+      const updated = await this.repo.cancelIfConfirmed(tx, b.id, by, now);
+      if (updated) await this.outbox.bookingCancelled(tx, updated, by);
       return updated;
-    }, TX);
+    });
+    return cancelled ?? (await this.getForViewer(reference, viewer));
+  }
+
+  async listForParent(parentId: string, scope: "upcoming" | "past" | "all"): Promise<BookingDto[]> {
+    return (await this.repo.listForParent(parentId, scope, this.deps.clock.now())).map(b => this.toDto(b));
   }
 }

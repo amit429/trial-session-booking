@@ -1,41 +1,24 @@
-import { addDays, localDate, localDayWindow, upcomingTransitions, type DaySlotsDto, type SlotDto, type SlotsResponse } from "@shared";
+import { addDays, localDate, localDayWindow, upcomingTransitions, type SlotsResponse } from "@shared";
 import type { Deps } from "@/container";
-import { buildSlots, type Day, type EngineBooking, type EngineConfig, type EngineMentor, type Slot } from "@/domain/scheduling/slot-engine";
+import type { DbClient } from "@/core/types";
+import { buildSlots } from "@/domain/scheduling/slot-engine";
+import type { Day, EngineBooking, EngineConfig, EngineMentor } from "@/domain/scheduling/types";
+import { toDayDto, toEngineBooking, toEngineMentor, toTransitionDto } from "./slots.mapper";
+import type { SlotsRepository } from "./slots.repository";
 
-export const toSlotDto = (s: Slot): SlotDto => ({
-  startUtc: s.startUtc.toISOString(),
-  endUtc: s.endUtc.toISOString(),
-  status: s.status,
-  availableMentors: s.availableMentors
-});
-export const toDayDto = (d: Day): DaySlotsDto => ({ date: d.date, status: d.status, slots: d.slots.map(toSlotDto) });
+export type EngineData = { mentors: EngineMentor[]; bookings: EngineBooking[] };
 
+/** Loads availability data (two queries) and runs the pure slot engine for a parent's zone. */
 export class SlotService {
-  constructor(private deps: Deps) {}
+  constructor(private deps: Deps, private repo: SlotsRepository) {}
 
   get engineConfig(): EngineConfig {
     return this.deps.config.scheduling;
   }
 
-  /** Active mentors with rules, and confirmed bookings around [from, to). Two queries. */
-  async engineData(from: Date, to: Date, db = this.deps.db): Promise<{ mentors: EngineMentor[]; bookings: EngineBooking[] }> {
-    const pad = 2 * 86_400_000;
-    const [mentors, bookings] = await Promise.all([
-      db.mentor.findMany({ where: { isActive: true }, include: { rules: true }, orderBy: { id: "asc" } }),
-      db.booking.findMany({
-        where: { status: "CONFIRMED", startUtc: { lt: new Date(to.getTime() + pad) }, endUtc: { gt: new Date(from.getTime() - pad) } },
-        select: { mentorId: true, startUtc: true, endUtc: true, mentorLocalDate: true }
-      })
-    ]);
-    return {
-      mentors: mentors.map(m => ({
-        id: m.id,
-        timezone: m.timezone,
-        maxDailyTrials: m.maxDailyTrials,
-        rules: m.rules.map(r => ({ weekday: r.weekday, startMinute: r.startMinute, endMinute: r.endMinute }))
-      })),
-      bookings: bookings.map(b => ({ ...b, mentorLocalDate: b.mentorLocalDate.toISOString().slice(0, 10) }))
-    };
+  async engineData(from: Date, to: Date, client?: DbClient): Promise<EngineData> {
+    const [mentors, bookings] = await Promise.all([this.repo.activeMentorsWithRules(client), this.repo.confirmedAround(from, to, client)]);
+    return { mentors: mentors.map(toEngineMentor), bookings: bookings.map(toEngineBooking) };
   }
 
   today(tz: string) {
@@ -58,7 +41,7 @@ export class SlotService {
       timezone: tz,
       meta: { today, horizonDays, minNoticeMinutes, classDurationMinutes: durationMinutes },
       days: list.map(toDayDto),
-      transitions: upcomingTransitions(tz, today, horizonDays).map(t => ({ date: t.date, atUtc: t.at.toISOString(), fromOffset: t.fromOffset, toOffset: t.toOffset, back: t.back }))
+      transitions: upcomingTransitions(tz, today, horizonDays).map(toTransitionDto)
     };
   }
 }

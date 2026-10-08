@@ -1,43 +1,62 @@
-import type { OutboxMessage, Prisma } from "@prisma/client";
-import { addDays, formatClockMinutes, localDate, localWeekday, zonedTime, type OutboxDto } from "@shared";
+import type { Prisma } from "@prisma/client";
+import {
+  DAY_MS,
+  MENTOR_TIMEZONE,
+  addDays,
+  dateOnlyToUtc,
+  localDate,
+  utcToDateOnly,
+  type AdminBookingDetailDto,
+  type AdminBookingDto,
+  type AdminDashboardDto,
+  type AdminMentorDto,
+  type AdminParentDetailDto,
+  type AdminParentRowDto,
+  type MentorScheduleDto,
+  type Paged
+} from "@shared";
 import type { Deps } from "@/container";
 import { notFound } from "@/http/errors";
-import { accountStatus, type BookingService } from "@/modules/bookings/bookings.service";
-
-const IST = "Asia/Kolkata";
-const dateOnly = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
-const include = { mentor: true, parent: true } as const;
-
-export const toOutboxDto = (m: OutboxMessage & { booking?: { reference: string } | null }): OutboxDto => ({
-  id: m.id, kind: m.kind, toEmail: m.toEmail, subject: m.subject, body: m.body,
-  bookingReference: m.booking?.reference ?? null, createdAt: m.createdAt.toISOString()
-});
+import { accountStatus, toAdminBookingDto, type BookingService } from "@/modules/bookings";
+import { toOutboxDto } from "@/modules/outbox";
+import type { ParentsRepository } from "@/modules/parents";
+import { isOnShift, toWeeklyShift } from "./admin.mapper";
+import type { AdminRepository } from "./admin.repository";
 
 export type BookingFilters = { scope: "upcoming" | "past" | "all"; status?: "CONFIRMED" | "CANCELLED"; mentorId?: string; q?: string; page: number; pageSize: number };
 
 export class AdminService {
-  constructor(private deps: Deps, private bookings: BookingService) {}
+  constructor(
+    private deps: Deps,
+    private repo: AdminRepository,
+    private parents: ParentsRepository,
+    private bookings: BookingService
+  ) {}
 
-  private now() { return this.deps.clock.now(); }
-  private todayIst() { return localDate(this.now(), IST); }
+  private now() {
+    return this.deps.clock.now();
+  }
+  private todayIst() {
+    return localDate(this.now(), MENTOR_TIMEZONE);
+  }
+  private adminDto = (b: Parameters<typeof toAdminBookingDto>[0]) => toAdminBookingDto(b, this.bookings.manageUrl(b));
 
   /** Load per India date: booked vs capacity (mentors on shift that weekday × their daily cap). */
-  async dashboard(days: number) {
+  async dashboard(days: number): Promise<AdminDashboardDto> {
     const today = this.todayIst();
     const dates = Array.from({ length: days }, (_, i) => addDays(today, i));
+    const now = this.now();
     const [mentors, counts, next7] = await Promise.all([
-      this.deps.db.mentor.findMany({ where: { isActive: true }, include: { rules: true } }),
-      this.deps.db.booking.groupBy({ by: ["mentorLocalDate"], where: { status: "CONFIRMED", mentorLocalDate: { gte: dateOnly(dates[0]), lte: dateOnly(dates.at(-1)!) } }, _count: { _all: true } }),
-      this.deps.db.booking.count({ where: { status: "CONFIRMED", startUtc: { gt: this.now(), lt: new Date(this.now().getTime() + 7 * 86_400_000) } } })
+      this.repo.activeMentorsWithRules(),
+      this.repo.confirmedCountsByMentorDate(dateOnlyToUtc(dates[0]), dateOnlyToUtc(dates[dates.length - 1])),
+      this.repo.countConfirmedStarting(now, new Date(now.getTime() + 7 * DAY_MS))
     ]);
-    const booked = new Map(counts.map(c => [c.mentorLocalDate.toISOString().slice(0, 10), c._count._all]));
-    const capacity = dates.map(istDate => {
-      const cap = mentors.reduce((sum, m) => {
-        const wd = localWeekday(zonedTime(istDate, 720, m.timezone).toJSDate(), m.timezone);
-        return sum + (m.rules.some(r => r.weekday === wd) ? m.maxDailyTrials : 0);
-      }, 0);
-      return { istDate, booked: booked.get(istDate) ?? 0, capacity: cap };
-    });
+    const booked = new Map(counts.map(c => [utcToDateOnly(c.mentorLocalDate), c._count._all]));
+    const capacity = dates.map(istDate => ({
+      istDate,
+      booked: booked.get(istDate) ?? 0,
+      capacity: mentors.reduce((sum, m) => sum + (isOnShift(m, istDate) ? m.maxDailyTrials : 0), 0)
+    }));
     return {
       today,
       todayCount: capacity[0]?.booked ?? 0,
@@ -47,46 +66,43 @@ export class AdminService {
     };
   }
 
-  async listBookings(f: BookingFilters) {
+  async listBookings(f: BookingFilters): Promise<Paged<AdminBookingDto>> {
     const now = this.now();
     const q = f.q?.trim();
     const where: Prisma.BookingWhereInput = {
       ...(f.scope === "upcoming" ? { startUtc: { gt: now } } : f.scope === "past" ? { startUtc: { lte: now } } : {}),
       ...(f.status ? { status: f.status } : {}),
       ...(f.mentorId ? { mentorId: f.mentorId } : {}),
-      ...(q ? { OR: [
-        { reference: { contains: q, mode: "insensitive" } },
-        { childName: { contains: q, mode: "insensitive" } },
-        { parent: { email: { contains: q, mode: "insensitive" } } },
-        { parent: { name: { contains: q, mode: "insensitive" } } }
-      ] } : {})
+      ...(q
+        ? {
+            OR: [
+              { reference: { contains: q, mode: "insensitive" } },
+              { childName: { contains: q, mode: "insensitive" } },
+              { parent: { email: { contains: q, mode: "insensitive" } } },
+              { parent: { name: { contains: q, mode: "insensitive" } } }
+            ]
+          }
+        : {})
     };
-    const [rows, total] = await Promise.all([
-      this.deps.db.booking.findMany({ where, include, orderBy: { startUtc: f.scope === "past" ? "desc" : "asc" }, skip: (f.page - 1) * f.pageSize, take: f.pageSize }),
-      this.deps.db.booking.count({ where })
-    ]);
-    return { items: rows.map(b => this.bookings.toAdminDto(b)), total };
+    const [rows, total] = await this.repo.searchBookings(where, f.scope === "past" ? "desc" : "asc", f.page, f.pageSize);
+    return { items: rows.map(this.adminDto), total };
   }
 
-  async bookingDetail(reference: string) {
-    const b = await this.deps.db.booking.findUnique({ where: { reference }, include: { ...include, outbox: { orderBy: { createdAt: "asc" } } } });
+  async bookingDetail(reference: string): Promise<AdminBookingDetailDto> {
+    const b = await this.repo.bookingWithMessages(reference);
     if (!b) throw notFound("We couldn't find this booking.");
-    return { ...this.bookings.toAdminDto(b), messages: b.outbox.map(m => toOutboxDto({ ...m, booking: { reference } })) };
+    return { ...this.adminDto(b), messages: b.outbox.map(m => toOutboxDto({ ...m, booking: { reference } })) };
   }
 
-  async cancel(reference: string) {
-    return this.bookings.toAdminDto(await this.bookings.cancel(reference, { isAdmin: true }, "ADMIN"));
+  async cancel(reference: string): Promise<AdminBookingDto> {
+    return this.adminDto(await this.bookings.cancel(reference, { isAdmin: true }, "ADMIN"));
   }
 
-  async listParents(q: string | undefined, page: number, pageSize: number) {
+  async listParents(q: string | undefined, page: number, pageSize: number): Promise<Paged<AdminParentRowDto>> {
+    const term = q?.trim();
+    const where: Prisma.ParentWhereInput = term ? { OR: [{ email: { contains: term, mode: "insensitive" } }, { name: { contains: term, mode: "insensitive" } }] } : {};
+    const [rows, total] = await this.parents.search(where, page, pageSize);
     const now = this.now();
-    const where: Prisma.ParentWhereInput = q?.trim()
-      ? { OR: [{ email: { contains: q.trim(), mode: "insensitive" } }, { name: { contains: q.trim(), mode: "insensitive" } }] }
-      : {};
-    const [rows, total] = await Promise.all([
-      this.deps.db.parent.findMany({ where, include: { bookings: { select: { status: true, startUtc: true } } }, orderBy: { name: "asc" }, skip: (page - 1) * pageSize, take: pageSize }),
-      this.deps.db.parent.count({ where })
-    ]);
     return {
       items: rows.map(p => ({
         id: p.id, name: p.name, email: p.email, phone: p.phone, timezone: p.timezone, status: accountStatus(p),
@@ -97,62 +113,40 @@ export class AdminService {
     };
   }
 
-  async parentDetail(id: string) {
-    const p = await this.deps.db.parent.findUnique({ where: { id }, include: { bookings: { include, orderBy: { startUtc: "desc" } } } });
+  async parentDetail(id: string): Promise<AdminParentDetailDto> {
+    const p = await this.parents.findWithBookings(id);
     if (!p) throw notFound("We couldn't find this parent.");
     return {
       parent: { id: p.id, name: p.name, email: p.email, phone: p.phone, timezone: p.timezone, status: accountStatus(p), createdAt: p.createdAt.toISOString() },
-      bookings: p.bookings.map(b => this.bookings.toAdminDto(b))
+      bookings: p.bookings.map(this.adminDto)
     };
   }
 
-  private weeklyShift(rules: { weekday: number; startMinute: number; endMinute: number }[]) {
-    return [...rules].sort((a, b) => a.weekday - b.weekday).map(r => ({ weekday: r.weekday, start: formatClockMinutes(r.startMinute, true), end: formatClockMinutes(r.endMinute % 1440, true) }));
-  }
-
-  async listMentors() {
+  async listMentors(): Promise<AdminMentorDto[]> {
     const today = this.todayIst();
-    const mentors = await this.deps.db.mentor.findMany({
-      include: { rules: true, bookings: { where: { status: "CONFIRMED", startUtc: { gt: this.now() } }, select: { mentorLocalDate: true } } },
-      orderBy: { name: "asc" }
-    });
-    return mentors.map(m => {
-      const wd = localWeekday(zonedTime(today, 720, m.timezone).toJSDate(), m.timezone);
-      return {
-        id: m.id, name: m.name, email: m.email, bio: m.bio, shiftLabel: m.shiftLabel, timezone: m.timezone, maxDailyTrials: m.maxDailyTrials,
-        weeklyShift: this.weeklyShift(m.rules),
-        onShiftToday: m.rules.some(r => r.weekday === wd),
-        todayBooked: m.bookings.filter(b => b.mentorLocalDate.toISOString().slice(0, 10) === today).length,
-        upcomingCount: m.bookings.length
-      };
-    });
+    const mentors = await this.repo.mentorsWithUpcoming(this.now());
+    return mentors.map(m => ({
+      id: m.id, name: m.name, email: m.email, bio: m.bio, shiftLabel: m.shiftLabel, timezone: m.timezone, maxDailyTrials: m.maxDailyTrials,
+      weeklyShift: toWeeklyShift(m.rules),
+      onShiftToday: isOnShift(m, today),
+      todayBooked: m.bookings.filter(b => utcToDateOnly(b.mentorLocalDate) === today).length,
+      upcomingCount: m.bookings.length
+    }));
   }
 
-  async mentorSchedule(id: string, from: string | undefined, days: number) {
-    const m = await this.deps.db.mentor.findUnique({ where: { id }, include: { rules: true } });
+  async mentorSchedule(id: string, from: string | undefined, days: number): Promise<MentorScheduleDto> {
+    const m = await this.repo.mentorWithRules(id);
     if (!m) throw notFound("We couldn't find this mentor.");
     const start = from ?? localDate(this.now(), m.timezone);
     const dates = Array.from({ length: days }, (_, i) => addDays(start, i));
-    const rows = await this.deps.db.booking.findMany({
-      where: { mentorId: id, status: "CONFIRMED", mentorLocalDate: { gte: dateOnly(dates[0]), lte: dateOnly(dates.at(-1)!) } },
-      include, orderBy: { startUtc: "asc" }
-    });
+    const rows = await this.repo.confirmedForMentorBetweenDates(id, dateOnlyToUtc(dates[0]), dateOnlyToUtc(dates[dates.length - 1]));
     return {
       mentor: { id: m.id, name: m.name, bio: m.bio, shiftLabel: m.shiftLabel, timezone: m.timezone, maxDailyTrials: m.maxDailyTrials },
-      weeklyShift: this.weeklyShift(m.rules),
+      weeklyShift: toWeeklyShift(m.rules),
       days: dates.map(d => {
-        const wd = localWeekday(zonedTime(d, 720, m.timezone).toJSDate(), m.timezone);
-        const list = rows.filter(b => b.mentorLocalDate.toISOString().slice(0, 10) === d);
-        return { istDate: d, onShift: m.rules.some(r => r.weekday === wd), booked: list.length, max: m.maxDailyTrials, bookings: list.map(b => this.bookings.toAdminDto(b)) };
+        const list = rows.filter(b => utcToDateOnly(b.mentorLocalDate) === d);
+        return { istDate: d, onShift: isOnShift(m, d), booked: list.length, max: m.maxDailyTrials, bookings: list.map(this.adminDto) };
       })
     };
-  }
-
-  async outbox(page: number, pageSize: number) {
-    const [rows, total] = await Promise.all([
-      this.deps.db.outboxMessage.findMany({ include: { booking: { select: { reference: true } } }, orderBy: { createdAt: "desc" }, skip: (page - 1) * pageSize, take: pageSize }),
-      this.deps.db.outboxMessage.count()
-    ]);
-    return { items: rows.map(toOutboxDto), total };
   }
 }
