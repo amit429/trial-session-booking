@@ -129,6 +129,24 @@ Notable moments during the build:
 
 **Agent:** Resumed from the progress ledger and finished the remaining tasks: confirmation page, accounts and My bookings, admin console, then the README, API reference and this transcript.
 
+> **Me:** When I am trying to log in… does not redirect… admin… create account CTA why?… /admin route… no loading states… skeleton loading…
+
+**Agent:** Fixed the stale session cache behind the double sign-in, gave the admin a booking view, showed the create-account prompt only to guests without an account, and added route-level skeletons and a top progress bar.
+
+## 8. Landing page and a codebase-wide clean-up
+
+> **Me:** There should be a proper landing page , we should directly not start with /book , we should give the user option to book a class or can login sign up , a hero section or something and also please go through the entire code base , check for all the coding issues or bad coding practices and all followed and lets fix that as well , one thing is there should be proper folder structure for components and serviuces and each page / bifurcated correctly and also every model should have a new .ts file and all models should be imported from common folders also also lets try to implement module imports like @shared and @ somthing and from theat module we can import the common things or things related to that , research on net some more coding practices and fix everything
+
+**Agent:**
+
+- Researched bulletproof-react (feature folders, unidirectional imports), Node layered/module architecture, and tsconfig path aliases with Vite.
+- **Shared:** one file per model (`models/*.model.ts`), schemas, constants, errors and utils split out; imported everywhere as `@shared`.
+- **API:** each module is `routes → controller → service → repository` with a mapper and an `index.ts`; `core/` holds config, clock, logger and DB. Added a test that two simultaneous cancels notify people only once.
+- **Web:** feature folders with `api/` hooks, `components/`, `pages/` (one page per file) and `index.ts`; shared booking UI moved to `components/booking`; a query-key factory; typed API errors (no `any`).
+- **Lint:** ESLint flat config whose rules enforce the boundaries (no feature-to-feature imports, pure domain, framework-free shared), plus Prettier. Fixed every finding, including `setState`-in-effect patterns now written as derived state.
+- **Landing page** at `/`: hero with book / sign in / sign up, a live card of the next open times in the visitor's zone, how it works, subjects (preselecting the subject in booking), FAQ and a closing call to action.
+- While fixing a lint warning it briefly broke calendar escaping, then added a unit test that pins RFC 5545 escaping so that can't regress.
+
 ---
 
 ## Raw session export

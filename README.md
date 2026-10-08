@@ -190,6 +190,8 @@ npm test                  # everything (shared, api, web)
 npm run test:unit         # time module, slot engine, suggestions, assignment, tokens
 npm run test:integration  # API against a real Postgres (port 5433)
 npm run typecheck
+npm run lint              # ESLint, including the architecture-boundary rules
+npm run format:check      # Prettier
 npm run build
 ```
 
@@ -246,9 +248,26 @@ apps/api     Express 5 + Prisma 6 + PostgreSQL 16
 packages/shared   Luxon time module, zod schemas (used by web and api), error codes
 ```
 
-- **API layers:** routes → services → pure domain functions (`slotEngine`, `suggestions`, `assignment`) → Prisma.
+- **API modules:** each module in `apps/api/src/modules/<name>/` has `routes → controller → service → repository`, plus a `mapper` (DB row → DTO) and an `index.ts` public API. Pure scheduling rules live in `domain/` (no DB or HTTP code).
+- **Web features:** each feature in `apps/web/src/features/<name>/` has `api/` (TanStack Query hooks), `components/`, `pages/` (one page per file) and `index.ts`. Shared UI sits in `components/` (`ui`, `layout`, `booking`, `feedback`, `guards`), with `hooks/` and `lib/` alongside it; `app/` holds providers and the router.
+- **Shared models:** every DTO is its own file in `packages/shared/src/models/*.model.ts`, imported by both apps as `@shared`.
 - **Composition:** one root (`container.ts`) wires everything, so tests swap in a fixed clock and the test database.
 - **Slots:** computed per request from mentor shifts; there is no slots table.
+
+**Import aliases** (tsconfig `paths`; `vite-tsconfig-paths` in Vite/Vitest, `tsx` natively):
+
+| Alias     | Points to                                     |
+| --------- | --------------------------------------------- |
+| `@shared` | `packages/shared/src` (models, schemas, time) |
+| `@/…`     | the current app's `src/`                      |
+
+**Enforced boundaries** (`eslint.config.js`):
+
+- A web feature never imports another feature.
+- `components/`, `hooks/` and `lib/` never import features or `app/`.
+- API modules import each other only through `index.ts`.
+- `domain/` stays pure.
+- `packages/shared` stays framework-free.
 
 See the [technical design](docs/TECHNICAL_DESIGN.md) for the data model, algorithms and decision records.
 
@@ -267,8 +286,21 @@ See the [technical design](docs/TECHNICAL_DESIGN.md) for the data model, algorit
 ## Project layout
 
 ```
-apps/api/src/{domain,services,routes,http}   apps/api/prisma/{schema.prisma,migrations,seed.ts}
-apps/api/test/{unit,integration}             apps/web/src/{features,components,lib}
-packages/shared/src/{time,schemas.ts,errors.ts}
-docs/                                         PRD, technical design, API, prototype, plan
+packages/shared/src/
+  constants/ errors/ models/*.model.ts schemas/*.schema.ts time/ utils/   index.ts (barrel → @shared)
+apps/api/src/
+  main.ts app.ts container.ts
+  core/      config, clock, logger, db
+  http/      errors, validate, cookies, request-context, middleware/{session,origin-check,rate-limit}
+  domain/    scheduling/{slot-engine,suggestions,assignment}  security/tokens  booking/reference
+  modules/   slots bookings auth admin me outbox parents dev health
+             └─ <name>.routes · .controller · .service · .repository · .mapper · index.ts
+apps/api/prisma/   schema.prisma migrations/ seed.ts
+apps/api/test/     unit/ integration/
+apps/web/src/
+  main.tsx  app/{providers,router,NotFoundPage}
+  components/{ui,layout,booking,feedback,guards}  hooks/  lib/{api-client,query-keys,session,…}
+  features/  landing booking manage-booking my-bookings auth admin dev
+             └─ api/ components/ pages/ index.ts
+docs/        PRD, technical design, API, prototype, plan
 ```

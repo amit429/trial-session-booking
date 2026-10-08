@@ -57,43 +57,50 @@ packages/shared: zod schemas, DTO types, error codes, time module (Luxon)
 
 ```
 .
-├── docker-compose.yml   package.json (workspaces)   .env.example
-├── README.md  TRANSCRIPT.md
-├── docs/  PRD.md  TECHNICAL_DESIGN.md  API.md
-├── packages/shared/src/
-│   ├── schemas/  booking.ts slots.ts auth.ts admin.ts common.ts
-│   ├── errors.ts                       # ErrorCode enum + user-facing messages
-│   └── time/  zones.ts windows.ts grid.ts rules.ts format.ts transitions.ts
+├── docker-compose.yml  package.json (workspaces)  eslint.config.js  .prettierrc.json  .env.example
+├── README.md  TRANSCRIPT.md  docs/
+├── packages/shared/src/                     # imported as @shared
+│   ├── constants/  time.ts scheduling.ts
+│   ├── errors/     error-codes.ts           # ERROR_CODES + user-facing messages
+│   ├── models/     one file per DTO: booking.model.ts slot.model.ts mentor.model.ts parent.model.ts
+│   │               suggestion.model.ts auth.model.ts admin.model.ts outbox.model.ts common.model.ts …
+│   ├── schemas/    fields.ts booking.schema.ts auth.schema.ts slots.schema.ts   (zod, shared by web + api)
+│   ├── time/       zones windows grid rules format transitions
+│   └── utils/      labels.ts dates.ts
 ├── apps/api/
-│   ├── prisma/  schema.prisma  migrations/  seed.ts
+│   ├── prisma/     schema.prisma migrations/ seed.ts
 │   ├── src/
-│   │   ├── server.ts  app.ts  container.ts  config.ts  clock.ts
-│   │   ├── http/  errors.ts  rateLimit.ts  session.ts (loadSession, requireParent,
-│   │   │          requireAdmin)  originCheck.ts  cookies.ts
-│   │   ├── routes/  slots.ts bookings.ts auth.ts me.ts admin.ts dev.ts health.ts
-│   │   ├── controllers/  (one per route file)
-│   │   ├── services/  slotService suggestionService bookingService assignmentStrategy
-│   │   │              outboxService calendarService sessionService parentAuthService
-│   │   │              adminAuthService adminService
-│   │   ├── domain/  slotEngine.ts suggestions.ts reference.ts tokens.ts
-│   │   └── repositories/  mentorRepo bookingRepo parentRepo sessionRepo authTokenRepo
-│   │                      adminRepo outboxRepo
-│   └── test/  unit/  integration/  helpers/ (db reset, factories, FixedClock, agent with cookies)
+│   │   ├── main.ts app.ts container.ts      # bootstrap, middleware + routes, composition root
+│   │   ├── core/   config clock logger db types
+│   │   ├── http/   errors validate cookies request-context middleware/{session,origin-check,rate-limit}
+│   │   ├── domain/ scheduling/{slot-engine,suggestions,assignment,types} security/tokens booking/reference
+│   │   └── modules/<name>/  <name>.routes.ts → .controller.ts → .service.ts → .repository.ts
+│   │                        + .mapper.ts (row → DTO) + index.ts (public API)
+│   │       slots bookings (calendar, booking-access) auth (sessions, passwords) admin me outbox parents dev health
+│   └── test/       unit/ integration/ helpers/
 └── apps/web/src/
-    ├── main.tsx  app/ (router.tsx, queryClient.ts, PublicLayout.tsx, AdminLayout.tsx)
-    ├── components/ui/                  # shadcn primitives
-    ├── lib/  api.ts  useTimezone.ts  idempotencyKey.ts
-    ├── auth/  useAuth.ts (GET /auth/me)  RequireParent.tsx  RequireAdmin.tsx
-    └── features/
-        ├── booking/       BookPage TimezoneBar DstBanner DayStrip SlotGrid SlotButton
-        │                  SelectedSlotCard BookingForm SuggestionsPanel
-        ├── confirmation/  BookingPage ConfirmationCard AddToCalendar CopyLink CreateAccountPrompt
-        ├── account/       SignupPage LoginPage VerifyEmailPage ForgotPasswordPage
-        │                  ResetPasswordPage MyBookingsPage
-        ├── admin/         AdminLoginPage DashboardPage BookingsPage ParentsPage ParentDetailPage
-        │                  MentorsPage MentorDetailPage OutboxPage CapacityMeter
-        └── dev/           DevOutboxPage
+    ├── main.tsx
+    ├── app/        providers.tsx router.tsx (lazy pages) query-client.ts NotFoundPage.tsx
+    ├── components/ ui/ (shadcn) layout/ (SiteHeader, SiteFooter, PublicLayout) booking/ (StatusBadge,
+    │               DateBox, CopyField, AccountBadge, OutboxList) feedback/ (skeletons, progress) guards/
+    ├── hooks/      useTimezone
+    ├── lib/        api-client (typed ApiError) query-keys session clipboard utils
+    └── features/<name>/  api/ (TanStack Query hooks)  components/  pages/ (one per file)  index.ts
+        landing  booking  manage-booking  my-bookings  auth  admin  dev
 ```
+
+**Aliases:** `@shared` → `packages/shared/src`; `@/` → the app's own `src/`. Declared once in tsconfig `paths`; resolved by `vite-tsconfig-paths` (Vite, Vitest) and natively by `tsx`.
+
+**Boundaries (enforced by ESLint `no-restricted-imports`):**
+
+| Code                         | May import                                         | Must not import                      |
+| ---------------------------- | -------------------------------------------------- | ------------------------------------ |
+| `web/features/<x>`           | its own files (relative), shared layers, `@shared` | another feature                      |
+| `web/components, hooks, lib` | each other, `@shared`                              | features, `app/`                     |
+| `web/app`                    | everything                                         | —                                    |
+| `api/modules/<x>`            | other modules via `@/modules/<y>` (index only)     | `@/modules/<y>/<file>`               |
+| `api/domain`                 | `@shared`                                          | modules, http, core, Prisma, Express |
+| `packages/shared`            | Luxon, zod                                         | app code, React, Express, Prisma     |
 
 ## 4. Technology
 
@@ -672,7 +679,7 @@ helmet; `cors({ origin: APP_BASE_URL, credentials: true })`; `express.json({ lim
 
 | Path                                                                                         | Guard                                  | Page                                   |
 | -------------------------------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
-| `/`                                                                                          | —                                      | redirect `/book`                       |
+| `/`                                                                                          | —                                      | `LandingPage`                          |
 | `/book`                                                                                      | —                                      | `BookPage`                             |
 | `/booking/:ref`                                                                              | token in query, or owner/admin session | `BookingPage`                          |
 | `/signup`, `/login`, `/verify-email`, `/forgot-password`, `/reset-password`                  | —                                      | account pages                          |
@@ -682,6 +689,10 @@ helmet; `cors({ origin: APP_BASE_URL, credentials: true })`; `express.json({ lim
 | `/dev/outbox`                                                                                | — (404 if disabled)                    | `DevOutboxPage`                        |
 
 `useAuth()` = TanStack Query on `GET /auth/me`; invalidated after login/logout. On any API 401, redirect to the matching login with `?next=<current path>`. Header: guests see "Sign in"; parents see "My bookings · Sign out".
+
+**Landing page** (`features/landing`): hero with "Book a free trial" and "Sign in" (or "My bookings" when signed in), a live card with the next 3 open times in the visitor's zone (shares the slots cache with `/book`), How it works (`#how-it-works`), Subjects (link to `/book?subject=CODING|MATH`, which preselects the subject), Why families book here, FAQ and a closing CTA.
+
+**Server state:** each feature's `api/*.api.ts` wraps TanStack Query; all keys come from `lib/query-keys.ts`, so one feature can invalidate another's data (e.g. booking invalidates slots and My bookings) without importing it.
 
 ### 12.2 Booking page state machine
 
