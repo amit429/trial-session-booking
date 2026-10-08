@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { CapacityChart } from "../CapacityChart";
+import { CapacityChart } from "../components/CapacityChart";
 
 describe("CapacityChart", () => {
   it("draws one bar per India date and marks full days", () => {

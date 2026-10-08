@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type ButtonHTMLAttributes } from "react";
-import { Slot } from "./slot";
+import { Slot } from "@/components/ui/slot";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(

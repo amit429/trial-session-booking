@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { SuggestionsResponse } from "@shared";
 import { describe, expect, it, vi } from "vitest";
-import { Suggestions } from "../Suggestions";
-import { validateBooking } from "../validation";
+import { Suggestions } from "../components/Suggestions";
+import { validateBooking } from "../utils/validation";
 
 const NY = "America/New_York";
 const sg = (strategy: SuggestionsResponse["strategy"], n = 2): SuggestionsResponse => ({
