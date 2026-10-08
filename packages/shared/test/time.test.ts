@@ -4,6 +4,7 @@ import {
   dayWindow,
   expandRules,
   formatSlot,
+  formatTime,
   formatZoneLabel,
   gridStarts,
   localClockMinutes,
@@ -115,5 +116,26 @@ describe("upcomingTransitions", () => {
   });
   it("finds nothing when no change is in range", () => {
     expect(upcomingTransitions(NY, "2026-10-08", 14)).toEqual([]);
+  });
+});
+
+describe("every supported US and UK/Ireland zone, across both 2026 clock changes", () => {
+  // The same India class (18:30 IST) before the UK and US changes (20 Oct) and after both (10 Nov).
+  const before = "2026-10-20T13:00:00Z";
+  const after = "2026-11-10T13:00:00Z";
+  it.each([
+    ["America/New_York", "9:00 AM EDT", "8:00 AM EST"],
+    ["America/Chicago", "8:00 AM CDT", "7:00 AM CST"],
+    ["America/Denver", "7:00 AM MDT", "6:00 AM MST"],
+    ["America/Phoenix", "6:00 AM MST", "6:00 AM MST"], // Arizona has no DST
+    ["America/Los_Angeles", "6:00 AM PDT", "5:00 AM PST"],
+    ["America/Anchorage", "5:00 AM AKDT", "4:00 AM AKST"],
+    ["Pacific/Honolulu", "3:00 AM HST", "3:00 AM HST"], // Hawaii has no DST
+    ["Europe/London", "2:00 PM BST", "1:00 PM GMT"],
+    ["Europe/Dublin", "2:00 PM GMT+1", "1:00 PM GMT"] // never the ambiguous "IST"
+  ])("%s shows %s, then %s", (zone, beforeLabel, afterLabel) => {
+    const label = (iso: string) => `${formatTime(iso, zone)} ${zoneAbbreviation(zone, iso)}`;
+    expect(label(before)).toBe(beforeLabel);
+    expect(label(after)).toBe(afterLabel);
   });
 });

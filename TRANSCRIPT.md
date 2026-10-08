@@ -129,6 +129,18 @@ Notable moments during the build:
 
 **Agent:** Resumed from the progress ledger and finished the remaining tasks: confirmation page, accounts and My bookings, admin console, then the README, API reference and this transcript.
 
+> **Me:** How to check the db?
+
+**Agent:** Explained the three ways in: Prisma Studio (`npm run db:studio`), `psql` inside the Docker container, and the admin console. Listed the tables and a few ready-made queries (bookings per mentor per India date, the outbox).
+
+> **Me:** why is all this not documented in the readme , nothing about server or db , how to check data and all
+
+**Agent:** Agreed it was a gap. Added README sections for running the servers (ports, the Vite proxy, health checks), the database (how to look at the data, the tables, useful queries, reset/reseed/migrate) and troubleshooting.
+
+> **Me:** Please continue
+
+**Agent:** Finished the remaining plan tasks and pushed.
+
 > **Me:** When I am trying to log in… does not redirect… admin… create account CTA why?… /admin route… no loading states… skeleton loading…
 
 **Agent:** Fixed the stale session cache behind the double sign-in, gave the admin a booking view, showed the create-account prompt only to guests without an account, and added route-level skeletons and a top progress bar.
@@ -156,6 +168,21 @@ Notable moments during the build:
 - Scripted headless Chrome (DevTools protocol, New York zone, light theme) to drive the running app like a user: book as a guest, hit a full time and a full day, trigger validation and the one-trial rule, sign up with the same email, verify from the dev outbox, sign in, reset a password, cancel from the private link, and walk the whole admin console. Plus London, dark mode and phone widths.
 - Saved 45 screenshots to `docs/screenshots/` and added a captioned gallery to the README, grouped by journey, with the outcome each screen shows.
 - Brought the docs up to date: the PRD journey now starts at the home page, the technical design's component table matches the real feature folders, and the README's manual test script starts with the home page.
+
+## 10. Security and a requirements check
+
+> **Me:** Are we adding any sensitive info in .env.example?
+
+**Agent:** No. Every value is a local placeholder: the Docker Postgres default credentials, a dev-only `APP_SECRET`, the demo admin account the README already lists, and `.example` domains. The real `.env` is gitignored and has never been committed. Pointed out one gap: the API would still start in production with these demo values, and offered to add a guard.
+
+> **Me:** Do a quick check based on all the requirements in Codeyoung_Senior_Full_Stack_Engineer_Assignment.pdf everything is covered , all the cases and edge cases and all the new development and all the submission requirements are covered neetly
+
+**Agent:**
+
+- Mapped every requirement, edge case and submission item in the brief to the code, tests and docs. Lint, typecheck and all tests passed.
+- Found that only New York, Los Angeles, London and Dublin had explicit time-zone tests. Added a test for every supported US and UK/Ireland zone across both 2026 clock changes, including Arizona and Hawaii, which don't change.
+- Added the prompts that were missing from this transcript.
+- Flagged that the raw session export (agent responses in full) still has to be appended with `/export` before submission.
 
 ---
 
