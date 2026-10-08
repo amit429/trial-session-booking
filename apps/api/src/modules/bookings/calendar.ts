@@ -14,7 +14,7 @@ export function googleCalendarUrl(b: CalendarBooking): string {
   return `https://calendar.google.com/calendar/render?${p.toString().replace(/\+/g, "%20")}&dates=${dates}`;
 }
 
-const escapeIcs = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+const escapeIcs = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
 
 /** RFC 5545 event in UTC, so every calendar shows it in the viewer's own zone. */
 export function icsFile(b: CalendarBooking & { cancelled?: boolean }, now: Date): string {

@@ -24,11 +24,23 @@
     "db:reset": "npm run db:reset -w apps/api",
     "db:studio": "npm run db:studio -w apps/api",
     "db:psql": "docker compose exec db psql -U postgres -d trialbooking",
-    "db:logs": "docker compose logs -f db"
+    "db:logs": "docker compose logs -f db",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "concurrently": "^9.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
     "typescript": "~5.9.0",
+    "typescript-eslint": "^8.71.1",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "allowScripts": {
@@ -36,5 +48,6 @@
     "prisma@6.19.3": true,
     "@prisma/engines@6.19.3": true,
     "esbuild@0.28.2": true
-  }
+  },
+  "type": "module"
 }

@@ -6,6 +6,13 @@ export type Interval = { start: Date; end: Date };
 const toMillis = (instant: Instant) => (typeof instant === "number" ? instant : typeof instant === "string" ? Date.parse(instant) : instant.getTime());
 const toDt = (instant: Instant, zone: string) => DateTime.fromMillis(toMillis(instant), { zone });
 
+/** Luxon returns null for invalid dates; surface that as an error instead of passing null along. */
+function isoDateOf(dt: DateTime): string {
+  const iso = dt.toISODate();
+  if (iso === null) throw new RangeError(`Invalid date: ${dt.invalidExplanation ?? "unknown"}`);
+  return iso;
+}
+
 /** Wall-clock time on a local date. Minutes may be 1440 (= next day's midnight). */
 export function zonedTime(isoDate: string, minutes: number, zone: string): DateTime {
   const day = DateTime.fromISO(isoDate, { zone }).startOf("day");
@@ -28,7 +35,7 @@ export function dayWindow(isoDate: string, zone: string, startMinute: number, en
 }
 
 export function localDate(instant: Instant, zone: string): string {
-  return toDt(instant, zone).toISODate()!;
+  return isoDateOf(toDt(instant, zone));
 }
 
 export function localClockMinutes(instant: Instant, zone: string): number {
@@ -42,7 +49,7 @@ export function localWeekday(instant: Instant, zone: string): number {
 }
 
 export function addDays(isoDate: string, n: number): string {
-  return DateTime.fromISO(isoDate, { zone: "UTC" }).plus({ days: n }).toISODate()!;
+  return isoDateOf(DateTime.fromISO(isoDate, { zone: "UTC" }).plus({ days: n }));
 }
 
 export function offsetMinutes(instant: Instant, zone: string): number {

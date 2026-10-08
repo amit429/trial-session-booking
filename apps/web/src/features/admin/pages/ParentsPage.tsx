@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { useAdminParents } from "../api/admin.api";
 import { AdminPage, PageTitle } from "../components/AdminPage";
 import { SearchInput } from "../components/SearchInput";
-import { TableSkeleton, tableHeadClass } from "../components/TableSkeleton";
+import { tableHeadClass } from "../components/table";
+import { TableSkeleton } from "../components/TableSkeleton";
 
 const COLUMNS = ["Parent", "Account", "Bookings", "Upcoming", "Time zone"];
 

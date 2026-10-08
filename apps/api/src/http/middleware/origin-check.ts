@@ -10,7 +10,8 @@ export function originCheck(appBaseUrl: string): RequestHandler {
   return (req, _res, next) => {
     if (SAFE.has(req.method)) return next();
     if (!req.cookies?.[PARENT_COOKIE] && !req.cookies?.[ADMIN_COOKIE]) return next();
-    const source = req.get("origin") ?? (req.get("referer") ? new URL(req.get("referer")!).origin : undefined);
+    const referer = req.get("referer");
+    const source = req.get("origin") ?? (referer ? new URL(referer).origin : undefined);
     if (source && source !== allowed) throw new AppError("ORIGIN_MISMATCH", 403);
     next();
   };

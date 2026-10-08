@@ -15,7 +15,7 @@ import { useAdminBooking } from "../api/admin.api";
 import { useCancelBookingDialog } from "../hooks/useCancelBookingDialog";
 import { BookingFacts, BookingFactsSkeleton } from "./BookingFacts";
 import { isUpcoming } from "./booking-state";
-import { BOOKING_COLUMNS, tableHeadClass } from "./TableSkeleton";
+import { BOOKING_COLUMNS, tableHeadClass } from "./table";
 
 /** Bookings table with row actions, a quick-look sheet and admin cancel. Times: India first, parent's alongside. */
 export function BookingsTable({ rows, fetching }: { rows: AdminBookingDto[]; fetching?: boolean }) {

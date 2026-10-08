@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RequireParent } from "@/components/guards/route-guards";
 import { mockApi } from "@/test/mockApi";
-import { LoginPage } from "../pages/LoginPage";
+import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { MyBookingsPage } from "@/features/my-bookings/pages/MyBookingsPage";
 
 const parent = { id: "p1", name: "Emma Clarke", email: "demo.parent@example.com", timezone: "Europe/London", status: "VERIFIED" };

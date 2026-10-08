@@ -1,11 +1,9 @@
-import { Compass } from "lucide-react";
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
-import { createBrowserRouter, Link } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { FormCardSkeleton, PublicPageSkeleton } from "@/components/feedback/skeletons";
-import { EmptyState } from "@/components/feedback/EmptyState";
 import { RequireAdmin, RequireParent } from "@/components/guards/route-guards";
 import { PublicLayout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
+import { NotFoundPage } from "./NotFoundPage";
 
 /** Route-level code splitting: each page loads on demand behind a page-shaped skeleton. */
 const page = <M,>(load: () => Promise<M>, name: keyof M) => lazy(() => load().then(m => ({ default: m[name] as unknown as ComponentType })));
@@ -33,16 +31,6 @@ const OutboxPage = page(() => import("@/features/admin/pages/OutboxPage"), "Outb
 
 const withPageSkeleton = (node: ReactNode) => <Suspense fallback={<PublicPageSkeleton />}>{node}</Suspense>;
 const withFormSkeleton = (node: ReactNode) => <Suspense fallback={<PublicLayout narrow><FormCardSkeleton /></PublicLayout>}>{node}</Suspense>;
-
-function NotFound() {
-  return (
-    <PublicLayout narrow>
-      <EmptyState icon={<Compass />} title="We couldn't find that page">
-        <Button asChild variant="brand"><Link to="/">Go to the home page</Link></Button>
-      </EmptyState>
-    </PublicLayout>
-  );
-}
 
 export const router = createBrowserRouter([
   { path: "/", element: withPageSkeleton(<LandingPage />) },
@@ -75,5 +63,5 @@ export const router = createBrowserRouter([
       }
     ]
   },
-  { path: "*", element: <NotFound /> }
+  { path: "*", element: <NotFoundPage /> }
 ]);

@@ -1,8 +1,7 @@
 import { Skeleton } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { BOOKING_COLUMNS, tableHeadClass } from "./table";
 
-export const BOOKING_COLUMNS = ["Booking", "India time", "Parent's time", "Child", "Parent", "Mentor", "Status"];
-export const tableHeadClass = "[&_th]:h-10 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-border [&_th]:px-3 [&_th]:text-left [&_th]:font-medium [&_th]:text-muted-foreground";
 
 /** Placeholder rows shaped like the real table. */
 export function TableSkeleton({ rows = 6, cols = BOOKING_COLUMNS }: { rows?: number; cols?: string[] }) {

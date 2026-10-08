@@ -67,7 +67,8 @@ async function main() {
   // S1 · a UK-shift mentor already at 2/2 on tomorrow's India date.
   const tIst = addDays(localDate(realNow, IST), 1);
   const wd = zonedTime(tIst, 720, IST).weekday;
-  const s1 = mentors.find((m, i) => MENTOR_SEED[i].shift === "UK" && MENTOR_SEED[i].off !== wd)!;
+  const s1 = mentors.find((_, i) => MENTOR_SEED[i].shift === "UK" && MENTOR_SEED[i].off !== wd);
+  if (!s1) throw new Error("Seed data has no UK-shift mentor working tomorrow");
   for (const minutes of [19 * 60, 21 * 60]) {
     const start = zonedTime(tIst, minutes, IST).toJSDate();
     const who = person();
@@ -119,7 +120,8 @@ async function main() {
   // Past first: from "4 days ago" the later upcoming trial would count as the one active trial.
   clock.set(zonedTime(addDays(localDate(realNow, LDN), -4), 6 * 60, LDN).toJSDate()); // 06:00 London, 4 days ago
   const past = await openSlots(LDN, localDate(clock.now(), LDN));
-  if (past.length) await book(past.at(-1)!.startUtc, LDN, demo, "Freddie");
+  const lastPast = past.at(-1);
+  if (lastPast) await book(lastPast.startUtc, LDN, demo, "Freddie");
   clock.set(realNow);
   const upcoming = await openSlots(LDN, addDays(localDate(realNow, LDN), 3));
   if (upcoming.length) await book(upcoming[Math.floor(upcoming.length / 2)].startUtc, LDN, demo, "Freddie");

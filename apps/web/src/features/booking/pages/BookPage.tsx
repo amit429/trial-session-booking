@@ -1,6 +1,6 @@
 import { formatSlot, localDate, type BookingDto, type ExistingTrialDto, type SlotDto, type SuggestionsResponse } from "@shared";
 import { Globe, Lock } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { PublicLayout } from "@/components/layout";
@@ -32,8 +32,8 @@ export function BookPage() {
   const { parent } = useAuth();
   const navigate = useNavigate();
 
-  const [date, setDate] = useState<string | null>(null);
-  const [month, setMonth] = useState<string | null>(null);
+  const [pickedDate, setDate] = useState<string | null>(null);
+  const [pickedMonth, setMonth] = useState<string | null>(null);
   const [h24, setH24] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
@@ -46,21 +46,16 @@ export function BookPage() {
   const [raceSugg, setRaceSugg] = useState<{ data: SuggestionsResponse; lead: string } | null>(null);
   const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
 
-  useEffect(() => {
-    if (parent) setForm(f => ({ ...f, name: f.name || parent.name, email: parent.email }));
-  }, [parent]);
+  // Signed-in parents book with their account email; their name pre-fills until they type another.
+  const formValues = parent ? { ...form, name: form.name || parent.name, email: parent.email } : form;
 
   const slotsQ = useSlots(tz);
   const days = useMemo(() => new Map((slotsQ.data?.days ?? []).map(d => [d.date, d])), [slotsQ.data]);
 
-  // Default to the first day with an open time; keep the calendar month in sync.
-  useEffect(() => {
-    if (!slotsQ.data) return;
-    if (!date || !days.has(date)) {
-      const first = slotsQ.data.days.find(d => d.status === "OPEN") ?? slotsQ.data.days[0];
-      if (first) { setDate(first.date); setMonth(first.date.slice(0, 7)); }
-    }
-  }, [slotsQ.data, days, date]);
+  // Until the parent picks a day, show the first day with an open time (derived, not synced via an effect).
+  const firstOpen = slotsQ.data ? (slotsQ.data.days.find(d => d.status === "OPEN") ?? slotsQ.data.days[0])?.date ?? null : null;
+  const date = pickedDate && days.has(pickedDate) ? pickedDate : firstOpen;
+  const month = pickedMonth ?? date?.slice(0, 7) ?? null;
 
   const day = date ? days.get(date) : undefined;
   const fullDay = day?.status === "FULL";
@@ -98,7 +93,7 @@ export function BookPage() {
 
   const submit = () => {
     if (!tz || !selected) return;
-    const r = validateBooking(form, selected, tz);
+    const r = validateBooking(formValues, selected, tz);
     setExisting(null);
     setRaceSugg(null);
     if (!r.ok) {
@@ -112,7 +107,7 @@ export function BookPage() {
 
   const transition = slotsQ.data?.transitions[0];
   const info = (
-    <InfoPane tz={tz} setTz={z => { setTz(z); setDate(null); setFullPick(null); }} isDetected={isDetected} transition={transition} h24={h24}
+    <InfoPane tz={tz} setTz={z => { setTz(z); setDate(null); setMonth(null); setFullPick(null); }} isDetected={isDetected} transition={transition} h24={h24}
       picked={step === 2 ? selected : null} onChangeTime={() => { setStep(1); setRaceSugg(null); }} />
   );
   const shell = (cols: string, children: React.ReactNode) => (
@@ -132,7 +127,7 @@ export function BookPage() {
         {shell("min-[961px]:grid-cols-[300px_minmax(0,1fr)]", <>
           {info}
           <DetailsForm
-            form={form} setForm={f => { setForm(f); }} errors={errors} onSubmit={submit} onBack={() => { setStep(1); setRaceSugg(null); }}
+            form={formValues} setForm={setForm} errors={errors} onSubmit={submit} onBack={() => { setStep(1); setRaceSugg(null); }}
             submitting={book.isPending} lockedEmail={!!parent} existing={existing} signedIn={!!parent}
             banner={raceSugg && <Suggestions tz={tz} data={raceSugg.data} lead={raceSugg.lead} onPick={pickSlot} h24={h24} />}
           />
