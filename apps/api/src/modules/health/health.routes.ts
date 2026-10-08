@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { Container } from "../container";
+import type { Container } from "@/container";
 
 export function healthRoutes(c: Container) {
   const r = Router();

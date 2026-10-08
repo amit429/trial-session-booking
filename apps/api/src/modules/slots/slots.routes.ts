@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { SlotsQuery, SuggestionsQuery } from "@shared";
-import type { Container } from "../container";
-import { parse } from "../http/validate";
+import type { Container } from "@/container";
+import { parse } from "@/http/validate";
 
 export function slotRoutes(c: Container) {
   const r = Router();

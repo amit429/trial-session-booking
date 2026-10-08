@@ -1,5 +1,5 @@
 import type { ZodTypeAny, z } from "zod";
-import { zodToAppError } from "./errors";
+import { zodToAppError } from "@/http/errors";
 
 export function parse<S extends ZodTypeAny>(schema: S, data: unknown): z.infer<S> {
   const r = schema.safeParse(data);

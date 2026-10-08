@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { hashToken, manageToken, newToken, verifyManageToken } from "../../src/domain/tokens";
-import { newReference } from "../../src/domain/reference";
+import { hashToken, manageToken, newToken, verifyManageToken } from "@/domain/security/tokens";
+import { newReference } from "@/domain/booking/reference";
 
 describe("tokens", () => {
   it("creates unguessable url-safe tokens and stores only hashes", () => {

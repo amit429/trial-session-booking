@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
-import type { Container } from "../container";
-import { notFound } from "../http/errors";
-import { parse } from "../http/validate";
-import { toOutboxDto } from "../services/adminService";
+import type { Container } from "@/container";
+import { notFound } from "@/http/errors";
+import { parse } from "@/http/validate";
+import { toOutboxDto } from "@/modules/admin/admin.service";
 
 /** Development-only inbox so verify/reset/manage links can be clicked without real email (FR-20). */
 export function devRoutes(c: Container) {

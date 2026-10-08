@@ -1,4 +1,4 @@
-import { createDb, type Db } from "../../src/db";
+import { createDb, type Db } from "@/core/db";
 
 export const testDb: Db = createDb(process.env.TEST_DATABASE_URL);
 

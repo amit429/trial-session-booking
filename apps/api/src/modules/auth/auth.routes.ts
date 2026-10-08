@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { EmailRequest, LoginRequest, ResetPasswordRequest, SignupRequest, TokenRequest, type MeResponse } from "@shared";
-import type { Container } from "../container";
-import { ADMIN_COOKIE, PARENT_COOKIE, clearSessionCookie, setSessionCookie } from "../http/cookies";
-import { limiter } from "../http/rateLimit";
-import { parse } from "../http/validate";
-import { toParentDto } from "../services/parentAuthService";
+import type { Container } from "@/container";
+import { ADMIN_COOKIE, PARENT_COOKIE, clearSessionCookie, setSessionCookie } from "@/http/cookies";
+import { limiter } from "@/http/middleware/rate-limit";
+import { parse } from "@/http/validate";
+import { toParentDto } from "@/modules/auth/parent-auth.service";
 
 const CHECK_EMAIL = { message: "Check your email." };
 

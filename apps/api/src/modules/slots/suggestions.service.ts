@@ -1,7 +1,7 @@
 import { upcomingTransitions, type SuggestionsResponse } from "@shared";
-import type { Deps } from "../container";
-import { rankSuggestions } from "../domain/suggestions";
-import { toSlotDto, type SlotService } from "./slotService";
+import type { Deps } from "@/container";
+import { rankSuggestions } from "@/domain/scheduling/suggestions";
+import { toSlotDto, type SlotService } from "@/modules/slots/slots.service";
 
 export class SuggestionService {
   constructor(private deps: Deps, private slots: SlotService) {}

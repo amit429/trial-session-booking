@@ -1,6 +1,6 @@
 import type { Request, RequestHandler } from "express";
 import { ipKeyGenerator, rateLimit } from "express-rate-limit";
-import { AppError } from "./errors";
+import { AppError } from "@/http/errors";
 
 /** Per-minute limiter. Keyed by IP (IPv6 grouped by /56 subnet so rotating addresses doesn't bypass it), plus the submitted email for auth forms. */
 export function limiter(enabled: boolean, limit: number, withEmail = false): RequestHandler {

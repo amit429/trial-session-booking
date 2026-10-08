@@ -1,5 +1,5 @@
-import type { Db } from "../../src/db";
-import { MENTOR_SEED, SHIFTS, mentorEmail, seedRules } from "../../src/seedData";
+import type { Db } from "@/core/db";
+import { MENTOR_SEED, SHIFTS, mentorEmail, seedRules } from "@/data/seed-mentors";
 
 /** Create the 10 seed mentors. `allWeek` drops each mentor's day off. */
 export async function seedMentors(db: Db, opts: { allWeek?: boolean; only?: number[] } = {}) {

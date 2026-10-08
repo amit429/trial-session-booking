@@ -1,8 +1,8 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { PINNED_ZONES, addDays, dayWindow, formatTime, localDate } from "@shared";
-import { buildSlots, type EngineBooking, type EngineConfig, type EngineMentor } from "../../src/domain/slotEngine";
-import { MENTOR_SEED, seedRules } from "../../src/seedData";
+import { buildSlots, type EngineBooking, type EngineConfig, type EngineMentor } from "@/domain/scheduling/slot-engine";
+import { MENTOR_SEED, seedRules } from "@/data/seed-mentors";
 
 const CFG: EngineConfig = { minNoticeMinutes: 120, horizonDays: 14, stepMinutes: 30, durationMinutes: 60, maxDailyTrials: 2, parentStartMinute: 480, parentEndMinute: 1260 };
 const IST = "Asia/Kolkata";

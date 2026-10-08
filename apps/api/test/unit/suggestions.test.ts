@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dayWindow, formatSlot, zonedTime } from "@shared";
-import type { Day, Slot } from "../../src/domain/slotEngine";
-import { rankSuggestions } from "../../src/domain/suggestions";
+import type { Day, Slot } from "@/domain/scheduling/slot-engine";
+import { rankSuggestions } from "@/domain/scheduling/suggestions";
 
 const NY = "America/New_York";
 const LIMITS = { sameDay: 4, sameTime: 3, nearest: 4 };

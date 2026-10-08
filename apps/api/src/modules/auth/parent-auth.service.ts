@@ -1,12 +1,12 @@
 import type { AuthTokenPurpose, Parent } from "@prisma/client";
 import type { ParentDto } from "@shared";
-import type { Deps } from "../container";
-import { hashToken, newToken } from "../domain/tokens";
-import { AppError } from "../http/errors";
-import { accountStatus } from "./bookingService";
-import type { OutboxService } from "./outboxService";
-import { hashPassword, verifyPassword } from "./passwords";
-import type { SessionService } from "./sessionService";
+import type { Deps } from "@/container";
+import { hashToken, newToken } from "@/domain/security/tokens";
+import { AppError } from "@/http/errors";
+import { accountStatus } from "@/modules/bookings/bookings.service";
+import type { OutboxService } from "@/modules/outbox/outbox.service";
+import { hashPassword, verifyPassword } from "@/modules/auth/passwords";
+import type { SessionService } from "@/modules/auth/session.service";
 
 const HOURS = { VERIFY_EMAIL: 24, RESET_PASSWORD: 1 } as const;
 

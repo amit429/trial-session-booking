@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { CancelRequest, CreateBookingRequest } from "@shared";
 import type { Request } from "express";
-import { icsFile } from "../services/calendarService";
-import type { Viewer } from "../services/bookingService";
+import { icsFile } from "@/modules/bookings/calendar";
+import type { Viewer } from "@/modules/bookings/bookings.service";
 import { z } from "zod";
-import type { Container } from "../container";
-import { AppError } from "../http/errors";
-import { limiter } from "../http/rateLimit";
-import { parse } from "../http/validate";
+import type { Container } from "@/container";
+import { AppError } from "@/http/errors";
+import { limiter } from "@/http/middleware/rate-limit";
+import { parse } from "@/http/validate";
 
 const IdempotencyKey = z.string().uuid();
 

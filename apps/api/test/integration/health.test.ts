@@ -1,7 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
-import { AppError } from "../../src/http/errors";
+import { AppError } from "@/http/errors";
 import { makeTestApp } from "../helpers/app";
 
 describe("API skeleton", () => {
@@ -22,7 +22,7 @@ describe("API skeleton", () => {
 
   it("maps unexpected errors to INTERNAL without leaking stacks, and AppErrors to their status", async () => {
     const { container } = makeTestApp();
-    const { createApp } = await import("../../src/app");
+    const { createApp } = await import("@/app");
     const extra = express.Router();
     extra.get("/boom", () => { throw new Error("secret stack detail"); });
     extra.get("/gone", () => { throw new AppError("ALREADY_STARTED", 422); });

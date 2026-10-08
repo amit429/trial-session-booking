@@ -1,5 +1,5 @@
 import { localDate, localDayWindow } from "@shared";
-import { availableMentorsAt, type EngineBooking, type EngineConfig, type EngineMentor } from "./slotEngine";
+import { availableMentorsAt, type EngineBooking, type EngineConfig, type EngineMentor } from "@/domain/scheduling/slot-engine";
 
 type Context = { mentors: EngineMentor[]; bookings: EngineBooking[]; config: EngineConfig; now: Date };
 

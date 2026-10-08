@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { localDate } from "@shared";
-import { rankMentors } from "../../src/domain/assignment";
-import type { EngineBooking, EngineConfig, EngineMentor } from "../../src/domain/slotEngine";
+import { rankMentors } from "@/domain/scheduling/assignment";
+import type { EngineBooking, EngineConfig, EngineMentor } from "@/domain/scheduling/slot-engine";
 
 const CFG: EngineConfig = { minNoticeMinutes: 0, horizonDays: 14, stepMinutes: 30, durationMinutes: 60, maxDailyTrials: 2, parentStartMinute: 480, parentEndMinute: 1260 };
 const IST = "Asia/Kolkata";

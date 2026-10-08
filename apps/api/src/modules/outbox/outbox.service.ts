@@ -1,7 +1,7 @@
 import { formatSlot } from "@shared";
 import type { Prisma } from "@prisma/client";
-import type { Deps } from "../container";
-import type { Db } from "../db";
+import type { Deps } from "@/container";
+import type { Db } from "@/core/db";
 
 type Tx = Db | Prisma.TransactionClient;
 type BookingForMail = {

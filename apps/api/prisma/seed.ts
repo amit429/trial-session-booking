@@ -5,13 +5,13 @@
  */
 import { randomUUID } from "node:crypto";
 import { addDays, localDate, zonedTime } from "@shared";
-import { FixedClock } from "../src/clock";
-import { loadConfig } from "../src/config";
-import { buildContainer } from "../src/container";
-import { createDb } from "../src/db";
-import { MENTOR_SEED, SHIFTS, mentorEmail, seedRules } from "../src/seedData";
-import { AppError } from "../src/http/errors";
-import { hashPassword } from "../src/services/passwords";
+import { FixedClock } from "@/core/clock";
+import { loadConfig } from "@/core/config";
+import { buildContainer } from "@/container";
+import { createDb } from "@/core/db";
+import { MENTOR_SEED, SHIFTS, mentorEmail, seedRules } from "@/data/seed-mentors";
+import { AppError } from "@/http/errors";
+import { hashPassword } from "@/modules/auth/passwords";
 
 const NY = "America/New_York";
 const LDN = "Europe/London";

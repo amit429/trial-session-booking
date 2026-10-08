@@ -1,15 +1,15 @@
-import type { Clock } from "./clock";
-import type { Config } from "./config";
-import type { Db } from "./db";
-import { logger, type Logger } from "./logger";
-import { AdminAuthService } from "./services/adminAuthService";
-import { AdminService } from "./services/adminService";
-import { BookingService } from "./services/bookingService";
-import { OutboxService } from "./services/outboxService";
-import { ParentAuthService } from "./services/parentAuthService";
-import { SessionService } from "./services/sessionService";
-import { SlotService } from "./services/slotService";
-import { SuggestionService } from "./services/suggestionService";
+import type { Clock } from "@/core/clock";
+import type { Config } from "@/core/config";
+import type { Db } from "@/core/db";
+import { logger, type Logger } from "@/core/logger";
+import { AdminAuthService } from "@/modules/auth/admin-auth.service";
+import { AdminService } from "@/modules/admin/admin.service";
+import { BookingService } from "@/modules/bookings/bookings.service";
+import { OutboxService } from "@/modules/outbox/outbox.service";
+import { ParentAuthService } from "@/modules/auth/parent-auth.service";
+import { SessionService } from "@/modules/auth/session.service";
+import { SlotService } from "@/modules/slots/slots.service";
+import { SuggestionService } from "@/modules/slots/suggestions.service";
 
 export type Deps = { db: Db; clock: Clock; config: Config; logger: Logger };
 

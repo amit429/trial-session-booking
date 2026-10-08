@@ -1,6 +1,6 @@
 import type { AdminUser, Parent, SessionKind } from "@prisma/client";
-import type { Deps } from "../container";
-import { hashToken, newToken } from "../domain/tokens";
+import type { Deps } from "@/container";
+import { hashToken, newToken } from "@/domain/security/tokens";
 
 /** DB-backed sessions: random token in the cookie, SHA-256 of it in the table (ADR-12). */
 export class SessionService {

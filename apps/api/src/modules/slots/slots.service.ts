@@ -1,6 +1,6 @@
 import { addDays, localDate, localDayWindow, upcomingTransitions, type DaySlotsDto, type SlotDto, type SlotsResponse } from "@shared";
-import type { Deps } from "../container";
-import { buildSlots, type Day, type EngineBooking, type EngineConfig, type EngineMentor, type Slot } from "../domain/slotEngine";
+import type { Deps } from "@/container";
+import { buildSlots, type Day, type EngineBooking, type EngineConfig, type EngineMentor, type Slot } from "@/domain/scheduling/slot-engine";
 
 export const toSlotDto = (s: Slot): SlotDto => ({
   startUtc: s.startUtc.toISOString(),

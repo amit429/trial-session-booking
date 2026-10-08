@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
-import type { Container } from "../container";
-import { requireAdmin } from "../http/session";
-import { parse } from "../http/validate";
+import type { Container } from "@/container";
+import { requireAdmin } from "@/http/middleware/session";
+import { parse } from "@/http/validate";
 
 const page = { page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(25) };
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);

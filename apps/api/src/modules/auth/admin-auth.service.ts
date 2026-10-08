@@ -1,7 +1,7 @@
-import type { Deps } from "../container";
-import { AppError } from "../http/errors";
-import { hashPassword, verifyPassword } from "./passwords";
-import type { SessionService } from "./sessionService";
+import type { Deps } from "@/container";
+import { AppError } from "@/http/errors";
+import { hashPassword, verifyPassword } from "@/modules/auth/passwords";
+import type { SessionService } from "@/modules/auth/session.service";
 
 export class AdminAuthService {
   constructor(private deps: Deps, private sessions: SessionService) {}

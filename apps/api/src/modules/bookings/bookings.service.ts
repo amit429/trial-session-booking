@@ -7,16 +7,16 @@ import {
   type BookingDto,
   type CreateBookingRequest
 } from "@shared";
-import type { Deps } from "../container";
-import { rankMentors } from "../domain/assignment";
-import { meetingSuffix, newReference } from "../domain/reference";
-import { availableMentorsAt, horizonEnd, isInParentWindow, staffedMentorsAt } from "../domain/slotEngine";
-import { manageToken, verifyManageToken } from "../domain/tokens";
-import { AppError, notFound } from "../http/errors";
-import { googleCalendarUrl } from "./calendarService";
-import type { OutboxService } from "./outboxService";
-import type { SlotService } from "./slotService";
-import type { SuggestionService } from "./suggestionService";
+import type { Deps } from "@/container";
+import { rankMentors } from "@/domain/scheduling/assignment";
+import { meetingSuffix, newReference } from "@/domain/booking/reference";
+import { availableMentorsAt, horizonEnd, isInParentWindow, staffedMentorsAt } from "@/domain/scheduling/slot-engine";
+import { manageToken, verifyManageToken } from "@/domain/security/tokens";
+import { AppError, notFound } from "@/http/errors";
+import { googleCalendarUrl } from "@/modules/bookings/calendar";
+import type { OutboxService } from "@/modules/outbox/outbox.service";
+import type { SlotService } from "@/modules/slots/slots.service";
+import type { SuggestionService } from "@/modules/slots/suggestions.service";
 
 export type FullBooking = Booking & { mentor: Mentor; parent: Parent };
 export type Viewer = { token?: string; parentId?: string; isAdmin?: boolean };

@@ -1,5 +1,5 @@
 import type { CookieOptions, Response } from "express";
-import type { Config } from "../config";
+import type { Config } from "@/core/config";
 
 export const PARENT_COOKIE = "cy_parent_sid";
 export const ADMIN_COOKIE = "cy_admin_sid";

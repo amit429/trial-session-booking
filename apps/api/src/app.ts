@@ -3,17 +3,17 @@ import cors from "cors";
 import express, { type Router } from "express";
 import helmet from "helmet";
 import { pinoHttp } from "pino-http";
-import type { Container } from "./container";
-import { errorHandler, notFoundHandler } from "./http/errors";
-import { healthRoutes } from "./routes/health";
-import { originCheck } from "./http/originCheck";
-import { loadSession } from "./http/session";
-import { adminRoutes } from "./routes/admin";
-import { authRoutes } from "./routes/auth";
-import { bookingRoutes } from "./routes/bookings";
-import { devRoutes } from "./routes/dev";
-import { meRoutes } from "./routes/me";
-import { slotRoutes } from "./routes/slots";
+import type { Container } from "@/container";
+import { errorHandler, notFoundHandler } from "@/http/errors";
+import { healthRoutes } from "@/modules/health/health.routes";
+import { originCheck } from "@/http/middleware/origin-check";
+import { loadSession } from "@/http/middleware/session";
+import { adminRoutes } from "@/modules/admin/admin.routes";
+import { authRoutes } from "@/modules/auth/auth.routes";
+import { bookingRoutes } from "@/modules/bookings/bookings.routes";
+import { devRoutes } from "@/modules/dev/dev.routes";
+import { meRoutes } from "@/modules/me/me.routes";
+import { slotRoutes } from "@/modules/slots/slots.routes";
 
 export function createApp(c: Container, extra?: Router) {
   const app = express();

@@ -1,9 +1,9 @@
-import { createApp } from "./app";
-import { SystemClock } from "./clock";
-import { loadConfig } from "./config";
-import { buildContainer } from "./container";
-import { createDb } from "./db";
-import { logger } from "./logger";
+import { createApp } from "@/app";
+import { SystemClock } from "@/core/clock";
+import { loadConfig } from "@/core/config";
+import { buildContainer } from "@/container";
+import { createDb } from "@/core/db";
+import { logger } from "@/core/logger";
 
 const config = loadConfig();
 const db = createDb();

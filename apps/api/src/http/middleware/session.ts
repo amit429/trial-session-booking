@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
-import type { Container } from "../container";
-import { ADMIN_COOKIE, PARENT_COOKIE, setSessionCookie } from "./cookies";
-import { AppError } from "./errors";
+import type { Container } from "@/container";
+import { ADMIN_COOKIE, PARENT_COOKIE, setSessionCookie } from "@/http/cookies";
+import { AppError } from "@/http/errors";
 
 /** Attach req.auth from the parent and admin cookies (separate on purpose, ADR-15). */
 export function loadSession(c: Container): RequestHandler {

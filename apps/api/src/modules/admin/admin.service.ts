@@ -1,8 +1,8 @@
 import type { OutboxMessage, Prisma } from "@prisma/client";
 import { addDays, formatClockMinutes, localDate, localWeekday, zonedTime, type OutboxDto } from "@shared";
-import type { Deps } from "../container";
-import { notFound } from "../http/errors";
-import { accountStatus, type BookingService } from "./bookingService";
+import type { Deps } from "@/container";
+import { notFound } from "@/http/errors";
+import { accountStatus, type BookingService } from "@/modules/bookings/bookings.service";
 
 const IST = "Asia/Kolkata";
 const dateOnly = (iso: string) => new Date(`${iso}T00:00:00.000Z`);

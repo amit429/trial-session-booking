@@ -1,5 +1,5 @@
 import { formatClockMinutes, formatDay, localClockMinutes, type Transition } from "@shared";
-import type { Day, Slot } from "./slotEngine";
+import type { Day, Slot } from "@/domain/scheduling/slot-engine";
 
 export type SuggestionStrategy = "SAME_DAY" | "SAME_TIME" | "NEAREST" | "NONE";
 export type SuggestionLimits = { sameDay: number; sameTime: number; nearest: number };

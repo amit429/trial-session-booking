@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
-import type { Container } from "../container";
-import { requireParent } from "../http/session";
-import { parse } from "../http/validate";
+import type { Container } from "@/container";
+import { requireParent } from "@/http/middleware/session";
+import { parse } from "@/http/validate";
 
 export function meRoutes(c: Container) {
   const r = Router();

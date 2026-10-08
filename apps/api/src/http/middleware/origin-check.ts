@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
-import { ADMIN_COOKIE, PARENT_COOKIE } from "./cookies";
-import { AppError } from "./errors";
+import { ADMIN_COOKIE, PARENT_COOKIE } from "@/http/cookies";
+import { AppError } from "@/http/errors";
 
 const SAFE = new Set(["GET", "HEAD", "OPTIONS"]);
 

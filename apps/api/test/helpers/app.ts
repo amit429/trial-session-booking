@@ -1,7 +1,7 @@
-import { FixedClock } from "../../src/clock";
-import { loadConfig } from "../../src/config";
-import { buildContainer, type Container } from "../../src/container";
-import { createApp } from "../../src/app";
+import { FixedClock } from "@/core/clock";
+import { loadConfig } from "@/core/config";
+import { buildContainer, type Container } from "@/container";
+import { createApp } from "@/app";
 import { testDb } from "./db";
 
 export function makeTestApp(opts: { now?: string; env?: Record<string, string> } = {}) {
