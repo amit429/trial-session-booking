@@ -1,54 +1,20 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ZONE_NAMES, formatDayLong, formatSlot, formatTime, formatZoneLabel, normalizeZone, zoneAbbreviation, type BookingDto } from "@shared";
-import { CalendarDays, Check, CheckCircle2, Copy, Download, Globe, Link2, Mail, Search, ShieldCheck, XCircle } from "lucide-react";
+import { ZONE_NAMES, formatDayLong, formatSlot, formatTime, formatZoneLabel, normalizeZone, subjectLabel, zoneAbbreviation } from "@shared";
+import { CalendarDays, Check, CheckCircle2, Download, Globe, Link2, Mail, Search, ShieldCheck, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { PublicLayout } from "@/components/layout/SiteHeader";
+import { CopyField } from "@/components/booking";
+import { PublicLayout } from "@/components/layout";
 import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, Separator, Skeleton } from "@/components/ui/card";
+import { Card, CardContent, Separator } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/dialog";
-import { ApiError, api } from "@/lib/api-client";
+import { errorMessage } from "@/lib/api-client";
 import { useAuth } from "@/lib/session";
-import { subjectLabel } from "@/lib/utils";
-
-function copy(text: string, what: string) {
-  navigator.clipboard?.writeText(text).then(
-    () => toast.success(`${what} copied`),
-    () => toast.error("Couldn't copy. Select the text and copy it instead.")
-  );
-}
-
-function CopyBox({ value, display, label }: { value: string; display?: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted py-1 pl-2.5 pr-1">
-      <span className="min-w-0 flex-1 truncate font-mono text-xs">{display ?? value}</span>
-      <Button variant="ghost" size="icon-sm" aria-label={`Copy ${label}`} onClick={() => copy(value, label)}><Copy /></Button>
-    </div>
-  );
-}
-
-function BookingSkeleton() {
-  return (
-    <div className="mx-auto flex max-w-[600px] flex-col gap-4" aria-busy="true" aria-label="Loading booking">
-      <Card className="shadow-md">
-        <CardContent className="flex flex-col gap-6 p-7">
-          <div className="flex flex-col items-center gap-3"><Skeleton className="size-[52px] rounded-full" /><Skeleton className="h-6 w-48" /><Skeleton className="h-4 w-64" /></div>
-          <Separator />
-          <div className="flex flex-col gap-[18px]">
-            {[0, 1, 2, 3, 4].map(i => <div key={i} className="grid grid-cols-[110px_minmax(0,1fr)] gap-4"><Skeleton className="h-4 w-16" /><div className="flex flex-col gap-1.5"><Skeleton className="h-4 w-3/4" />{i === 1 && <Skeleton className="h-4 w-1/2" />}</div></div>)}
-          </div>
-          <Separator />
-          <div className="flex gap-2"><Skeleton className="h-9 w-40" /><Skeleton className="h-9 w-44" /></div>
-        </CardContent>
-      </Card>
-      <Card><CardContent className="flex flex-col gap-2 py-[18px]"><Skeleton className="h-4 w-40" /><Skeleton className="h-9" /></CardContent></Card>
-    </div>
-  );
-}
+import { useBooking, useCancelBooking } from "../api/booking.api";
+import { BookingSkeleton } from "../components/BookingSkeleton";
 
 /** Confirmation and private manage page (FR-8, FR-10). */
 export function BookingPage() {
@@ -56,31 +22,18 @@ export function BookingPage() {
   const [params] = useSearchParams();
   const token = params.get("token") ?? undefined;
   const { parent, admin, isLoading: authLoading } = useAuth();
-  const qc = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Staff without a parent's link get the admin view of the booking instead.
   const sendToAdmin = !authLoading && !!admin && !token && !parent;
 
-  const q = useQuery({
-    queryKey: ["booking", reference, token],
-    queryFn: () => api.get<BookingDto>(`/bookings/${reference}`, { token }),
-    retry: false,
-    enabled: !authLoading && !sendToAdmin
-  });
-  const cancel = useMutation({
-    mutationFn: () => api.post<BookingDto>(`/bookings/${reference}/cancel`, { token }),
-    onSuccess: b => {
-      qc.setQueryData(["booking", reference, token], b);
-      qc.invalidateQueries({ queryKey: ["slots"] });
-      qc.invalidateQueries({ queryKey: ["me-bookings"] });
-      setConfirmOpen(false);
-      toast.success("Trial cancelled", { description: "The mentor has been told and the time is free again." });
-    },
-    onError: (e: unknown) => {
-      setConfirmOpen(false);
-      toast.error(e instanceof ApiError ? e.message : "Something went wrong. Please try again.");
-    }
-  });
+  const q = useBooking(reference, token, !authLoading && !sendToAdmin);
+  const cancel = useCancelBooking(reference, token);
+  const confirmCancel = () =>
+    cancel.mutate(undefined, {
+      onSuccess: () => toast.success("Trial cancelled", { description: "The mentor has been told and the time is free again." }),
+      onError: e => toast.error(errorMessage(e)),
+      onSettled: () => setConfirmOpen(false)
+    });
 
   if (sendToAdmin) return <Navigate to={`/admin/bookings/${reference}`} replace />;
   if (authLoading || q.isLoading) return <PublicLayout narrow><BookingSkeleton /></PublicLayout>;
@@ -148,7 +101,7 @@ export function BookingPage() {
               </dd>
               <dt>Parent</dt>
               <dd>{b.parent.name} <span className="text-muted-foreground">· {b.parent.email}</span></dd>
-              {!cancelled && <><dt>Where</dt><dd><CopyBox value={b.meetingUrl} label="Class link" /></dd></>}
+              {!cancelled && <><dt>Where</dt><dd><CopyField value={b.meetingUrl} label="Class link" /></dd></>}
               <dt>Reference</dt>
               <dd className="font-mono">{b.reference}</dd>
             </dl>
@@ -172,7 +125,7 @@ export function BookingPage() {
             <CardContent className="flex flex-col gap-2 py-[18px]">
               <p className="flex items-center gap-2 font-semibold"><Link2 className="size-4" />Manage this booking</p>
               <p className="text-[13px] text-muted-foreground">This private link lets you view or cancel without an account. Keep it to yourself; we've also emailed it to you.</p>
-              <CopyBox value={b.manageUrl} display={`…/booking/${b.reference}?token=${token.slice(0, 10)}…`} label="Manage link" />
+              <CopyField value={b.manageUrl} display={`…/booking/${b.reference}?token=${token.slice(0, 10)}…`} label="Manage link" />
             </CardContent>
           </Card>
         )}
@@ -199,7 +152,7 @@ export function BookingPage() {
         confirmLabel="Cancel trial"
         cancelLabel="Keep trial"
         busy={cancel.isPending}
-        onConfirm={() => cancel.mutate()}
+        onConfirm={confirmCancel}
       />
     </PublicLayout>
   );

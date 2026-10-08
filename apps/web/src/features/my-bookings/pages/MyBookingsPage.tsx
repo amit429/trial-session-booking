@@ -1,47 +1,28 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDayLong, formatSlot, formatTime, zoneAbbreviation, type BookingDto } from "@shared";
+import { formatDayLong, formatSlot, formatTime, subjectLabel, zoneAbbreviation, type BookingDto } from "@shared";
 import { CalendarDays, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { PublicLayout } from "@/components/layout/SiteHeader";
-import { Badge } from "@/components/ui/badge";
+import { DateBox, StatusBadge } from "@/components/booking";
+import { PublicLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Busy, ListSkeleton } from "@/components/feedback/skeletons";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Tabs } from "@/components/ui/tabs";
-import { ApiError, api } from "@/lib/api-client";
+import { errorMessage } from "@/lib/api-client";
 import { useAuth } from "@/lib/session";
-import { subjectLabel } from "@/lib/utils";
-
-export function StatusBadge({ b }: { b: Pick<BookingDto, "status" | "startUtc"> }) {
-  if (b.status === "CANCELLED") return <Badge variant="destructive" dot>Cancelled</Badge>;
-  if (new Date(b.startUtc) <= new Date()) return <Badge variant="secondary">Completed</Badge>;
-  return <Badge variant="success" dot>Confirmed</Badge>;
-}
-
-export function DateBox({ iso, tz }: { iso: string; tz: string }) {
-  const local = new Date(iso);
-  return (
-    <div className="w-[52px] overflow-hidden rounded-lg border border-border bg-background text-center" aria-hidden>
-      <div className="bg-muted py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: tz }).format(local)}</div>
-      <div className="pb-1.5 pt-0.5 text-[19px] font-semibold tabular-nums">{new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: tz }).format(local)}</div>
-    </div>
-  );
-}
+import { useCancelMyBooking, useMyBookings } from "../api/my-bookings.api";
 
 export function MyBookingsPage() {
   const { parent } = useAuth();
-  const qc = useQueryClient();
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [toCancel, setToCancel] = useState<BookingDto | null>(null);
-  const q = useQuery({ queryKey: ["me-bookings"], queryFn: () => api.get<BookingDto[]>("/me/bookings", { scope: "all" }) });
-  const cancel = useMutation({
-    mutationFn: (ref: string) => api.post<BookingDto>(`/bookings/${ref}/cancel`, {}),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["me-bookings"] }); qc.invalidateQueries({ queryKey: ["slots"] }); setToCancel(null); toast.success("Trial cancelled"); },
-    onError: e => { setToCancel(null); toast.error(e instanceof ApiError ? e.message : "Something went wrong."); }
+  const q = useMyBookings();
+  const cancel = useCancelMyBooking({
+    onSuccess: () => { setToCancel(null); toast.success("Trial cancelled"); },
+    onError: e => { setToCancel(null); toast.error(errorMessage(e)); }
   });
 
   const now = new Date();
@@ -72,9 +53,9 @@ export function MyBookingsPage() {
               </EmptyState>
             ) : list.map(b => (
               <div key={b.reference} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 border-b border-border px-5 py-4 last:border-b-0 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
-                <DateBox iso={b.startUtc} tz={b.parentTimezone} />
+                <DateBox iso={b.startUtc} timezone={b.parentTimezone} />
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <div className="flex flex-wrap items-center gap-2"><strong>{subjectLabel(b.subject)} trial · {b.child.name}</strong><StatusBadge b={b} /></div>
+                  <div className="flex flex-wrap items-center gap-2"><strong>{subjectLabel(b.subject)} trial · {b.child.name}</strong><StatusBadge booking={b} /></div>
                   <span className="text-[13px] tabular-nums text-muted-foreground">{formatDayLong(new Date(b.startUtc), b.parentTimezone)} · {formatTime(b.startUtc, b.parentTimezone)} {zoneAbbreviation(b.parentTimezone, new Date(b.startUtc))}</span>
                   <span className="text-[13px] text-muted-foreground">with {b.mentor.name}</span>
                 </div>

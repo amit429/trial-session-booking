@@ -1,15 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import type { OutboxDto } from "@shared";
-import { PublicLayout } from "@/components/layout/SiteHeader";
+import { OutboxList } from "@/components/booking";
+import { PublicLayout } from "@/components/layout";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Busy, MessagesSkeleton } from "@/components/feedback/skeletons";
-import { api } from "@/lib/api-client";
-import { OutboxList } from "@/components/booking/OutboxList";
+import { useDevOutbox } from "../api/dev.api";
 
 /** Development-only inbox (FR-20): emails land here so verify, reset and manage links can be clicked. */
 export function DevOutboxPage() {
-  const q = useQuery({ queryKey: ["dev-outbox"], queryFn: () => api.get<OutboxDto[]>("/dev/outbox", { limit: 60 }), refetchInterval: 4000, retry: false });
+  const q = useDevOutbox();
   return (
     <PublicLayout narrow>
       <div className="mb-6 flex flex-col gap-1.5">

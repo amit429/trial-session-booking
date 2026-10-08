@@ -1,7 +1,6 @@
-import { formatDay, zonedTime } from "@shared";
+import { MENTOR_TIMEZONE, formatDay, zonedTime } from "@shared";
 
-const IST = "Asia/Kolkata";
-const label = (d: string) => formatDay(zonedTime(d, 720, IST).toJSDate(), IST);
+const label = (d: string) => formatDay(zonedTime(d, 720, MENTOR_TIMEZONE).toJSDate(), MENTOR_TIMEZONE);
 
 /** Booked vs capacity per India date. Bars share one scale; capacity is drawn behind bookings. */
 export function CapacityChart({ data }: { data: { istDate: string; booked: number; capacity: number }[] }) {

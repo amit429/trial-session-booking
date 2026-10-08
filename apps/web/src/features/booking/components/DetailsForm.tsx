@@ -1,4 +1,4 @@
-import { formatSlot } from "@shared";
+import { formatSlot, type ExistingTrialDto } from "@shared";
 import { ArrowLeft, ArrowRight, Calculator, Code2, Info, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert } from "@/components/ui/alert";
@@ -8,11 +8,9 @@ import { Field, Input, NativeSelect } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { BookingForm, FormErrors } from "../utils/validation";
 
-export type ExistingTrial = { reference: string; startUtc: string; timezone: string };
-
 export function DetailsForm({ form, setForm, errors, onSubmit, onBack, submitting, lockedEmail, existing, signedIn, banner }: {
   form: BookingForm; setForm: (f: BookingForm) => void; errors: FormErrors; onSubmit: () => void; onBack: () => void; submitting: boolean;
-  lockedEmail: boolean; existing: ExistingTrial | null; signedIn: boolean; banner?: React.ReactNode;
+  lockedEmail: boolean; existing: ExistingTrialDto | null; signedIn: boolean; banner?: React.ReactNode;
 }) {
   const set = (k: keyof BookingForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [k]: e.target.value });
   const inv = (k: keyof BookingForm) => (errors[k] ? { "aria-invalid": true, "aria-describedby": `f-${k}-error` } : {});

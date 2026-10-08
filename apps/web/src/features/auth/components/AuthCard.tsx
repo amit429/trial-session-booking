@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PublicLayout } from "@/components/layout/SiteHeader";
+import { PublicLayout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function AuthCard({ icon, title, description, children, footer }: { icon?: ReactNode; title: string; description?: ReactNode; children?: ReactNode; footer?: ReactNode }) {

@@ -1,19 +1,17 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
-import { Toaster } from "sonner";
-import { GlobalProgress } from "@/components/feedback/GlobalProgress";
-import { queryClient } from "@/app/query-client";
+import { AppProviders } from "@/app/providers";
 import { router } from "@/app/router";
 import "@/index.css";
 
-createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root");
+if (!root) throw new Error("Missing #root element in index.html");
+
+createRoot(root).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <GlobalProgress />
+    <AppProviders>
       <RouterProvider router={router} />
-      <Toaster position="bottom-right" richColors closeButton />
-    </QueryClientProvider>
+    </AppProviders>
   </StrictMode>
 );

@@ -1,19 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatSlot, localClockMinutes, localDate, type BookingDto, type SlotDto, type SlotsResponse, type SuggestionsResponse } from "@shared";
+import { formatSlot, localDate, type BookingDto, type ExistingTrialDto, type SlotDto, type SuggestionsResponse } from "@shared";
 import { Globe, Lock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { PublicLayout } from "@/components/layout/SiteHeader";
+import { PublicLayout } from "@/components/layout";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/card";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { ApiError, api, appPath } from "@/lib/api-client";
+import { appPath, errorMessage, isApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/session";
 import { useTimezone } from "@/hooks/useTimezone";
 import { cn } from "@/lib/utils";
-import { DetailsForm, type ExistingTrial } from "../components/DetailsForm";
+import { useCreateBooking, useSlots, useSuggestions } from "../api/booking.api";
+import { DetailsForm } from "../components/DetailsForm";
 import { InfoPane } from "../components/InfoPane";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { Suggestions } from "../components/Suggestions";
@@ -21,24 +21,27 @@ import { TimesPane } from "../components/TimesPane";
 import { mapServerErrors, validateBooking, type BookingForm, type FormErrors } from "../utils/validation";
 
 const EMPTY: BookingForm = { name: "", email: "", phone: "", child: "", grade: "", subject: "" };
+const SUBJECT_PARAMS = new Set(["CODING", "MATH"]);
 const SLOT_ERRORS = { SLOT_UNAVAILABLE: "That time was just booked", SLOT_TOO_SOON: "This time is now too soon to book", OUTSIDE_HOURS: "That time is outside class hours" } as const;
-const hhmm = (min: number) => `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+type SlotErrorCode = keyof typeof SLOT_ERRORS;
+const isSlotError = (code: string): code is SlotErrorCode => code in SLOT_ERRORS;
 
 /** PRD §5 journey: pick a day and time in local time → details → atomic booking → confirmation. */
 export function BookPage() {
   const { tz, setTz, isDetected } = useTimezone();
   const { parent } = useAuth();
   const navigate = useNavigate();
-  const qc = useQueryClient();
 
   const [date, setDate] = useState<string | null>(null);
   const [month, setMonth] = useState<string | null>(null);
   const [h24, setH24] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
-  const [form, setForm] = useState<BookingForm>(EMPTY);
+  const [params] = useSearchParams();
+  const presetSubject = params.get("subject");
+  const [form, setForm] = useState<BookingForm>(() => ({ ...EMPTY, subject: presetSubject && SUBJECT_PARAMS.has(presetSubject) ? presetSubject : "" }));
   const [errors, setErrors] = useState<FormErrors>({});
-  const [existing, setExisting] = useState<ExistingTrial | null>(null);
+  const [existing, setExisting] = useState<ExistingTrialDto | null>(null);
   const [fullPick, setFullPick] = useState<SlotDto | null>(null);
   const [raceSugg, setRaceSugg] = useState<{ data: SuggestionsResponse; lead: string } | null>(null);
   const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
@@ -47,12 +50,7 @@ export function BookPage() {
     if (parent) setForm(f => ({ ...f, name: f.name || parent.name, email: parent.email }));
   }, [parent]);
 
-  const slotsQ = useQuery({
-    queryKey: ["slots", tz],
-    queryFn: () => api.get<SlotsResponse>("/slots", { tz: tz! }),
-    enabled: !!tz,
-    staleTime: 30_000
-  });
+  const slotsQ = useSlots(tz);
   const days = useMemo(() => new Map((slotsQ.data?.days ?? []).map(d => [d.date, d])), [slotsQ.data]);
 
   // Default to the first day with an open time; keep the calendar month in sync.
@@ -67,11 +65,7 @@ export function BookPage() {
   const day = date ? days.get(date) : undefined;
   const fullDay = day?.status === "FULL";
   const suggTarget = fullPick ?? (fullDay && day ? day.slots[Math.floor(day.slots.length / 2)] : null);
-  const suggQ = useQuery({
-    queryKey: ["suggestions", tz, suggTarget?.startUtc],
-    queryFn: () => api.get<SuggestionsResponse>("/slots/suggestions", { tz: tz!, date: localDate(suggTarget!.startUtc, tz!), time: hhmm(localClockMinutes(suggTarget!.startUtc, tz!)) }),
-    enabled: !!tz && !!suggTarget && step === 1
-  });
+  const suggQ = useSuggestions(tz, suggTarget?.startUtc ?? null, step === 1);
 
   const pickSlot = (startUtc: string) => {
     if (!tz) return;
@@ -86,26 +80,21 @@ export function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const book = useMutation({
-    mutationFn: (body: unknown) => api.post<BookingDto>("/bookings", body, { "Idempotency-Key": idemKey }),
-    onSuccess: b => {
-      qc.invalidateQueries({ queryKey: ["slots"] });
-      qc.invalidateQueries({ queryKey: ["me-bookings"] });
-      toast.success("Trial booked", { description: `${formatSlot(b.startUtc, b.parentTimezone)} with ${b.mentor.name}` });
-      navigate(appPath(b.manageUrl!), { state: { justBooked: true } });
-    },
-    onError: (err: unknown) => {
-      qc.invalidateQueries({ queryKey: ["slots"] });
-      if (!(err instanceof ApiError)) return toast.error("Something went wrong. Please try again.");
-      if (err.code in SLOT_ERRORS && err.details?.suggestions) {
-        setRaceSugg({ data: err.details.suggestions, lead: SLOT_ERRORS[err.code as keyof typeof SLOT_ERRORS] });
-        return;
-      }
-      if (err.code === "ACTIVE_TRIAL_EXISTS") return setExisting(err.details as ExistingTrial);
-      if (err.code === "VALIDATION") return setErrors(mapServerErrors(err.details?.fieldErrors));
-      toast.error(err.message);
+  const book = useCreateBooking(idemKey);
+  const onBooked = (b: BookingDto) => {
+    toast.success("Trial booked", { description: `${formatSlot(b.startUtc, b.parentTimezone)} with ${b.mentor.name}` });
+    navigate(appPath(b.manageUrl ?? `/booking/${b.reference}`), { state: { justBooked: true } });
+  };
+  /** Lost races and invalid times show alternatives in place; the form keeps what the parent typed. */
+  const onBookingError = (err: unknown) => {
+    if (!isApiError(err)) return toast.error(errorMessage(err));
+    if (isSlotError(err.code) && err.details.suggestions) return setRaceSugg({ data: err.details.suggestions, lead: SLOT_ERRORS[err.code] });
+    if (err.code === "ACTIVE_TRIAL_EXISTS" && err.details.reference && err.details.startUtc && err.details.timezone) {
+      return setExisting({ reference: err.details.reference, startUtc: err.details.startUtc, timezone: err.details.timezone });
     }
-  });
+    if (err.code === "VALIDATION") return setErrors(mapServerErrors(err.details.fieldErrors));
+    toast.error(err.message);
+  };
 
   const submit = () => {
     if (!tz || !selected) return;
@@ -118,7 +107,7 @@ export function BookPage() {
       return;
     }
     setErrors({});
-    book.mutate(r.body);
+    book.mutate(r.body, { onSuccess: onBooked, onError: onBookingError });
   };
 
   const transition = slotsQ.data?.transitions[0];

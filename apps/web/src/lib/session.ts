@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { AdminDto, MeResponse, ParentDto } from "@shared";
-import { api } from "@/lib/api-client";
+import { api } from "./api-client";
+import { queryKeys } from "./query-keys";
 
-export const ME_KEY = ["me"] as const;
+const ME_KEY = queryKeys.me;
+
 
 export function useAuth() {
   const q = useQuery({ queryKey: ME_KEY, queryFn: () => api.get<MeResponse>("/auth/me"), staleTime: 60_000 });
