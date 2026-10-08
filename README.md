@@ -12,9 +12,7 @@ Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a 
 | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Product spec           | [`docs/PRD.md`](docs/PRD.md)                                                                               |
 | Technical design       | [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md)                                                     |
-| API reference          | [`docs/API.md`](docs/API.md)                                                                               |
-| Clickable UI prototype | [`docs/ui-prototype.html`](docs/ui-prototype.html) (open in a browser)                                     |
-| Implementation plan    | [`docs/superpowers/plans/2026-10-08-trial-booking.md`](docs/superpowers/plans/2026-10-08-trial-booking.md) |
+| API reference          | [`docs/API.md`](docs/API.md)                                                                               |                                    |
 | AI transcript          | [`TRANSCRIPT.md`](TRANSCRIPT.md)                                                                           |
 | Screenshots            | [Screenshots](#screenshots) ([`docs/screenshots/`](docs/screenshots/))                                     |
 
