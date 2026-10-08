@@ -1,4 +1,12 @@
-import { DAY_MS, formatClockMinutes, formatDay, localClockMinutes, type SuggestionNote, type SuggestionStrategy, type Transition } from "@shared";
+import {
+  DAY_MS,
+  formatClockMinutes,
+  formatDay,
+  localClockMinutes,
+  type SuggestionNote,
+  type SuggestionStrategy,
+  type Transition
+} from "@shared";
 import type { Day, Slot } from "./types";
 
 export type SuggestionLimits = { sameDay: number; sameTime: number; nearest: number };
@@ -33,7 +41,12 @@ export function rankSuggestions(
 
   const sameDay = days.find(d => d.date === D);
   if (sameDay && open(sameDay).length) {
-    return done("SAME_DAY", open(sameDay).sort((a, b) => dist(a) - dist(b) || a.startUtc.getTime() - b.startUtc.getTime()).slice(0, limits.sameDay));
+    return done(
+      "SAME_DAY",
+      open(sameDay)
+        .sort((a, b) => dist(a) - dist(b) || a.startUtc.getTime() - b.startUtc.getTime())
+        .slice(0, limits.sameDay)
+    );
   }
 
   const target = dayNumber(D);
@@ -49,12 +62,18 @@ export function rankSuggestions(
   const nearest: Slot[] = [];
   for (const d of [...days].sort((a, b) => a.date.localeCompare(b.date))) {
     if (d.date === D) continue;
-    for (const s of open(d).sort((a, b) => dist(a) - dist(b) || a.startUtc.getTime() - b.startUtc.getTime()).slice(0, 2)) {
+    for (const s of open(d)
+      .sort((a, b) => dist(a) - dist(b) || a.startUtc.getTime() - b.startUtc.getTime())
+      .slice(0, 2)) {
       if (nearest.length < limits.nearest) nearest.push(s);
     }
     if (nearest.length >= limits.nearest) break;
   }
-  if (nearest.length) return done("NEAREST", nearest.sort((a, b) => a.startUtc.getTime() - b.startUtc.getTime()));
+  if (nearest.length)
+    return done(
+      "NEAREST",
+      nearest.sort((a, b) => a.startUtc.getTime() - b.startUtc.getTime())
+    );
   return done("NONE", []);
 }
 
@@ -66,7 +85,8 @@ function dstNotes(days: Day[], T: number, tz: string, transitions: Transition[])
   const before = days.filter(d => d.date < tr.date).some(hasT);
   const after = days.filter(d => d.date >= tr.date).some(hasT);
   const when = `From ${formatDay(tr.at, tz)}, ${formatClockMinutes(T)}`;
-  if (before && !after) return [{ type: "DST_SHIFT" as const, message: `${when} is outside our mentors' hours because the clocks change.` }];
+  if (before && !after)
+    return [{ type: "DST_SHIFT" as const, message: `${when} is outside our mentors' hours because the clocks change.` }];
   if (!before && after) return [{ type: "DST_SHIFT" as const, message: `${when} becomes available because the clocks change.` }];
   return [];
 }

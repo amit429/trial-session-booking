@@ -16,8 +16,14 @@ describe("parent sign-in", () => {
   it("lands on My bookings after the first successful sign-in", async () => {
     let signedIn = false;
     mockApi({
-      "GET /auth/me": async () => { await new Promise(r => setTimeout(r, 60)); return { parent: signedIn ? parent : null, admin: null }; },
-      "POST /auth/parent/login": () => { signedIn = true; return { parent }; },
+      "GET /auth/me": async () => {
+        await new Promise(r => setTimeout(r, 60));
+        return { parent: signedIn ? parent : null, admin: null };
+      },
+      "POST /auth/parent/login": () => {
+        signedIn = true;
+        return { parent };
+      },
       "GET /me/bookings": () => []
     });
     render(
@@ -25,7 +31,14 @@ describe("parent sign-in", () => {
         <MemoryRouter initialEntries={["/login"]}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/my-bookings" element={<RequireParent><MyBookingsPage /></RequireParent>} />
+            <Route
+              path="/my-bookings"
+              element={
+                <RequireParent>
+                  <MyBookingsPage />
+                </RequireParent>
+              }
+            />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>

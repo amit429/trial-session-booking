@@ -15,12 +15,22 @@ async function adminAgent() {
   return agent;
 }
 const book = (email: string, startUtc: string, tz = "America/New_York") =>
-  request(app).post("/api/bookings").set("Idempotency-Key", randomUUID()).send({
-    parent: { name: `Parent ${email.split("@")[0]}`, email }, child: { name: "Kid", grade: 3 }, subject: "MATH", startUtc, timezone: tz
-  });
+  request(app)
+    .post("/api/bookings")
+    .set("Idempotency-Key", randomUUID())
+    .send({
+      parent: { name: `Parent ${email.split("@")[0]}`, email },
+      child: { name: "Kid", grade: 3 },
+      subject: "MATH",
+      startUtc,
+      timezone: tz
+    });
 
 describe("admin console API", () => {
-  beforeEach(async () => { await resetDb(); await seedMentors(db); });
+  beforeEach(async () => {
+    await resetDb();
+    await seedMentors(db);
+  });
 
   it("dashboard capacity per IST date counts only mentors working that weekday", async () => {
     await book("a@example.com", "2026-10-21T13:00:00.000Z", "Europe/London");
@@ -57,7 +67,9 @@ describe("admin console API", () => {
     await book("guest@example.com", "2026-10-21T13:00:00.000Z", "Europe/London");
     const agent = await adminAgent();
     const res = await agent.get("/api/admin/parents");
-    expect(res.body.items).toEqual([expect.objectContaining({ email: "guest@example.com", status: "GUEST", bookingCount: 1, upcomingCount: 1 })]);
+    expect(res.body.items).toEqual([
+      expect.objectContaining({ email: "guest@example.com", status: "GUEST", bookingCount: 1, upcomingCount: 1 })
+    ]);
     const detail = await agent.get(`/api/admin/parents/${res.body.items[0].id}`);
     expect(detail.body.bookings).toHaveLength(1);
   });
@@ -80,6 +92,9 @@ describe("admin console API", () => {
     const dev = makeTestApp({ env: { DEV_OUTBOX_ENABLED: "true" } });
     const res = await request(dev.app).get("/api/dev/outbox");
     expect(res.status).toBe(200);
-    expect(res.body[0]).toMatchObject({ kind: expect.stringMatching(/^BOOKING_CONFIRMED/), bookingReference: expect.stringMatching(/^CY-/) });
+    expect(res.body[0]).toMatchObject({
+      kind: expect.stringMatching(/^BOOKING_CONFIRMED/),
+      bookingReference: expect.stringMatching(/^CY-/)
+    });
   });
 });

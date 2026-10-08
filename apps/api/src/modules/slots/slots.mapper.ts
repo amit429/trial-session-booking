@@ -11,7 +11,13 @@ export const toSlotDto = (s: Slot): SlotDto => ({
 
 export const toDayDto = (d: Day): DaySlotsDto => ({ date: d.date, status: d.status, slots: d.slots.map(toSlotDto) });
 
-export const toTransitionDto = (t: Transition): TransitionDto => ({ date: t.date, atUtc: t.at.toISOString(), fromOffset: t.fromOffset, toOffset: t.toOffset, back: t.back });
+export const toTransitionDto = (t: Transition): TransitionDto => ({
+  date: t.date,
+  atUtc: t.at.toISOString(),
+  fromOffset: t.fromOffset,
+  toOffset: t.toOffset,
+  back: t.back
+});
 
 export const toEngineMentor = (m: Mentor & { rules: AvailabilityRule[] }): EngineMentor => ({
   id: m.id,

@@ -15,25 +15,43 @@ async function lastLink(email: string, path: string) {
 }
 async function verifiedParent(email = "jane@example.com", password = "CorrectHorse1") {
   await request(app).post("/api/auth/parent/signup").send({ name: "Jane Doe", email, password });
-  await request(app).post("/api/auth/parent/verify").send({ token: await lastLink(email, "/verify-email") });
+  await request(app)
+    .post("/api/auth/parent/verify")
+    .send({ token: await lastLink(email, "/verify-email") });
   const agent = request.agent(app);
   const res = await agent.post("/api/auth/parent/login").set("Origin", ORIGIN).send({ email, password });
   expect(res.status).toBe(200);
   return agent;
 }
 function book(email: string, startUtc = "2026-10-21T19:00:00.000Z") {
-  return request(app).post("/api/bookings").set("Idempotency-Key", randomUUID()).send({
-    parent: { name: "Jane Doe", email }, child: { name: "Sam", grade: 4 }, subject: "CODING", startUtc, timezone: "America/New_York"
-  });
+  return request(app)
+    .post("/api/bookings")
+    .set("Idempotency-Key", randomUUID())
+    .send({
+      parent: { name: "Jane Doe", email },
+      child: { name: "Sam", grade: 4 },
+      subject: "CODING",
+      startUtc,
+      timezone: "America/New_York"
+    });
 }
 
 describe("parent accounts", () => {
-  beforeEach(async () => { await resetDb(); await seedMentors(db, { allWeek: true }); });
+  beforeEach(async () => {
+    await resetDb();
+    await seedMentors(db, { allWeek: true });
+  });
 
   it("sign-up answers the same for new and existing emails, and warns the real owner", async () => {
-    const first = await request(app).post("/api/auth/parent/signup").send({ name: "Jane Doe", email: "jane@example.com", password: "CorrectHorse1" });
-    await request(app).post("/api/auth/parent/verify").send({ token: await lastLink("jane@example.com", "/verify-email") });
-    const second = await request(app).post("/api/auth/parent/signup").send({ name: "Mallory", email: "jane@example.com", password: "Whatever123" });
+    const first = await request(app)
+      .post("/api/auth/parent/signup")
+      .send({ name: "Jane Doe", email: "jane@example.com", password: "CorrectHorse1" });
+    await request(app)
+      .post("/api/auth/parent/verify")
+      .send({ token: await lastLink("jane@example.com", "/verify-email") });
+    const second = await request(app)
+      .post("/api/auth/parent/signup")
+      .send({ name: "Mallory", email: "jane@example.com", password: "Whatever123" });
     expect(first.status).toBe(202);
     expect(second.status).toBe(202);
     expect(second.body).toEqual(first.body);
@@ -45,7 +63,9 @@ describe("parent accounts", () => {
     const pending = await request(app).post("/api/auth/parent/login").send({ email: "jane@example.com", password: "CorrectHorse1" });
     expect(pending.status).toBe(403);
     expect(pending.body.error.code).toBe("EMAIL_NOT_VERIFIED");
-    await request(app).post("/api/auth/parent/verify").send({ token: await lastLink("jane@example.com", "/verify-email") });
+    await request(app)
+      .post("/api/auth/parent/verify")
+      .send({ token: await lastLink("jane@example.com", "/verify-email") });
     const ok = await request(app).post("/api/auth/parent/login").send({ email: "jane@example.com", password: "CorrectHorse1" });
     expect(ok.status).toBe(200);
     expect(ok.body.parent).toMatchObject({ email: "jane@example.com", status: "VERIFIED" });
@@ -82,7 +102,9 @@ describe("parent accounts", () => {
     const token = await lastLink("jane@example.com", "/reset-password");
     expect((await request(app).post("/api/auth/parent/reset-password").send({ token, password: "NewPassword9" })).status).toBe(200);
     expect((await agent.get("/api/auth/me")).body.parent).toBeNull();
-    expect((await request(app).post("/api/auth/parent/login").send({ email: "jane@example.com", password: "NewPassword9" })).status).toBe(200);
+    expect((await request(app).post("/api/auth/parent/login").send({ email: "jane@example.com", password: "NewPassword9" })).status).toBe(
+      200
+    );
   });
 
   it("a guest booking shows up in My bookings after the parent signs up and verifies", async () => {
@@ -109,7 +131,10 @@ describe("parent accounts", () => {
 });
 
 describe("admin and cross-cutting protection", () => {
-  beforeEach(async () => { await resetDb(); await container.adminAuth.ensureAdmin(); });
+  beforeEach(async () => {
+    await resetDb();
+    await container.adminAuth.ensureAdmin();
+  });
 
   it("a parent cookie never unlocks admin endpoints", async () => {
     const agent = await verifiedParent();
@@ -137,7 +162,10 @@ describe("rate limiting", () => {
   const limited = makeTestApp({ env: { RATE_LIMIT_ENABLED: "true" } });
   it("locks sign-in after 5 attempts a minute for the same email", async () => {
     const codes = [];
-    for (let i = 0; i < 6; i++) codes.push((await request(limited.app).post("/api/auth/parent/login").send({ email: "x@example.com", password: "bad-pass1" })).status);
+    for (let i = 0; i < 6; i++)
+      codes.push(
+        (await request(limited.app).post("/api/auth/parent/login").send({ email: "x@example.com", password: "bad-pass1" })).status
+      );
     expect(codes).toEqual([401, 401, 401, 401, 401, 429]);
   });
 
@@ -145,7 +173,14 @@ describe("rate limiting", () => {
     const fresh = makeTestApp({ env: { RATE_LIMIT_ENABLED: "true" } });
     const codes = [];
     for (let i = 1; i <= 6; i++) {
-      codes.push((await request(fresh.app).post("/api/auth/parent/login").set("X-Forwarded-For", `2001:db8:abcd:12::${i}`).send({ email: "v6@example.com", password: "bad-pass1" })).status);
+      codes.push(
+        (
+          await request(fresh.app)
+            .post("/api/auth/parent/login")
+            .set("X-Forwarded-For", `2001:db8:abcd:12::${i}`)
+            .send({ email: "v6@example.com", password: "bad-pass1" })
+        ).status
+      );
     }
     expect(codes.at(-1)).toBe(429);
   });

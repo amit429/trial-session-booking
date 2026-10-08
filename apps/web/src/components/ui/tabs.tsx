@@ -1,6 +1,18 @@
 import { cn } from "@/lib/utils";
 
-export function Tabs<T extends string>({ value, onChange, items, label, className }: { value: T; onChange: (v: T) => void; items: { value: T; label: React.ReactNode }[]; label: string; className?: string }) {
+export function Tabs<T extends string>({
+  value,
+  onChange,
+  items,
+  label,
+  className
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  items: { value: T; label: React.ReactNode }[];
+  label: string;
+  className?: string;
+}) {
   return (
     <div role="tablist" aria-label={label} className={cn("inline-flex gap-0.5 rounded-[9px] bg-muted p-[3px]", className)}>
       {items.map(i => (

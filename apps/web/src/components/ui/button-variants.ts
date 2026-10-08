@@ -15,7 +15,13 @@ export const buttonVariants = cva(
         "destructive-ghost": "text-destructive-text hover:bg-destructive-soft",
         link: "h-auto p-0 underline underline-offset-4 hover:text-brand-text"
       },
-      size: { default: "h-9 px-3.5", sm: "h-8 rounded-[7px] px-2.5 text-[13px]", lg: "h-10 px-[18px]", icon: "size-9", "icon-sm": "size-8 rounded-[7px]" }
+      size: {
+        default: "h-9 px-3.5",
+        sm: "h-8 rounded-[7px] px-2.5 text-[13px]",
+        lg: "h-10 px-[18px]",
+        icon: "size-9",
+        "icon-sm": "size-8 rounded-[7px]"
+      }
     },
     defaultVariants: { variant: "default", size: "default" }
   }

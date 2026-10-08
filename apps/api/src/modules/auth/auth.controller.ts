@@ -1,4 +1,14 @@
-import { EmailRequest, LoginRequest, ResetPasswordRequest, SignupRequest, TokenRequest, type AdminLoginResponse, type MeResponse, type MessageResponse, type ParentLoginResponse } from "@shared";
+import {
+  EmailRequest,
+  LoginRequest,
+  ResetPasswordRequest,
+  SignupRequest,
+  TokenRequest,
+  type AdminLoginResponse,
+  type MeResponse,
+  type MessageResponse,
+  type ParentLoginResponse
+} from "@shared";
 import type { Request, Response } from "express";
 import type { Container } from "@/container";
 import { ADMIN_COOKIE, PARENT_COOKIE, clearSessionCookie, setSessionCookie } from "@/http/cookies";

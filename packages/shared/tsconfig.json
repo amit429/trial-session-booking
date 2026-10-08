@@ -3,17 +3,9 @@
   "compilerOptions": {
     "types": [],
     "paths": {
-      "@shared": [
-        "./src/index.ts"
-      ],
-      "@shared/*": [
-        "./src/*"
-      ]
+      "@shared": ["./src/index.ts"],
+      "@shared/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "test",
-    "vitest.config.ts"
-  ]
+  "include": ["src", "test", "vitest.config.ts"]
 }

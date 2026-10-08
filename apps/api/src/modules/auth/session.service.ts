@@ -8,7 +8,10 @@ export type ResolvedSession = { parent?: Parent; admin?: AdminUser; renewedUntil
 
 /** DB-backed sessions: random token in the cookie, SHA-256 of it in the table (ADR-12). */
 export class SessionService {
-  constructor(private deps: Deps, private repo: SessionsRepository) {}
+  constructor(
+    private deps: Deps,
+    private repo: SessionsRepository
+  ) {}
 
   private ttlMs(kind: SessionKind) {
     const c = this.deps.config;

@@ -23,7 +23,14 @@ import type { ParentsRepository } from "@/modules/parents";
 import { isOnShift, toWeeklyShift } from "./admin.mapper";
 import type { AdminRepository } from "./admin.repository";
 
-export type BookingFilters = { scope: "upcoming" | "past" | "all"; status?: "CONFIRMED" | "CANCELLED"; mentorId?: string; q?: string; page: number; pageSize: number };
+export type BookingFilters = {
+  scope: "upcoming" | "past" | "all";
+  status?: "CONFIRMED" | "CANCELLED";
+  mentorId?: string;
+  q?: string;
+  page: number;
+  pageSize: number;
+};
 
 export class AdminService {
   constructor(
@@ -100,12 +107,19 @@ export class AdminService {
 
   async listParents(q: string | undefined, page: number, pageSize: number): Promise<Paged<AdminParentRowDto>> {
     const term = q?.trim();
-    const where: Prisma.ParentWhereInput = term ? { OR: [{ email: { contains: term, mode: "insensitive" } }, { name: { contains: term, mode: "insensitive" } }] } : {};
+    const where: Prisma.ParentWhereInput = term
+      ? { OR: [{ email: { contains: term, mode: "insensitive" } }, { name: { contains: term, mode: "insensitive" } }] }
+      : {};
     const [rows, total] = await this.parents.search(where, page, pageSize);
     const now = this.now();
     return {
       items: rows.map(p => ({
-        id: p.id, name: p.name, email: p.email, phone: p.phone, timezone: p.timezone, status: accountStatus(p),
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        phone: p.phone,
+        timezone: p.timezone,
+        status: accountStatus(p),
         bookingCount: p.bookings.length,
         upcomingCount: p.bookings.filter(b => b.status === "CONFIRMED" && b.startUtc > now).length
       })),
@@ -117,7 +131,15 @@ export class AdminService {
     const p = await this.parents.findWithBookings(id);
     if (!p) throw notFound("We couldn't find this parent.");
     return {
-      parent: { id: p.id, name: p.name, email: p.email, phone: p.phone, timezone: p.timezone, status: accountStatus(p), createdAt: p.createdAt.toISOString() },
+      parent: {
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        phone: p.phone,
+        timezone: p.timezone,
+        status: accountStatus(p),
+        createdAt: p.createdAt.toISOString()
+      },
       bookings: p.bookings.map(this.adminDto)
     };
   }
@@ -126,7 +148,13 @@ export class AdminService {
     const today = this.todayIst();
     const mentors = await this.repo.mentorsWithUpcoming(this.now());
     return mentors.map(m => ({
-      id: m.id, name: m.name, email: m.email, bio: m.bio, shiftLabel: m.shiftLabel, timezone: m.timezone, maxDailyTrials: m.maxDailyTrials,
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      bio: m.bio,
+      shiftLabel: m.shiftLabel,
+      timezone: m.timezone,
+      maxDailyTrials: m.maxDailyTrials,
       weeklyShift: toWeeklyShift(m.rules),
       onShiftToday: isOnShift(m, today),
       todayBooked: m.bookings.filter(b => utcToDateOnly(b.mentorLocalDate) === today).length,

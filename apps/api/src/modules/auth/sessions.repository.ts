@@ -5,7 +5,9 @@ export class SessionsRepository {
   constructor(private db: Db) {}
 
   create(id: string, kind: SessionKind, subjectId: string, expiresAt: Date) {
-    return this.db.session.create({ data: { id, kind, expiresAt, ...(kind === "PARENT" ? { parentId: subjectId } : { adminId: subjectId }) } });
+    return this.db.session.create({
+      data: { id, kind, expiresAt, ...(kind === "PARENT" ? { parentId: subjectId } : { adminId: subjectId }) }
+    });
   }
 
   findWithSubject(id: string) {

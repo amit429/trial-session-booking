@@ -6,7 +6,9 @@ export function DateBox({ iso, timezone }: { iso: string; timezone: string }) {
       <div className="bg-muted py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         {new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: timezone }).format(at)}
       </div>
-      <div className="pb-1.5 pt-0.5 text-[19px] font-semibold tabular-nums">{new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: timezone }).format(at)}</div>
+      <div className="pb-1.5 pt-0.5 text-[19px] font-semibold tabular-nums">
+        {new Intl.DateTimeFormat("en-GB", { day: "numeric", timeZone: timezone }).format(at)}
+      </div>
     </div>
   );
 }

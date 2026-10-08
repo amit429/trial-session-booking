@@ -8,11 +8,23 @@ export function MessageBody({ body }: { body: string }) {
       {parts.map((p, i) => {
         if (!/^https?:\/\//.test(p)) return <span key={i}>{p}</span>;
         let url: URL | null = null;
-        try { url = new URL(p); } catch { /* not a URL */ }
-        if (url && url.origin === window.location.origin) {
-          return <Link key={i} to={`${url.pathname}${url.search}`} className="font-medium text-brand-text underline underline-offset-4">{p}</Link>;
+        try {
+          url = new URL(p);
+        } catch {
+          /* not a URL */
         }
-        return <span key={i} className="font-mono text-xs">{p}</span>;
+        if (url && url.origin === window.location.origin) {
+          return (
+            <Link key={i} to={`${url.pathname}${url.search}`} className="font-medium text-brand-text underline underline-offset-4">
+              {p}
+            </Link>
+          );
+        }
+        return (
+          <span key={i} className="font-mono text-xs">
+            {p}
+          </span>
+        );
       })}
     </div>
   );

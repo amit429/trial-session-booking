@@ -24,7 +24,9 @@ export function formatZoneLabel(zone: string, instant: Instant): string {
 }
 
 export function formatTime(instant: Instant, zone: string, h24 = false): string {
-  return toDt(instant, zone).setLocale("en-US").toFormat(h24 ? "HH:mm" : "h:mm a");
+  return toDt(instant, zone)
+    .setLocale("en-US")
+    .toFormat(h24 ? "HH:mm" : "h:mm a");
 }
 
 export function formatDay(instant: Instant, zone: string): string {

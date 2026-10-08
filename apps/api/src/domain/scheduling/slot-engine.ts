@@ -13,7 +13,6 @@ type Prepared = {
   perDay: Map<string, number>;
 };
 
-
 function prepare(mentors: EngineMentor[], bookings: EngineBooking[], from: Date, to: Date): Prepared[] {
   const pad = 2 * DAY_MS;
   return mentors.map(mentor => {
@@ -83,7 +82,9 @@ export function buildSlots(input: EngineInput): Day[] {
 export function staffedMentorsAt(start: Date, mentors: EngineMentor[], config: EngineConfig): EngineMentor[] {
   const s = start.getTime();
   const e = s + config.durationMinutes * MINUTE_MS;
-  return prepare(mentors, [], start, new Date(e)).filter(p => isStaffed(p, s, e)).map(p => p.mentor);
+  return prepare(mentors, [], start, new Date(e))
+    .filter(p => isStaffed(p, s, e))
+    .map(p => p.mentor);
 }
 
 /** Mentors who can take a class at `start` right now: on shift, free and under their daily cap. */

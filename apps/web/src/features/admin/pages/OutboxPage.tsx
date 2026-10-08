@@ -8,7 +8,13 @@ export function OutboxPage() {
   return (
     <AdminPage crumbs={[{ label: "Outbox" }]}>
       <PageTitle title="Outbox">Every email the system would send: confirmations, cancellations and account emails.</PageTitle>
-      {query.data ? <OutboxList items={query.data.items} /> : <Busy><MessagesSkeleton count={5} /></Busy>}
+      {query.data ? (
+        <OutboxList items={query.data.items} />
+      ) : (
+        <Busy>
+          <MessagesSkeleton count={5} />
+        </Busy>
+      )}
     </AdminPage>
   );
 }

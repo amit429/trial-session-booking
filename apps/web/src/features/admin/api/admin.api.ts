@@ -59,10 +59,14 @@ export const useAdminParents = (q: string) =>
 export const useAdminParent = (id: string) =>
   useQuery({ queryKey: queryKeys.admin.parent(id), queryFn: () => api.get<AdminParentDetailDto>(`/admin/parents/${id}`) });
 
-export const useAdminMentors = () => useQuery({ queryKey: queryKeys.admin.mentors, queryFn: () => api.get<AdminMentorDto[]>("/admin/mentors") });
+export const useAdminMentors = () =>
+  useQuery({ queryKey: queryKeys.admin.mentors, queryFn: () => api.get<AdminMentorDto[]>("/admin/mentors") });
 
 export const useMentorSchedule = (id: string) =>
-  useQuery({ queryKey: queryKeys.admin.mentorSchedule(id), queryFn: () => api.get<MentorScheduleDto>(`/admin/mentors/${id}/schedule`, { days: 14 }) });
+  useQuery({
+    queryKey: queryKeys.admin.mentorSchedule(id),
+    queryFn: () => api.get<MentorScheduleDto>(`/admin/mentors/${id}/schedule`, { days: 14 })
+  });
 
 export const useAdminOutbox = () =>
   useQuery({ queryKey: queryKeys.admin.outbox, queryFn: () => api.get<Paged<OutboxDto>>("/admin/outbox", { pageSize: 80 }) });

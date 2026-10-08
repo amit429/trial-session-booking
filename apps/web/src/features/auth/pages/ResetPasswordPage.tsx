@@ -38,7 +38,9 @@ export function ResetPasswordPage() {
   if (expired) {
     return (
       <AuthCard icon={<AlertTriangle />} title="This link has expired" description="Reset links work once and for 1 hour.">
-        <Button asChild className="w-full"><Link to="/forgot-password">Request a new link</Link></Button>
+        <Button asChild className="w-full">
+          <Link to="/forgot-password">Request a new link</Link>
+        </Button>
       </AuthCard>
     );
   }
@@ -49,7 +51,9 @@ export function ResetPasswordPage() {
         <Field id="rp-pw" label="New password" description={`At least ${MIN_PASSWORD} characters.`}>
           <Input id="rp-pw" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
         </Field>
-        <Button type="submit" className="w-full" disabled={reset.isPending}>Save password</Button>
+        <Button type="submit" className="w-full" disabled={reset.isPending}>
+          Save password
+        </Button>
       </form>
     </AuthCard>
   );

@@ -4,7 +4,12 @@ export type BookingForm = { name: string; email: string; phone: string; child: s
 export type FormErrors = Partial<Record<keyof BookingForm, string>>;
 
 const FIELD: Record<string, keyof BookingForm> = {
-  "parent.name": "name", "parent.email": "email", "parent.phone": "phone", "child.name": "child", "child.grade": "grade", subject: "subject"
+  "parent.name": "name",
+  "parent.email": "email",
+  "parent.phone": "phone",
+  "child.name": "child",
+  "child.grade": "grade",
+  subject: "subject"
 };
 
 /** Validate with the same zod schema the API uses, mapped onto form fields. */

@@ -5,7 +5,10 @@ import { toSlotDto } from "./slots.mapper";
 import type { SlotService } from "./slots.service";
 
 export class SuggestionService {
-  constructor(private deps: Deps, private slots: SlotService) {}
+  constructor(
+    private deps: Deps,
+    private slots: SlotService
+  ) {}
 
   /** Suggestions for parent-local date D at clock minutes T (PRD §8). */
   async suggest(tz: string, D: string, T: number, exclude?: Date): Promise<SuggestionsResponse> {

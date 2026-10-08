@@ -18,8 +18,47 @@ const LDN = "Europe/London";
 const LA = "America/Los_Angeles";
 const IST = "Asia/Kolkata";
 
-const FIRST = ["Sarah", "Michael", "Priyanka", "James", "Olivia", "Daniel", "Hannah", "Marcus", "Grace", "Tom", "Aisha", "Ryan", "Chloe", "Ben", "Fatima", "Lucas", "Megan", "Omar", "Rachel", "Sean"];
-const LAST = ["Miller", "Johnson", "Shah", "Walker", "Kim", "Murphy", "Brooks", "Nguyen", "Hughes", "Khan", "Foster", "Evans", "Carter", "Garcia", "Byrne", "Cohen", "Price"];
+const FIRST = [
+  "Sarah",
+  "Michael",
+  "Priyanka",
+  "James",
+  "Olivia",
+  "Daniel",
+  "Hannah",
+  "Marcus",
+  "Grace",
+  "Tom",
+  "Aisha",
+  "Ryan",
+  "Chloe",
+  "Ben",
+  "Fatima",
+  "Lucas",
+  "Megan",
+  "Omar",
+  "Rachel",
+  "Sean"
+];
+const LAST = [
+  "Miller",
+  "Johnson",
+  "Shah",
+  "Walker",
+  "Kim",
+  "Murphy",
+  "Brooks",
+  "Nguyen",
+  "Hughes",
+  "Khan",
+  "Foster",
+  "Evans",
+  "Carter",
+  "Garcia",
+  "Byrne",
+  "Cohen",
+  "Price"
+];
 const KIDS = ["Ava", "Leo", "Zara", "Noah", "Isla", "Kai", "Maya", "Eli", "Ruby", "Finn", "Nora", "Arlo"];
 
 async function main() {
@@ -30,37 +69,53 @@ async function main() {
   const c = buildContainer({ db, clock, config });
   const realNow = clock.now();
 
-  await db.$executeRawUnsafe('TRUNCATE "OutboxMessage", "Booking", "AuthToken", "Session", "AdminUser", "Parent", "AvailabilityRule", "Mentor" CASCADE');
+  await db.$executeRawUnsafe(
+    'TRUNCATE "OutboxMessage", "Booking", "AuthToken", "Session", "AdminUser", "Parent", "AvailabilityRule", "Mentor" CASCADE'
+  );
   await c.adminAuth.ensureAdmin();
 
   const mentors = [];
   for (const m of MENTOR_SEED) {
-    mentors.push(await db.mentor.create({
-      data: { name: m.name, email: mentorEmail(m.name), timezone: IST, bio: m.bio, shiftLabel: SHIFTS[m.shift].label, rules: { create: seedRules(m.shift, m.off) } }
-    }));
+    mentors.push(
+      await db.mentor.create({
+        data: {
+          name: m.name,
+          email: mentorEmail(m.name),
+          timezone: IST,
+          bio: m.bio,
+          shiftLabel: SHIFTS[m.shift].label,
+          rules: { create: seedRules(m.shift, m.off) }
+        }
+      })
+    );
   }
 
   let n = 0;
   const person = () => {
     n++;
-    const f = FIRST[n % FIRST.length], l = LAST[(n * 7) % LAST.length];
+    const f = FIRST[n % FIRST.length],
+      l = LAST[(n * 7) % LAST.length];
     return { name: `${f} ${l}`, email: `${f}.${l}${n}`.toLowerCase() + "@example.com" };
   };
   const book = async (startUtc: Date, timezone: string, who = person(), child = KIDS[n % KIDS.length]) => {
     try {
-      return await c.bookings.create({
-        parent: { name: who.name, email: who.email, phone: undefined },
-        child: { name: child, grade: 2 + (n % 8) },
-        subject: n % 2 ? "CODING" : "MATH",
-        startUtc: startUtc.toISOString(),
-        timezone
-      }, randomUUID());
+      return await c.bookings.create(
+        {
+          parent: { name: who.name, email: who.email, phone: undefined },
+          child: { name: child, grade: 2 + (n % 8) },
+          subject: n % 2 ? "CODING" : "MATH",
+          startUtc: startUtc.toISOString(),
+          timezone
+        },
+        randomUUID()
+      );
     } catch (e) {
       if (e instanceof AppError) return null;
       throw e;
     }
   };
-  const openSlots = async (tz: string, date: string) => (await c.slots.getDays(tz, date, 1))[0]?.slots.filter(s => s.status === "OPEN") ?? [];
+  const openSlots = async (tz: string, date: string) =>
+    (await c.slots.getDays(tz, date, 1))[0]?.slots.filter(s => s.status === "OPEN") ?? [];
   const today = localDate(realNow, NY);
   const report: string[] = [];
 
@@ -75,9 +130,19 @@ async function main() {
     const parent = await db.parent.create({ data: { name: who.name, email: who.email, timezone: LDN } });
     await db.booking.create({
       data: {
-        reference: `CY-S1${minutes === 1140 ? "AAA" : "BBB"}`, parentId: parent.id, mentorId: s1.id, childName: "Oliver", childGrade: 5, subject: "CODING",
-        startUtc: start, endUtc: new Date(start.getTime() + 3_600_000), mentorLocalDate: new Date(`${tIst}T00:00:00Z`),
-        parentTimezone: LDN, mentorTimezone: IST, meetingUrl: `${config.meetingBaseUrl}/CY-S1-${minutes}`, idempotencyKey: randomUUID()
+        reference: `CY-S1${minutes === 1140 ? "AAA" : "BBB"}`,
+        parentId: parent.id,
+        mentorId: s1.id,
+        childName: "Oliver",
+        childGrade: 5,
+        subject: "CODING",
+        startUtc: start,
+        endUtc: new Date(start.getTime() + 3_600_000),
+        mentorLocalDate: new Date(`${tIst}T00:00:00Z`),
+        parentTimezone: LDN,
+        mentorTimezone: IST,
+        meetingUrl: `${config.meetingBaseUrl}/CY-S1-${minutes}`,
+        idempotencyKey: randomUUID()
       }
     });
   }

@@ -27,16 +27,36 @@ export function DashboardPage() {
     <AdminPage crumbs={[{ label: "Dashboard" }]}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <PageTitle title="Dashboard">Dates are India dates: the 2-per-day limit counts on the mentor's calendar.</PageTitle>
-        <Button asChild variant="outline" size="sm"><Link to="/admin/bookings"><CalendarDays />All bookings</Link></Button>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/admin/bookings">
+            <CalendarDays />
+            All bookings
+          </Link>
+        </Button>
       </div>
       {!d ? (
-        <Busy><div className="flex flex-col gap-5"><StatsSkeleton /><ChartSkeleton /></div></Busy>
+        <Busy>
+          <div className="flex flex-col gap-5">
+            <StatsSkeleton />
+            <ChartSkeleton />
+          </div>
+        </Busy>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-            <StatCard label="Trials today" value={d.todayCount} foot={formatDayLong(zonedTime(d.today, 720, MENTOR_TIMEZONE).toJSDate(), MENTOR_TIMEZONE)} badge={<Badge>India</Badge>} />
+            <StatCard
+              label="Trials today"
+              value={d.todayCount}
+              foot={formatDayLong(zonedTime(d.today, 720, MENTOR_TIMEZONE).toJSDate(), MENTOR_TIMEZONE)}
+              badge={<Badge>India</Badge>}
+            />
             <StatCard label="Next 7 days" value={d.next7DaysCount} foot="Confirmed, all mentors" />
-            <StatCard label="Capacity used" value={`${pct}%`} foot={`${booked} of ${total} trials in 14 days`} badge={<Badge variant={busy ? "warning" : "success"}>{busy ? "Busy" : "Healthy"}</Badge>} />
+            <StatCard
+              label="Capacity used"
+              value={`${pct}%`}
+              foot={`${booked} of ${total} trials in 14 days`}
+              badge={<Badge variant={busy ? "warning" : "success"}>{busy ? "Busy" : "Healthy"}</Badge>}
+            />
             <StatCard
               label="Fully booked days"
               value={d.fullyBookedIstDates.length}
@@ -47,15 +67,29 @@ export function DashboardPage() {
           <Card>
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-col gap-1"><CardTitle>Trials per India date</CardTitle><CardDescription>Booked vs capacity (mentors working that day × 2)</CardDescription></div>
+                <div className="flex flex-col gap-1">
+                  <CardTitle>Trials per India date</CardTitle>
+                  <CardDescription>Booked vs capacity (mentors working that day × 2)</CardDescription>
+                </div>
                 <div className="flex gap-4 text-[12.5px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-brand" />Booked</span>
-                  <span className="flex items-center gap-1.5"><i className="size-2 rounded-full border border-border bg-muted" />Capacity</span>
-                  <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-destructive" />Full</span>
+                  <span className="flex items-center gap-1.5">
+                    <i className="size-2 rounded-full bg-brand" />
+                    Booked
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <i className="size-2 rounded-full border border-border bg-muted" />
+                    Capacity
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <i className="size-2 rounded-full bg-destructive" />
+                    Full
+                  </span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent><CapacityChart data={d.capacity} /></CardContent>
+            <CardContent>
+              <CapacityChart data={d.capacity} />
+            </CardContent>
           </Card>
         </>
       )}

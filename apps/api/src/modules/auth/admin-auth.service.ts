@@ -6,7 +6,11 @@ import { hashPassword, verifyPassword } from "./passwords";
 import type { SessionService } from "./session.service";
 
 export class AdminAuthService {
-  constructor(private deps: Deps, private admins: AdminsRepository, private sessions: SessionService) {}
+  constructor(
+    private deps: Deps,
+    private admins: AdminsRepository,
+    private sessions: SessionService
+  ) {}
 
   /** Create or refresh the admin account from ADMIN_EMAIL / ADMIN_PASSWORD. */
   async ensureAdmin(): Promise<AdminUser> {

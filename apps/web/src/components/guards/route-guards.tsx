@@ -3,10 +3,23 @@ import { useAuth } from "@/lib/session";
 import { AdminContentSkeleton, Busy, ListSkeleton, PageHeaderSkeleton } from "@/components/feedback/skeletons";
 
 function Loading() {
-  return <Busy label="Checking your session"><div className="mx-auto flex max-w-[720px] flex-col gap-6 px-4 pt-[92px]"><PageHeaderSkeleton action /><ListSkeleton /></div></Busy>;
+  return (
+    <Busy label="Checking your session">
+      <div className="mx-auto flex max-w-[720px] flex-col gap-6 px-4 pt-[92px]">
+        <PageHeaderSkeleton action />
+        <ListSkeleton />
+      </div>
+    </Busy>
+  );
 }
 function AdminLoading() {
-  return <Busy label="Checking your session"><div className="m-2 rounded-xl border border-border bg-background md:ml-[256px]"><AdminContentSkeleton /></div></Busy>;
+  return (
+    <Busy label="Checking your session">
+      <div className="m-2 rounded-xl border border-border bg-background md:ml-[256px]">
+        <AdminContentSkeleton />
+      </div>
+    </Busy>
+  );
 }
 
 export function RequireParent({ children }: { children: React.ReactNode }) {

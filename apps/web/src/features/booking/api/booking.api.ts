@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatClockMinutes, localClockMinutes, localDate, type BookingDto, type CreateBookingRequest, type SlotsResponse, type SuggestionsResponse } from "@shared";
+import {
+  formatClockMinutes,
+  localClockMinutes,
+  localDate,
+  type BookingDto,
+  type CreateBookingRequest,
+  type SlotsResponse,
+  type SuggestionsResponse
+} from "@shared";
 import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 

@@ -9,7 +9,12 @@ const NY = "America/New_York";
 const sg = (strategy: SuggestionsResponse["strategy"], n = 2): SuggestionsResponse => ({
   strategy,
   requested: { date: "2026-10-31", time: "09:00", timezone: NY },
-  suggestions: Array.from({ length: n }, (_, i) => ({ startUtc: `2026-10-31T1${3 + i}:30:00.000Z`, endUtc: "x", status: "OPEN", availableMentors: i ? 3 : 1 })),
+  suggestions: Array.from({ length: n }, (_, i) => ({
+    startUtc: `2026-10-31T1${3 + i}:30:00.000Z`,
+    endUtc: "x",
+    status: "OPEN",
+    availableMentors: i ? 3 : 1
+  })),
   notes: []
 });
 
@@ -50,7 +55,11 @@ describe("validateBooking", () => {
     });
   });
   it("produces the API body when valid", () => {
-    const r = validateBooking({ name: "Jane Doe", email: " Jane@Example.com", phone: "", child: "Sam", grade: "4", subject: "CODING" }, "2026-10-21T19:00:00.000Z", NY);
+    const r = validateBooking(
+      { name: "Jane Doe", email: " Jane@Example.com", phone: "", child: "Sam", grade: "4", subject: "CODING" },
+      "2026-10-21T19:00:00.000Z",
+      NY
+    );
     expect(r).toMatchObject({ ok: true, body: { parent: { email: "jane@example.com" }, child: { grade: 4 }, subject: "CODING" } });
   });
 });

@@ -96,6 +96,7 @@ docs/API.md
 **Files:** `packages/shared/src/time/*.ts`, `packages/shared/test/time.test.ts`.
 
 **Interfaces (Produces):**
+
 ```ts
 normalizeZone(zone: string): string                       // throws InvalidZoneError
 addDays(isoDate: string, n: number): string
@@ -152,6 +153,7 @@ PINNED_ZONES: string[]; ZONE_NAMES: Record<string,string>
 **Files:** `src/config.ts`, `clock.ts`, `http/errors.ts`, `http/validate.ts`, `app.ts`, `server.ts`, `container.ts`, `routes/health.ts`, `test/helpers/app.ts`, `test/integration/health.test.ts`.
 
 **Interfaces (Produces):**
+
 ```ts
 interface Clock { now(): Date }  class SystemClock; class FixedClock { constructor(d: Date); set(d: Date) }
 loadConfig(env): Config        // zod-parsed (Technical Design §14)
@@ -159,6 +161,7 @@ class AppError extends Error { constructor(code: ErrorCode, status: number, mess
 buildContainer({ prisma, clock, config }): Container
 createApp(container): express.Express
 ```
+
 - [ ] Tests: `GET /api/health` → `{status:"ok", db:"ok"}`; unknown route → 404 envelope `NOT_FOUND`; thrown generic error → 500 `INTERNAL` without stack.
 - [ ] Commit "feat(api): express skeleton with config, clock and error envelope".
 
@@ -167,6 +170,7 @@ createApp(container): express.Express
 **Files:** `src/domain/slotEngine.ts`, `test/unit/slotEngine.test.ts`.
 
 **Interfaces:**
+
 ```ts
 type EngineMentor = { id: string; timezone: string; maxDailyTrials: number; rules: Rule[] };
 type EngineBooking = { mentorId: string; startUtc: Date; endUtc: Date; mentorLocalDate: string };
@@ -177,6 +181,7 @@ buildSlots(input: { parentTz; fromDate; days; now: Date; config: EngineConfig; m
 availableMentorsAt(start: Date, input): EngineMentor[]   // used by booking pre-check
 isInParentWindow(start: Date, parentTz, config): boolean
 ```
+
 - [ ] Tests:
   - Fixture: 10 seed mentors (Technical Design §15) and no bookings, `now = 2026-10-20T00:00Z`. New York on 2026-10-20 offers starts 8:00 AM–1:00 PM and 3:00–8:00 PM EDT; on 2026-11-10 8:00 AM–12:00 PM and 2:00–8:00 PM EST; London 2026-11-10 8:00 AM–5:00 PM plus 7:00–8:00 PM GMT (use days where every mentor works, e.g. compute with all mentors' `off` removed).
   - Cap: two bookings for mentor A on an IST date → A not in `availableMentorIds` for any other slot that date.
@@ -208,6 +213,7 @@ isInParentWindow(start: Date, parentTz, config): boolean
 **Files:** `src/domain/assignment.ts`, `tokens.ts`, `reference.ts`, `src/services/outboxService.ts`, `bookingService.ts`, `src/routes/bookings.ts`, `test/unit/assignment.test.ts`, `test/unit/tokens.test.ts`, `test/integration/bookings.create.test.ts`.
 
 **Interfaces:**
+
 ```ts
 rankMentors(candidates: EngineMentor[], start: Date, input): EngineMentor[]
 newToken(): string; hashToken(t: string): string
@@ -216,6 +222,7 @@ newReference(): string                                  // CY-XXXXXX
 BookingService.create(req: CreateBookingRequest, idemKey: string, sessionParentEmail?: string): Promise<BookingDto>
 toBookingDto(booking (with mentor), config): BookingDto // includes manageUrl, googleCalendarUrl
 ```
+
 - [ ] Tests: happy path 201 with mentor + manageUrl + 2 outbox rows rendered in parent/mentor zones; same idempotency key twice → same reference; `" Jane@Example.com "` twice with different keys → second is 409 `ACTIVE_TRIAL_EXISTS`; 7:30 AM NY slot → 422 `OUTSIDE_HOURS`; slot < 2 h → 422 `SLOT_TOO_SOON` with suggestions; 3rd booking for the only mentor on an IST date fails; **10 concurrent POSTs** with one available mentor → 1×201, 9×409 with `details.suggestions`; **30 parallel** bookings across a day → no mentor > 2 per IST date and no overlaps.
 - [ ] Commit "feat(api): atomic booking with assignment, idempotency and outbox".
 
@@ -255,6 +262,7 @@ toBookingDto(booking (with mentor), config): BookingDto // includes manageUrl, g
 **Files:** `apps/web/*` scaffold, `src/index.css` (tokens from Technical Design §13 / prototype), `src/components/ui/*`, `src/lib/api.ts`, `utils.ts`, `auth.ts`, `useTimezone.ts`, `AppShell.tsx`, `AdminShell.tsx`, guards, router in `main.tsx`.
 
 **Interfaces:** `api.get<T>(path)`, `api.post<T>(path, body, headers?)` throwing `ApiError {status, code, message, details}`; `useAuth()` → `{ parent, admin, refresh }`; `useTimezone()` → `[tz | null, setTz, detected]`.
+
 - [ ] `npm run build -w apps/web` passes; dev server proxies `/api` to :4000.
 - [ ] Commit "feat(web): app shell, routing and shadcn-style components".
 
@@ -269,24 +277,28 @@ toBookingDto(booking (with mentor), config): BookingDto // includes manageUrl, g
 ### Task 16: Booking page (confirmation / manage)
 
 **Files:** `src/features/booking-view/BookingPage.tsx`.
+
 - [ ] Success hero, What/When/Mentor/Parent/Where/Reference rows, travelling note, copy link, Google + .ics, cancel AlertDialog, manage-link card, create-account card for guests; cancelled/completed/not-found states.
 - [ ] Commit "feat(web): confirmation and manage page".
 
 ### Task 17: Account pages and My bookings
 
 **Files:** `src/features/account/*`, `src/features/dev/DevOutboxPage.tsx`.
+
 - [ ] Signup → check email; verify (success / expired + resend); login with all three alerts; forgot / reset; My bookings tabs with cancel; dev outbox with clickable links (rewritten to app routes).
 - [ ] Commit "feat(web): parent accounts, my bookings and dev outbox".
 
 ### Task 18: Admin console
 
 **Files:** `src/features/admin/*`.
+
 - [ ] Sidebar + breadcrumb layout; dashboard stats + SVG bar chart; bookings table with search/filters/row menu/sheet/cancel; parents list + detail; mentor cards + schedule; outbox.
 - [ ] Commit "feat(web): admin console".
 
 ### Task 19: Docs and final verification
 
 **Files:** `README.md`, `docs/API.md`, `TRANSCRIPT.md`.
+
 - [ ] README: prerequisites, setup (`cp .env.example .env`, `npm install`, `npm run db:up`, `npm run db:migrate`, `npm run db:seed`, `npm run dev`), demo logins, tests, architecture summary, assumptions, trade-offs, manual test script for DST/concurrency/edge cases.
 - [ ] API.md: every endpoint with example request/response and error codes.
 - [ ] TRANSCRIPT.md: prompts and agent responses of the AI-assisted sessions.

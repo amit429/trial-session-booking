@@ -1,7 +1,20 @@
-const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-const subjectLabel = (s: string) => (s === "CODING" ? "Coding" : "Maths");
+import { subjectLabel } from "@shared";
 
-type CalendarBooking = { reference: string; startUtc: Date; endUtc: Date; subject: string; childName: string; meetingUrl: string; mentorName: string };
+const stamp = (d: Date) =>
+  d
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
+
+type CalendarBooking = {
+  reference: string;
+  startUtc: Date;
+  endUtc: Date;
+  subject: string;
+  childName: string;
+  meetingUrl: string;
+  mentorName: string;
+};
 
 export function googleCalendarUrl(b: CalendarBooking): string {
   const p = new URLSearchParams({

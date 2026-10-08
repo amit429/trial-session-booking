@@ -1,9 +1,21 @@
 import { CalendarDays, PencilLine, Video } from "lucide-react";
 
 const STEPS = [
-  { Icon: CalendarDays, title: "Pick a time", text: "Choose a day and time on the calendar. Every time is shown in your own zone, and full times point you to the nearest open ones." },
-  { Icon: PencilLine, title: "Tell us about your child", text: "Name, grade and subject. A mentor who's free at that time is assigned the moment you book." },
-  { Icon: Video, title: "Join the class", text: "You get the class link, a calendar invite and a private link to change or cancel. No account needed." }
+  {
+    Icon: CalendarDays,
+    title: "Pick a time",
+    text: "Choose a day and time on the calendar. Every time is shown in your own zone, and full times point you to the nearest open ones."
+  },
+  {
+    Icon: PencilLine,
+    title: "Tell us about your child",
+    text: "Name, grade and subject. A mentor who's free at that time is assigned the moment you book."
+  },
+  {
+    Icon: Video,
+    title: "Join the class",
+    text: "You get the class link, a calendar invite and a private link to change or cancel. No account needed."
+  }
 ];
 
 export function HowItWorks() {
@@ -18,7 +30,9 @@ export function HowItWorks() {
           {STEPS.map(({ Icon, title, text }, i) => (
             <li key={title} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-6 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="grid size-10 place-items-center rounded-lg bg-brand-soft text-brand-text"><Icon className="size-5" /></span>
+                <span className="grid size-10 place-items-center rounded-lg bg-brand-soft text-brand-text">
+                  <Icon className="size-5" />
+                </span>
                 <span className="font-mono text-xs text-muted-foreground">Step {i + 1}</span>
               </div>
               <h3 className="text-base font-semibold">{title}</h3>

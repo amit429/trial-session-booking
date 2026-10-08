@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-const hhmm = z.string().regex(/^\d{2}:\d{2}$/).transform(v => Number(v.slice(0, 2)) * 60 + Number(v.slice(3)));
+const hhmm = z
+  .string()
+  .regex(/^\d{2}:\d{2}$/)
+  .transform(v => Number(v.slice(0, 2)) * 60 + Number(v.slice(3)));
 const bool = z.enum(["true", "false"]).transform(v => v === "true");
 
 const Env = z.object({

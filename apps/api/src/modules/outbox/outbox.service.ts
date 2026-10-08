@@ -7,7 +7,10 @@ import * as templates from "./outbox.templates";
 
 /** Stores every message the system would email (ADR-14) and reads them back for the outbox views. */
 export class OutboxService {
-  constructor(private deps: Deps, private repo: OutboxRepository) {}
+  constructor(
+    private deps: Deps,
+    private repo: OutboxRepository
+  ) {}
 
   private url = (path: string) => `${this.deps.config.appBaseUrl}${path}`;
 

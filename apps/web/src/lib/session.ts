@@ -5,7 +5,6 @@ import { queryKeys } from "./query-keys";
 
 const ME_KEY = queryKeys.me;
 
-
 export function useAuth() {
   const q = useQuery({ queryKey: ME_KEY, queryFn: () => api.get<MeResponse>("/auth/me"), staleTime: 60_000 });
   return { parent: q.data?.parent ?? null, admin: q.data?.admin ?? null, isLoading: q.isLoading, isFetching: q.isFetching };

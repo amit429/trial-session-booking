@@ -14,7 +14,13 @@ const BookingsQuery = z.object({
 });
 const SearchQuery = z.object({ q: z.string().max(100).optional(), ...paging });
 const IdParams = z.object({ id: z.string().uuid() });
-const ScheduleQuery = z.object({ from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), days: z.coerce.number().int().min(1).max(31).default(14) });
+const ScheduleQuery = z.object({
+  from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  days: z.coerce.number().int().min(1).max(31).default(14)
+});
 
 export const adminController = (c: Container) => ({
   async dashboard(req: Request, res: Response) {

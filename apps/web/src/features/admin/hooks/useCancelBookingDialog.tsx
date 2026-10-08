@@ -24,7 +24,11 @@ export function useCancelBookingDialog() {
       confirmLabel="Cancel booking"
       cancelLabel="Keep booking"
       busy={cancel.isPending}
-      description={target ? `${target.child.name}'s class on ${formatSlot(target.startUtc, MENTOR_TIMEZONE)} will be cancelled. We'll tell the parent and the mentor, and the time becomes free again.` : ""}
+      description={
+        target
+          ? `${target.child.name}'s class on ${formatSlot(target.startUtc, MENTOR_TIMEZONE)} will be cancelled. We'll tell the parent and the mentor, and the time becomes free again.`
+          : ""
+      }
       onConfirm={onConfirm}
     />
   );

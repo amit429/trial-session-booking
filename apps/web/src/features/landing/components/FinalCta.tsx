@@ -13,8 +13,20 @@ export function FinalCta() {
           <p className="opacity-80">Pick a time that works for you. It takes under a minute.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button asChild variant="brand" size="lg"><Link to="/book">Book a free trial <ArrowRight /></Link></Button>
-          {!parent && <Button asChild size="lg" className="border border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"><Link to="/signup">Create an account</Link></Button>}
+          <Button asChild variant="brand" size="lg">
+            <Link to="/book">
+              Book a free trial <ArrowRight />
+            </Link>
+          </Button>
+          {!parent && (
+            <Button
+              asChild
+              size="lg"
+              className="border border-primary-foreground/25 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+            >
+              <Link to="/signup">Create an account</Link>
+            </Button>
+          )}
         </div>
       </div>
     </section>

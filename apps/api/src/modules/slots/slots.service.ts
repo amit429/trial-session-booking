@@ -10,7 +10,10 @@ export type EngineData = { mentors: EngineMentor[]; bookings: EngineBooking[] };
 
 /** Loads availability data (two queries) and runs the pure slot engine for a parent's zone. */
 export class SlotService {
-  constructor(private deps: Deps, private repo: SlotsRepository) {}
+  constructor(
+    private deps: Deps,
+    private repo: SlotsRepository
+  ) {}
 
   get engineConfig(): EngineConfig {
     return this.deps.config.scheduling;

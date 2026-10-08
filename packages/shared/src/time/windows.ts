@@ -3,7 +3,8 @@ import { DateTime } from "luxon";
 export type Instant = Date | number | string;
 export type Interval = { start: Date; end: Date };
 
-const toMillis = (instant: Instant) => (typeof instant === "number" ? instant : typeof instant === "string" ? Date.parse(instant) : instant.getTime());
+const toMillis = (instant: Instant) =>
+  typeof instant === "number" ? instant : typeof instant === "string" ? Date.parse(instant) : instant.getTime();
 const toDt = (instant: Instant, zone: string) => DateTime.fromMillis(toMillis(instant), { zone });
 
 /** Luxon returns null for invalid dates; surface that as an error instead of passing null along. */

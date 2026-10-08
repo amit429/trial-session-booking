@@ -19,7 +19,10 @@ const body = (startUtc: string, email = `parent${++n}@example.com`, tz = "Americ
 const post = (b: object, key: string = randomUUID()) => request(app).post("/api/bookings").set("Idempotency-Key", key).send(b);
 
 describe("POST /api/bookings", () => {
-  beforeEach(async () => { await resetDb(); await seedMentors(db, { allWeek: true }); });
+  beforeEach(async () => {
+    await resetDb();
+    await seedMentors(db, { allWeek: true });
+  });
 
   it("books, assigns a mentor on shift and writes messages in each recipient's zone", async () => {
     const res = await post(body("2026-10-21T19:00:00.000Z"));
@@ -78,7 +81,10 @@ describe("POST /api/bookings", () => {
 });
 
 describe("capacity and concurrency", () => {
-  beforeEach(async () => { await resetDb(); await seedMentors(db, { allWeek: true, only: [0] }); }); // one UK-shift mentor
+  beforeEach(async () => {
+    await resetDb();
+    await seedMentors(db, { allWeek: true, only: [0] });
+  }); // one UK-shift mentor
 
   it("a mentor never takes a third trial on the same IST date", async () => {
     // 21 Oct, London: 2:00 PM, 4:00 PM, 6:00 PM BST = 18:30, 20:30, 22:30 IST
@@ -102,7 +108,10 @@ describe("capacity and concurrency", () => {
 });
 
 describe("parallel load across a day", () => {
-  beforeEach(async () => { await resetDb(); await seedMentors(db, { allWeek: true }); });
+  beforeEach(async () => {
+    await resetDb();
+    await seedMentors(db, { allWeek: true });
+  });
 
   it("30 parallel bookings never exceed 2 per mentor per IST date and never overlap", async () => {
     const slots = (await request(app).get("/api/slots").query({ tz: "America/New_York", from: "2026-10-22", days: 1 })).body.days[0].slots;
@@ -115,9 +124,10 @@ describe("parallel load across a day", () => {
       perDay.set(k, (perDay.get(k) ?? 0) + 1);
     }
     expect(Math.max(...perDay.values())).toBeLessThanOrEqual(2);
-    for (const a of rows) for (const b of rows) {
-      if (a.id !== b.id && a.mentorId === b.mentorId) expect(a.startUtc < b.endUtc && b.startUtc < a.endUtc).toBe(false);
-    }
+    for (const a of rows)
+      for (const b of rows) {
+        if (a.id !== b.id && a.mentorId === b.mentorId) expect(a.startUtc < b.endUtc && b.startUtc < a.endUtc).toBe(false);
+      }
     expect(rows.length).toBe(results.filter(r => r.status === 201).length);
   });
 });

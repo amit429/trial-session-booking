@@ -13,12 +13,8 @@
     "declaration": false,
     "sourceMap": true,
     "paths": {
-      "@shared": [
-        "./packages/shared/src/index.ts"
-      ],
-      "@shared/*": [
-        "./packages/shared/src/*"
-      ]
+      "@shared": ["./packages/shared/src/index.ts"],
+      "@shared/*": ["./packages/shared/src/*"]
     }
   }
 }

@@ -1,25 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@shared": [
-        "../../packages/shared/src/index.ts"
-      ],
-      "@shared/*": [
-        "../../packages/shared/src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@shared": ["../../packages/shared/src/index.ts"],
+      "@shared/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": [
-    "src",
-    "test",
-    "prisma",
-    "vitest.config.ts"
-  ]
+  "include": ["src", "test", "prisma", "vitest.config.ts"]
 }

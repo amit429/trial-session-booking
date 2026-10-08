@@ -24,8 +24,12 @@ describe("API skeleton", () => {
     const { container } = makeTestApp();
     const { createApp } = await import("@/app");
     const extra = express.Router();
-    extra.get("/boom", () => { throw new Error("secret stack detail"); });
-    extra.get("/gone", () => { throw new AppError("ALREADY_STARTED", 422); });
+    extra.get("/boom", () => {
+      throw new Error("secret stack detail");
+    });
+    extra.get("/gone", () => {
+      throw new AppError("ALREADY_STARTED", 422);
+    });
     const a = createApp(container, extra);
     const boom = await request(a).get("/api/boom");
     expect(boom.status).toBe(500);

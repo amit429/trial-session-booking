@@ -50,7 +50,9 @@ export class BookingService {
     const replay = await this.repo.findByIdempotencyKey(idempotencyKey);
     if (replay) return this.toDto(replay);
     if (sessionEmail && sessionEmail !== req.parent.email) {
-      throw new AppError("VALIDATION", 422, "Please use your account email.", { fieldErrors: { "parent.email": "Please use your account email" } });
+      throw new AppError("VALIDATION", 422, "Please use your account email.", {
+        fieldErrors: { "parent.email": "Please use your account email" }
+      });
     }
 
     const start = new Date(req.startUtc);
@@ -79,7 +81,12 @@ export class BookingService {
   }
 
   /** One candidate: the booking, or null to try the next mentor. Throws ACTIVE_TRIAL_EXISTS. */
-  private async tryMentor(mentor: EngineMentor, start: Date, req: CreateBookingRequest, idempotencyKey: string): Promise<FullBooking | null> {
+  private async tryMentor(
+    mentor: EngineMentor,
+    start: Date,
+    req: CreateBookingRequest,
+    idempotencyKey: string
+  ): Promise<FullBooking | null> {
     for (let attempt = 0; attempt < MAX_REFERENCE_RETRIES; attempt++) {
       try {
         return await this.repo.transaction(tx => this.bookInTransaction(tx, mentor, start, req, idempotencyKey));
@@ -96,7 +103,13 @@ export class BookingService {
     return null;
   }
 
-  private async bookInTransaction(tx: Prisma.TransactionClient, mentor: EngineMentor, start: Date, req: CreateBookingRequest, idempotencyKey: string) {
+  private async bookInTransaction(
+    tx: Prisma.TransactionClient,
+    mentor: EngineMentor,
+    start: Date,
+    req: CreateBookingRequest,
+    idempotencyKey: string
+  ) {
     const { config, clock } = this.deps;
     const now = clock.now();
     const end = classEnd(start, config.scheduling.durationMinutes);
@@ -106,7 +119,11 @@ export class BookingService {
     if (await this.repo.findByIdempotencyKey(idempotencyKey, tx)) throw new AlreadyCreated();
     const active = await this.repo.findUpcomingForParent(tx, parent.id, now);
     if (active) {
-      throw new AppError("ACTIVE_TRIAL_EXISTS", 409, undefined, { reference: active.reference, startUtc: active.startUtc.toISOString(), timezone: active.parentTimezone });
+      throw new AppError("ACTIVE_TRIAL_EXISTS", 409, undefined, {
+        reference: active.reference,
+        startUtc: active.startUtc.toISOString(),
+        timezone: active.parentTimezone
+      });
     }
     await this.repo.updateParentContact(tx, parent.id, contact, !parent.passwordHash);
 

@@ -12,7 +12,11 @@ export class AdminRepository {
   }
 
   confirmedCountsByMentorDate(from: Date, to: Date) {
-    return this.db.booking.groupBy({ by: ["mentorLocalDate"], where: { status: "CONFIRMED", mentorLocalDate: { gte: from, lte: to } }, _count: { _all: true } });
+    return this.db.booking.groupBy({
+      by: ["mentorLocalDate"],
+      where: { status: "CONFIRMED", mentorLocalDate: { gte: from, lte: to } },
+      _count: { _all: true }
+    });
   }
 
   countConfirmedStarting(from: Date, to: Date) {
@@ -42,6 +46,10 @@ export class AdminRepository {
   }
 
   confirmedForMentorBetweenDates(mentorId: string, from: Date, to: Date) {
-    return this.db.booking.findMany({ where: { mentorId, status: "CONFIRMED", mentorLocalDate: { gte: from, lte: to } }, include: full, orderBy: { startUtc: "asc" } });
+    return this.db.booking.findMany({
+      where: { mentorId, status: "CONFIRMED", mentorLocalDate: { gte: from, lte: to } },
+      include: full,
+      orderBy: { startUtc: "asc" }
+    });
   }
 }

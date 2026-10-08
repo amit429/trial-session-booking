@@ -4,33 +4,75 @@ import { PINNED_ZONES, addDays, dayWindow, formatTime, localDate } from "@shared
 import { buildSlots, type EngineBooking, type EngineConfig, type EngineMentor } from "@/domain/scheduling/slot-engine";
 import { MENTOR_SEED, seedRules } from "@/data/seed-mentors";
 
-const CFG: EngineConfig = { minNoticeMinutes: 120, horizonDays: 14, stepMinutes: 30, durationMinutes: 60, maxDailyTrials: 2, parentStartMinute: 480, parentEndMinute: 1260 };
+const CFG: EngineConfig = {
+  minNoticeMinutes: 120,
+  horizonDays: 14,
+  stepMinutes: 30,
+  durationMinutes: 60,
+  maxDailyTrials: 2,
+  parentStartMinute: 480,
+  parentEndMinute: 1260
+};
 const IST = "Asia/Kolkata";
-const allWeek: EngineMentor[] = MENTOR_SEED.map((m, i) => ({ id: `m${i}`, timezone: IST, maxDailyTrials: 2, rules: seedRules(m.shift, 0) }));
-const seeded: EngineMentor[] = MENTOR_SEED.map((m, i) => ({ id: `m${i}`, timezone: IST, maxDailyTrials: 2, rules: seedRules(m.shift, m.off) }));
+const allWeek: EngineMentor[] = MENTOR_SEED.map((m, i) => ({
+  id: `m${i}`,
+  timezone: IST,
+  maxDailyTrials: 2,
+  rules: seedRules(m.shift, 0)
+}));
+const seeded: EngineMentor[] = MENTOR_SEED.map((m, i) => ({
+  id: `m${i}`,
+  timezone: IST,
+  maxDailyTrials: 2,
+  rules: seedRules(m.shift, m.off)
+}));
 
 /** "8:00 AM".."1:00 PM" every 30 minutes, as rendered for the parent. */
 function range(from: string, to: string) {
-  const toMin = (s: string) => { const [h, rest] = s.split(":"); const [m, ap] = rest.split(" "); return ((+h % 12) + (ap === "PM" ? 12 : 0)) * 60 + +m; };
+  const toMin = (s: string) => {
+    const [h, rest] = s.split(":");
+    const [m, ap] = rest.split(" ");
+    return ((+h % 12) + (ap === "PM" ? 12 : 0)) * 60 + +m;
+  };
   const out: string[] = [];
-  for (let t = toMin(from); t <= toMin(to); t += 30) { const h = Math.floor(t / 60); out.push(`${((h + 11) % 12) + 1}:${String(t % 60).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`); }
+  for (let t = toMin(from); t <= toMin(to); t += 30) {
+    const h = Math.floor(t / 60);
+    out.push(`${((h + 11) % 12) + 1}:${String(t % 60).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`);
+  }
   return out;
 }
 function starts(tz: string, date: string, mentors: EngineMentor[], bookings: EngineBooking[] = [], now = "2026-10-01T00:00:00Z") {
-  const [day] = buildSlots({ parentTz: tz, fromDate: date, days: 1, now: new Date(now), config: { ...CFG, horizonDays: 60 }, mentors, bookings });
+  const [day] = buildSlots({
+    parentTz: tz,
+    fromDate: date,
+    days: 1,
+    now: new Date(now),
+    config: { ...CFG, horizonDays: 60 },
+    mentors,
+    bookings
+  });
   return day;
 }
 const times = (tz: string, day: ReturnType<typeof starts>) => day.slots.map(s => formatTime(s.startUtc, tz));
 
 describe("coverage matches PRD §7.3 (all mentors working)", () => {
   it("New York before the clock change", () => {
-    expect(times("America/New_York", starts("America/New_York", "2026-10-20", allWeek))).toEqual([...range("8:00 AM", "1:00 PM"), ...range("3:00 PM", "8:00 PM")]);
+    expect(times("America/New_York", starts("America/New_York", "2026-10-20", allWeek))).toEqual([
+      ...range("8:00 AM", "1:00 PM"),
+      ...range("3:00 PM", "8:00 PM")
+    ]);
   });
   it("New York after the clock change", () => {
-    expect(times("America/New_York", starts("America/New_York", "2026-11-10", allWeek))).toEqual([...range("8:00 AM", "12:00 PM"), ...range("2:00 PM", "8:00 PM")]);
+    expect(times("America/New_York", starts("America/New_York", "2026-11-10", allWeek))).toEqual([
+      ...range("8:00 AM", "12:00 PM"),
+      ...range("2:00 PM", "8:00 PM")
+    ]);
   });
   it("London after the clock change", () => {
-    expect(times("Europe/London", starts("Europe/London", "2026-11-10", allWeek))).toEqual([...range("8:00 AM", "5:00 PM"), ...range("7:00 PM", "8:00 PM")]);
+    expect(times("Europe/London", starts("Europe/London", "2026-11-10", allWeek))).toEqual([
+      ...range("8:00 AM", "5:00 PM"),
+      ...range("7:00 PM", "8:00 PM")
+    ]);
   });
   it("US Pacific loses its 7:30 and 8:00 PM starts after 1 Nov", () => {
     const before = times("America/Los_Angeles", starts("America/Los_Angeles", "2026-10-20", allWeek));
@@ -42,7 +84,12 @@ describe("coverage matches PRD §7.3 (all mentors working)", () => {
 
 describe("availability rules", () => {
   const one: EngineMentor[] = [{ id: "a", timezone: IST, maxDailyTrials: 2, rules: seedRules("UK", 0) }];
-  const bk = (iso: string): EngineBooking => ({ mentorId: "a", startUtc: new Date(iso), endUtc: new Date(new Date(iso).getTime() + 3_600_000), mentorLocalDate: localDate(new Date(iso), IST) });
+  const bk = (iso: string): EngineBooking => ({
+    mentorId: "a",
+    startUtc: new Date(iso),
+    endUtc: new Date(new Date(iso).getTime() + 3_600_000),
+    mentorLocalDate: localDate(new Date(iso), IST)
+  });
 
   it("a mentor with 2 trials on an IST date is unavailable for the rest of that date", () => {
     const day = starts("Europe/London", "2026-10-20", one, [bk("2026-10-20T08:00:00Z"), bk("2026-10-20T10:00:00Z")]);
@@ -71,7 +118,15 @@ describe("availability rules", () => {
   });
 
   it("stops at the booking horizon", () => {
-    const days = buildSlots({ parentTz: "America/New_York", fromDate: "2026-10-20", days: 20, now: new Date("2026-10-20T14:00:00Z"), config: CFG, mentors: allWeek, bookings: [] });
+    const days = buildSlots({
+      parentTz: "America/New_York",
+      fromDate: "2026-10-20",
+      days: 20,
+      now: new Date("2026-10-20T14:00:00Z"),
+      config: CFG,
+      mentors: allWeek,
+      bookings: []
+    });
     expect(days).toHaveLength(14);
     expect(days.at(-1)!.date).toBe("2026-11-02");
   });
@@ -91,7 +146,15 @@ describe("property: every slot respects both reasonable-hours rules", () => {
             const s = new Date(base + slot * 1_800_000);
             return { mentorId: `m${m}`, startUtc: s, endUtc: new Date(s.getTime() + 3_600_000), mentorLocalDate: localDate(s, IST) };
           });
-          const [day] = buildSlots({ parentTz: tz, fromDate: date, days: 1, now: new Date("2026-10-01T00:00:00Z"), config: { ...CFG, horizonDays: 90 }, mentors: seeded, bookings });
+          const [day] = buildSlots({
+            parentTz: tz,
+            fromDate: date,
+            days: 1,
+            now: new Date("2026-10-01T00:00:00Z"),
+            config: { ...CFG, horizonDays: 90 },
+            mentors: seeded,
+            bookings
+          });
           const win = dayWindow(date, tz, CFG.parentStartMinute, CFG.parentEndMinute);
           for (const s of day.slots) {
             expect(s.startUtc >= win.start && s.endUtc <= win.end).toBe(true);

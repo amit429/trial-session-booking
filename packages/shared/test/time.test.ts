@@ -88,11 +88,7 @@ describe("local date helpers", () => {
   });
   it("grid starts are UTC-aligned 30-minute steps", () => {
     const g = gridStarts(at("2026-10-20T12:10:00Z"), at("2026-10-20T13:30:00Z"), 30);
-    expect(g.map(d => d.toISOString())).toEqual([
-      "2026-10-20T12:30:00.000Z",
-      "2026-10-20T13:00:00.000Z",
-      "2026-10-20T13:30:00.000Z"
-    ]);
+    expect(g.map(d => d.toISOString())).toEqual(["2026-10-20T12:30:00.000Z", "2026-10-20T13:00:00.000Z", "2026-10-20T13:30:00.000Z"]);
   });
 });
 

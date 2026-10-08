@@ -13,11 +13,16 @@ export const useParentLogin = () => {
 };
 
 export const useSignup = () => useMutation({ mutationFn: (body: SignupRequest) => api.post<MessageResponse>("/auth/parent/signup", body) });
-export const useVerifyEmail = () => useMutation({ mutationFn: (token: string) => api.post<MessageResponse>("/auth/parent/verify", { token }) });
-export const useResendVerification = () => useMutation({ mutationFn: (email: string) => api.post<MessageResponse>("/auth/parent/resend-verification", { email }) });
-export const useForgotPassword = () => useMutation({ mutationFn: (email: string) => api.post<MessageResponse>("/auth/parent/forgot-password", { email }) });
+export const useVerifyEmail = () =>
+  useMutation({ mutationFn: (token: string) => api.post<MessageResponse>("/auth/parent/verify", { token }) });
+export const useResendVerification = () =>
+  useMutation({ mutationFn: (email: string) => api.post<MessageResponse>("/auth/parent/resend-verification", { email }) });
+export const useForgotPassword = () =>
+  useMutation({ mutationFn: (email: string) => api.post<MessageResponse>("/auth/parent/forgot-password", { email }) });
 export const useResetPassword = () =>
-  useMutation({ mutationFn: (body: { token: string; password: string }) => api.post<MessageResponse>("/auth/parent/reset-password", body) });
+  useMutation({
+    mutationFn: (body: { token: string; password: string }) => api.post<MessageResponse>("/auth/parent/reset-password", body)
+  });
 
 /** First field error from a VALIDATION response, else the error's own message. */
 export const firstFieldError = (e: unknown) => {

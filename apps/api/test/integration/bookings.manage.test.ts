@@ -9,16 +9,26 @@ const { app, db, clock } = makeTestApp({ now: "2026-10-20T14:00:00Z" });
 afterAll(() => db.$disconnect());
 
 async function book() {
-  const res = await request(app).post("/api/bookings").set("Idempotency-Key", randomUUID()).send({
-    parent: { name: "Jane Doe", email: "jane@example.com" }, child: { name: "Sam", grade: 4 }, subject: "MATH",
-    startUtc: "2026-10-21T19:00:00.000Z", timezone: "America/New_York"
-  });
+  const res = await request(app)
+    .post("/api/bookings")
+    .set("Idempotency-Key", randomUUID())
+    .send({
+      parent: { name: "Jane Doe", email: "jane@example.com" },
+      child: { name: "Sam", grade: 4 },
+      subject: "MATH",
+      startUtc: "2026-10-21T19:00:00.000Z",
+      timezone: "America/New_York"
+    });
   const url = new URL(res.body.manageUrl);
   return { ref: res.body.reference as string, token: url.searchParams.get("token")! };
 }
 
 describe("manage a booking with its private link", () => {
-  beforeEach(async () => { clock.set(new Date("2026-10-20T14:00:00Z")); await resetDb(); await seedMentors(db, { allWeek: true }); });
+  beforeEach(async () => {
+    clock.set(new Date("2026-10-20T14:00:00Z"));
+    await resetDb();
+    await seedMentors(db, { allWeek: true });
+  });
 
   it("shows the booking to the token holder only", async () => {
     const { ref, token } = await book();

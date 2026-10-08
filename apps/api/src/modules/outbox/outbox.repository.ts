@@ -17,7 +17,12 @@ export class OutboxRepository {
 
   page(page: number, pageSize: number) {
     return Promise.all([
-      this.db.outboxMessage.findMany({ include: withReference, orderBy: { createdAt: "desc" }, skip: (page - 1) * pageSize, take: pageSize }),
+      this.db.outboxMessage.findMany({
+        include: withReference,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
       this.db.outboxMessage.count()
     ]);
   }

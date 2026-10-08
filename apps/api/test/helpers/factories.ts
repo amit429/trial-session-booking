@@ -9,7 +9,11 @@ export async function seedMentors(db: Db, opts: { allWeek?: boolean; only?: numb
     out.push(
       await db.mentor.create({
         data: {
-          name: m.name, email: mentorEmail(m.name), timezone: "Asia/Kolkata", bio: m.bio, shiftLabel: SHIFTS[m.shift].label,
+          name: m.name,
+          email: mentorEmail(m.name),
+          timezone: "Asia/Kolkata",
+          bio: m.bio,
+          shiftLabel: SHIFTS[m.shift].label,
           rules: { create: seedRules(m.shift, opts.allWeek ? 0 : m.off) }
         }
       })

@@ -7,19 +7,54 @@
     <title>TrialDesk · Book a free trial class</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
       /* First paint before the app's JavaScript loads: themed background and a quiet loading mark. */
-      html, body { margin: 0; background: #fafafa; color-scheme: light; }
-      @media (prefers-color-scheme: dark) { html, body { background: #09090b; color-scheme: dark; } }
-      .boot { min-height: 100vh; display: grid; place-items: center; }
-      .boot-mark { width: 40px; height: 40px; border-radius: 11px; background: #7c3aed; animation: boot-pulse 1.2s ease-in-out infinite; }
-      @keyframes boot-pulse { 50% { opacity: 0.35; transform: scale(0.92); } }
-      @media (prefers-reduced-motion: reduce) { .boot-mark { animation: none; } }
+      html,
+      body {
+        margin: 0;
+        background: #fafafa;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #09090b;
+          color-scheme: dark;
+        }
+      }
+      .boot {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+      .boot-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        background: #7c3aed;
+        animation: boot-pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes boot-pulse {
+        50% {
+          opacity: 0.35;
+          transform: scale(0.92);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-mark {
+          animation: none;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="root"><div class="boot" role="progressbar" aria-label="Loading TrialDesk"><div class="boot-mark"></div></div></div>
+    <div id="root">
+      <div class="boot" role="progressbar" aria-label="Loading TrialDesk"><div class="boot-mark"></div></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

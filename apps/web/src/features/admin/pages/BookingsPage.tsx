@@ -21,20 +21,32 @@ export function BookingsPage() {
       <div className="flex flex-wrap items-center gap-2">
         <SearchInput label="Search bookings" placeholder="Search reference, parent, email, child…" value={filters.q} onChange={set("q")} />
         <NativeSelect aria-label="When" className={filterClass} value={filters.scope} onChange={e => set("scope")(e.target.value)}>
-          <option value="upcoming">Upcoming</option><option value="past">Past</option><option value="all">All dates</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="past">Past</option>
+          <option value="all">All dates</option>
         </NativeSelect>
         <NativeSelect aria-label="Status" className={filterClass} value={filters.status} onChange={e => set("status")(e.target.value)}>
-          <option value="">Any status</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option>
+          <option value="">Any status</option>
+          <option value="CONFIRMED">Confirmed</option>
+          <option value="CANCELLED">Cancelled</option>
         </NativeSelect>
         <NativeSelect aria-label="Mentor" className={filterClass} value={filters.mentorId} onChange={e => set("mentorId")(e.target.value)}>
           <option value="">All mentors</option>
-          {mentors.data?.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          {mentors.data?.map(m => (
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
+          ))}
         </NativeSelect>
         <span className="ml-auto text-[13px] text-muted-foreground">
           {list.data ? `${list.data.total} result${list.data.total === 1 ? "" : "s"}` : <Skeleton className="h-4 w-16" />}
         </span>
       </div>
-      {list.data ? <BookingsTable rows={list.data.items} fetching={list.isFetching && list.isPlaceholderData} /> : <TableSkeleton rows={8} />}
+      {list.data ? (
+        <BookingsTable rows={list.data.items} fetching={list.isFetching && list.isPlaceholderData} />
+      ) : (
+        <TableSkeleton rows={8} />
+      )}
     </AdminPage>
   );
 }

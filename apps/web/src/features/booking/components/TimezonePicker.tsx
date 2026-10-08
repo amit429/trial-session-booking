@@ -29,7 +29,11 @@ export function TimezonePicker({ tz, onChange, defaultOpen }: { tz: string | nul
       type="button"
       role="option"
       aria-selected={z === tz}
-      onClick={() => { onChange(z); setOpen(false); setQ(""); }}
+      onClick={() => {
+        onChange(z);
+        setOpen(false);
+        setQ("");
+      }}
       className="flex w-full cursor-pointer justify-between gap-3 rounded-md px-2 py-[7px] text-left text-[13.5px] hover:bg-accent aria-selected:bg-brand-soft aria-selected:text-brand-text"
     >
       <span>{nameOf(z)}</span>
@@ -43,10 +47,21 @@ export function TimezonePicker({ tz, onChange, defaultOpen }: { tz: string | nul
         {tz ? formatZoneLabel(tz, now) : "Choose your time zone"} <ChevronDown className="size-4" />
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content align="start" sideOffset={8} className="z-50 w-[320px] max-w-[calc(100vw-32px)] rounded-xl border border-border bg-card p-1.5 shadow-lg">
+        <Popover.Content
+          align="start"
+          sideOffset={8}
+          className="z-50 w-[320px] max-w-[calc(100vw-32px)] rounded-xl border border-border bg-card p-1.5 shadow-lg"
+        >
           <div className="flex items-center gap-2 border-b border-border px-2 pb-2 pt-1">
             <Search className="size-4 text-muted-foreground" />
-            <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search time zone…" aria-label="Search time zones" className="h-[30px] w-full bg-transparent outline-none" />
+            <input
+              autoFocus
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholder="Search time zone…"
+              aria-label="Search time zones"
+              className="h-[30px] w-full bg-transparent outline-none"
+            />
           </div>
           <div role="listbox" aria-label="Time zones" className="max-h-[280px] overflow-y-auto pt-1">
             {pinned.length > 0 && <p className="px-2 pb-1 pt-2 text-[11.5px] font-medium text-muted-foreground">Suggested</p>}

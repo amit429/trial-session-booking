@@ -13,9 +13,20 @@ function booking(mentorId: string, parentId: string, startIso: string, key: stri
   const start = new Date(startIso);
   return db.booking.create({
     data: {
-      reference: `CY-${key}`, parentId, mentorId, childName: "Sam", childGrade: 4, subject: "CODING",
-      startUtc: start, endUtc: new Date(start.getTime() + 3_600_000), mentorLocalDate: new Date("2026-10-21T00:00:00Z"),
-      parentTimezone: "America/New_York", mentorTimezone: "Asia/Kolkata", meetingUrl: "https://x", idempotencyKey: key, status
+      reference: `CY-${key}`,
+      parentId,
+      mentorId,
+      childName: "Sam",
+      childGrade: 4,
+      subject: "CODING",
+      startUtc: start,
+      endUtc: new Date(start.getTime() + 3_600_000),
+      mentorLocalDate: new Date("2026-10-21T00:00:00Z"),
+      parentTimezone: "America/New_York",
+      mentorTimezone: "Asia/Kolkata",
+      meetingUrl: "https://x",
+      idempotencyKey: key,
+      status
     }
   });
 }
@@ -40,7 +51,11 @@ describe("database constraints", () => {
 
   it("rejects an invalid grade and shift bounds", async () => {
     const { mentor } = await mentorAndParent();
-    await expect(db.availabilityRule.create({ data: { mentorId: mentor.id, weekday: 8, startMinute: 0, endMinute: 60 } })).rejects.toThrow();
-    await expect(db.availabilityRule.create({ data: { mentorId: mentor.id, weekday: 1, startMinute: 600, endMinute: 500 } })).rejects.toThrow();
+    await expect(
+      db.availabilityRule.create({ data: { mentorId: mentor.id, weekday: 8, startMinute: 0, endMinute: 60 } })
+    ).rejects.toThrow();
+    await expect(
+      db.availabilityRule.create({ data: { mentorId: mentor.id, weekday: 1, startMinute: 600, endMinute: 500 } })
+    ).rejects.toThrow();
   });
 });

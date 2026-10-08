@@ -8,17 +8,41 @@ const LIMITS = { sameDay: 4, sameTime: 3, nearest: 4 };
 const at = (date: string, hhmm: string) => zonedTime(date, Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3)), NY).toJSDate();
 const slot = (date: string, hhmm: string, status: "OPEN" | "FULL" = "OPEN"): Slot => {
   const s = at(date, hhmm);
-  return { startUtc: s, endUtc: new Date(s.getTime() + 3_600_000), status, availableMentors: status === "OPEN" ? 1 : 0, availableMentorIds: status === "OPEN" ? ["m"] : [] };
+  return {
+    startUtc: s,
+    endUtc: new Date(s.getTime() + 3_600_000),
+    status,
+    availableMentors: status === "OPEN" ? 1 : 0,
+    availableMentorIds: status === "OPEN" ? ["m"] : []
+  };
 };
-const day = (date: string, slots: Slot[]): Day => ({ date, slots, status: slots.some(s => s.status === "OPEN") ? "OPEN" : slots.length ? "FULL" : "CLOSED" });
+const day = (date: string, slots: Slot[]): Day => ({
+  date,
+  slots,
+  status: slots.some(s => s.status === "OPEN") ? "OPEN" : slots.length ? "FULL" : "CLOSED"
+});
 const label = (r: ReturnType<typeof rankSuggestions>) => r.suggestions.map(s => formatSlot(s.startUtc, NY));
 
 describe("rankSuggestions", () => {
   it("step 1: same day, closest to the requested time, ties earlier first", () => {
-    const days = [day("2026-10-21", [slot("2026-10-21", "08:00"), slot("2026-10-21", "08:30"), slot("2026-10-21", "09:00", "FULL"), slot("2026-10-21", "09:30"), slot("2026-10-21", "11:00"), slot("2026-10-21", "15:00")])];
+    const days = [
+      day("2026-10-21", [
+        slot("2026-10-21", "08:00"),
+        slot("2026-10-21", "08:30"),
+        slot("2026-10-21", "09:00", "FULL"),
+        slot("2026-10-21", "09:30"),
+        slot("2026-10-21", "11:00"),
+        slot("2026-10-21", "15:00")
+      ])
+    ];
     const r = rankSuggestions(days, "2026-10-21", 540, NY, LIMITS, at("2026-10-21", "09:00"));
     expect(r.strategy).toBe("SAME_DAY");
-    expect(label(r)).toEqual(["Wed 21 Oct · 8:30 AM EDT", "Wed 21 Oct · 9:30 AM EDT", "Wed 21 Oct · 8:00 AM EDT", "Wed 21 Oct · 11:00 AM EDT"]);
+    expect(label(r)).toEqual([
+      "Wed 21 Oct · 8:30 AM EDT",
+      "Wed 21 Oct · 9:30 AM EDT",
+      "Wed 21 Oct · 8:00 AM EDT",
+      "Wed 21 Oct · 11:00 AM EDT"
+    ]);
     expect(r.requested).toEqual({ date: "2026-10-21", time: "09:00", timezone: NY });
   });
 
@@ -44,7 +68,12 @@ describe("rankSuggestions", () => {
     days.unshift(day("2026-10-19", [slot("2026-10-19", "09:00", "FULL")]));
     const r = rankSuggestions(days, "2026-10-19", 540, NY, LIMITS);
     expect(r.strategy).toBe("NEAREST");
-    expect(label(r)).toEqual(["Tue 20 Oct · 3:00 PM EDT", "Tue 20 Oct · 4:00 PM EDT", "Wed 21 Oct · 3:00 PM EDT", "Wed 21 Oct · 4:00 PM EDT"]);
+    expect(label(r)).toEqual([
+      "Tue 20 Oct · 3:00 PM EDT",
+      "Tue 20 Oct · 4:00 PM EDT",
+      "Wed 21 Oct · 3:00 PM EDT",
+      "Wed 21 Oct · 4:00 PM EDT"
+    ]);
   });
 
   it("step 4: nothing open anywhere", () => {
@@ -53,8 +82,14 @@ describe("rankSuggestions", () => {
   });
 
   it("adds a note when the requested time stops being offered after a clock change", () => {
-    const days = [day("2026-10-30", [slot("2026-10-30", "20:00", "FULL")]), day("2026-10-31", [slot("2026-10-31", "20:00")]), day("2026-11-02", [slot("2026-11-02", "19:00")])];
-    const r = rankSuggestions(days, "2026-10-30", 1200, NY, LIMITS, undefined, [{ date: "2026-11-01", at: dayWindow("2026-11-01", NY, 720, 720).start, fromOffset: -240, toOffset: -300, back: true }]);
+    const days = [
+      day("2026-10-30", [slot("2026-10-30", "20:00", "FULL")]),
+      day("2026-10-31", [slot("2026-10-31", "20:00")]),
+      day("2026-11-02", [slot("2026-11-02", "19:00")])
+    ];
+    const r = rankSuggestions(days, "2026-10-30", 1200, NY, LIMITS, undefined, [
+      { date: "2026-11-01", at: dayWindow("2026-11-01", NY, 720, 720).start, fromOffset: -240, toOffset: -300, back: true }
+    ]);
     expect(r.notes[0]).toMatchObject({ type: "DST_SHIFT" });
     expect(r.notes[0].message).toBe("From Sun 1 Nov, 8:00 PM is outside our mentors' hours because the clocks change.");
   });

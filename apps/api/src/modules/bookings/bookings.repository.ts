@@ -68,7 +68,10 @@ export class BookingsRepository {
 
   /** Cancel only if still confirmed, so two simultaneous cancels can't both notify people. */
   async cancelIfConfirmed(tx: Prisma.TransactionClient, id: string, by: "PARENT" | "ADMIN", now: Date): Promise<FullBooking | null> {
-    const { count } = await tx.booking.updateMany({ where: { id, status: "CONFIRMED" }, data: { status: "CANCELLED", cancelledAt: now, cancelledBy: by } });
+    const { count } = await tx.booking.updateMany({
+      where: { id, status: "CONFIRMED" },
+      data: { status: "CANCELLED", cancelledAt: now, cancelledBy: by }
+    });
     return count ? tx.booking.findUniqueOrThrow({ where: { id }, include: full }) : null;
   }
 

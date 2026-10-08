@@ -38,14 +38,27 @@ export default tseslint.config(
     // The domain layer is pure: no database, HTTP or framework code.
     files: ["apps/api/src/domain/**/*.ts"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [{ group: ["@/modules/*", "@/http/*", "@/core/*", "@prisma/client", "express"], message: "Keep domain/ pure: pass data in instead." }] }]
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/modules/*", "@/http/*", "@/core/*", "@prisma/client", "express"],
+              message: "Keep domain/ pure: pass data in instead."
+            }
+          ]
+        }
+      ]
     }
   },
   {
     // Modules talk to each other only through their index.ts public API.
     files: ["apps/api/src/modules/**/*.ts"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [{ group: ["@/modules/*/*"], message: "Import another module through its index (e.g. @/modules/bookings)." }] }]
+      "no-restricted-imports": [
+        "error",
+        { patterns: [{ group: ["@/modules/*/*"], message: "Import another module through its index (e.g. @/modules/bookings)." }] }
+      ]
     }
   },
   {
@@ -73,7 +86,10 @@ export default tseslint.config(
     // Shared layers sit below features and the app shell.
     files: ["apps/web/src/{components,hooks,lib}/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [featureBoundary, { group: ["@/app/*"], message: "Shared code must not depend on the app shell." }] }]
+      "no-restricted-imports": [
+        "error",
+        { patterns: [featureBoundary, { group: ["@/app/*"], message: "Shared code must not depend on the app shell." }] }
+      ]
     }
   },
   {
@@ -85,7 +101,12 @@ export default tseslint.config(
   {
     // The shared package has no app or framework dependencies.
     files: ["packages/shared/src/**/*.ts"],
-    rules: { "no-restricted-imports": ["error", { patterns: [{ group: ["@/*", "react", "express", "@prisma/client"], message: "packages/shared must stay framework-free." }] }] }
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { patterns: [{ group: ["@/*", "react", "express", "@prisma/client"], message: "packages/shared must stay framework-free." }] }
+      ]
+    }
   },
 
   prettier

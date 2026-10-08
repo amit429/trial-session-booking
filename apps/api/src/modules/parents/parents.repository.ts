@@ -31,12 +31,21 @@ export class ParentsRepository {
 
   search(where: Prisma.ParentWhereInput, page: number, pageSize: number) {
     return Promise.all([
-      this.db.parent.findMany({ where, include: { bookings: { select: { status: true, startUtc: true } } }, orderBy: { name: "asc" }, skip: (page - 1) * pageSize, take: pageSize }),
+      this.db.parent.findMany({
+        where,
+        include: { bookings: { select: { status: true, startUtc: true } } },
+        orderBy: { name: "asc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
       this.db.parent.count({ where })
     ]);
   }
 
   findWithBookings(id: string) {
-    return this.db.parent.findUnique({ where: { id }, include: { bookings: { include: { mentor: true, parent: true }, orderBy: { startUtc: "desc" } } } });
+    return this.db.parent.findUnique({
+      where: { id },
+      include: { bookings: { include: { mentor: true, parent: true }, orderBy: { startUtc: "desc" } } }
+    });
   }
 }

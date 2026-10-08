@@ -27,21 +27,39 @@ export function VerifyEmailPage() {
   if (verify.isSuccess) {
     return (
       <AuthCard icon={<CheckCircle2 />} title="Email verified" description="Sign in to see every booking made with this email.">
-        <Button asChild className="w-full"><Link to="/login">Sign in</Link></Button>
+        <Button asChild className="w-full">
+          <Link to="/login">Sign in</Link>
+        </Button>
       </AuthCard>
     );
   }
-  if (verify.isPending) return <AuthCard title="Verifying your email…"><Skeleton className="h-9" /></AuthCard>;
+  if (verify.isPending)
+    return (
+      <AuthCard title="Verifying your email…">
+        <Skeleton className="h-9" />
+      </AuthCard>
+    );
 
   const resendLink = (e: React.FormEvent) => {
     e.preventDefault();
-    resend.mutate(email.trim(), { onSuccess: () => toast.success("Check your email", { description: "If that account is waiting for verification, we've sent a new link." }) });
+    resend.mutate(email.trim(), {
+      onSuccess: () =>
+        toast.success("Check your email", { description: "If that account is waiting for verification, we've sent a new link." })
+    });
   };
   return (
-    <AuthCard icon={<AlertTriangle />} title="This link has expired" description="Verification links work once and for 24 hours. We can send you a new one.">
+    <AuthCard
+      icon={<AlertTriangle />}
+      title="This link has expired"
+      description="Verification links work once and for 24 hours. We can send you a new one."
+    >
       <form className="flex flex-col gap-3" onSubmit={resendLink}>
-        <Field id="rv-email" label="Email"><Input id="rv-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} /></Field>
-        <Button type="submit" className="w-full" disabled={resend.isPending}>Send a new link</Button>
+        <Field id="rv-email" label="Email">
+          <Input id="rv-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+        </Field>
+        <Button type="submit" className="w-full" disabled={resend.isPending}>
+          Send a new link
+        </Button>
       </form>
     </AuthCard>
   );

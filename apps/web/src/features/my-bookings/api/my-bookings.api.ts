@@ -4,7 +4,8 @@ import { api } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 /** Every booking made with the signed-in parent's email. */
-export const useMyBookings = () => useQuery({ queryKey: queryKeys.myBookings, queryFn: () => api.get<BookingDto[]>("/me/bookings", { scope: "all" }) });
+export const useMyBookings = () =>
+  useQuery({ queryKey: queryKeys.myBookings, queryFn: () => api.get<BookingDto[]>("/me/bookings", { scope: "all" }) });
 
 /** Cancel one of the parent's bookings (authorised by their session), then refresh lists and slots. */
 export const useCancelMyBooking = (options: Pick<UseMutationOptions<BookingDto, Error, string>, "onSuccess" | "onError"> = {}) => {

@@ -6,7 +6,8 @@ import { PublicLayout } from "@/components/layout";
 import { NotFoundPage } from "./NotFoundPage";
 
 /** Route-level code splitting: each page loads on demand behind a page-shaped skeleton. */
-const page = <M,>(load: () => Promise<M>, name: keyof M) => lazy(() => load().then(m => ({ default: m[name] as unknown as ComponentType })));
+const page = <M,>(load: () => Promise<M>, name: keyof M) =>
+  lazy(() => load().then(m => ({ default: m[name] as unknown as ComponentType })));
 
 const LandingPage = page(() => import("@/features/landing"), "LandingPage");
 const BookPage = page(() => import("@/features/booking"), "BookPage");
@@ -30,7 +31,17 @@ const MentorDetailPage = page(() => import("@/features/admin/pages/MentorDetailP
 const OutboxPage = page(() => import("@/features/admin/pages/OutboxPage"), "OutboxPage");
 
 const withPageSkeleton = (node: ReactNode) => <Suspense fallback={<PublicPageSkeleton />}>{node}</Suspense>;
-const withFormSkeleton = (node: ReactNode) => <Suspense fallback={<PublicLayout narrow><FormCardSkeleton /></PublicLayout>}>{node}</Suspense>;
+const withFormSkeleton = (node: ReactNode) => (
+  <Suspense
+    fallback={
+      <PublicLayout narrow>
+        <FormCardSkeleton />
+      </PublicLayout>
+    }
+  >
+    {node}
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   { path: "/", element: withPageSkeleton(<LandingPage />) },

@@ -3,7 +3,14 @@ import type { Config } from "@/core/config";
 import type { Db } from "@/core/db";
 import { logger, type Logger } from "@/core/logger";
 import { AdminRepository, AdminService } from "@/modules/admin";
-import { AdminAuthService, AdminsRepository, AuthTokensRepository, ParentAuthService, SessionService, SessionsRepository } from "@/modules/auth";
+import {
+  AdminAuthService,
+  AdminsRepository,
+  AuthTokensRepository,
+  ParentAuthService,
+  SessionService,
+  SessionsRepository
+} from "@/modules/auth";
 import { BookingService, BookingsRepository } from "@/modules/bookings";
 import { OutboxRepository, OutboxService } from "@/modules/outbox";
 import { ParentsRepository } from "@/modules/parents";

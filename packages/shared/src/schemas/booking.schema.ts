@@ -16,7 +16,11 @@ export const CreateBookingRequest = z.object({
       .refine(v => v === undefined || /^\+?[0-9 ()-]{7,20}$/.test(v), "Please enter a valid phone number")
   }),
   child: z.object({
-    name: z.string({ required_error: "Please enter your child's name" }).trim().min(1, "Please enter your child's name").max(60, "Please enter your child's name"),
+    name: z
+      .string({ required_error: "Please enter your child's name" })
+      .trim()
+      .min(1, "Please enter your child's name")
+      .max(60, "Please enter your child's name"),
     grade: gradeField
   }),
   subject: SubjectSchema,

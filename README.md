@@ -4,24 +4,26 @@ Parents in the US, UK and Ireland book a free 1:1 trial class. A free mentor in 
 
 Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a placeholder brand.
 
-| | |
-|---|---|
-| Product spec | [`docs/PRD.md`](docs/PRD.md) |
-| Technical design | [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md) |
-| API reference | [`docs/API.md`](docs/API.md) |
-| Clickable UI prototype | [`docs/ui-prototype.html`](docs/ui-prototype.html) (open in a browser) |
-| Implementation plan | [`docs/superpowers/plans/2026-10-08-trial-booking.md`](docs/superpowers/plans/2026-10-08-trial-booking.md) |
-| AI transcript | [`TRANSCRIPT.md`](TRANSCRIPT.md) |
+|                        |                                                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Product spec           | [`docs/PRD.md`](docs/PRD.md)                                                                               |
+| Technical design       | [`docs/TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md)                                                     |
+| API reference          | [`docs/API.md`](docs/API.md)                                                                               |
+| Clickable UI prototype | [`docs/ui-prototype.html`](docs/ui-prototype.html) (open in a browser)                                     |
+| Implementation plan    | [`docs/superpowers/plans/2026-10-08-trial-booking.md`](docs/superpowers/plans/2026-10-08-trial-booking.md) |
+| AI transcript          | [`TRANSCRIPT.md`](TRANSCRIPT.md)                                                                           |
 
 ## What it does
 
 **Parents (no account needed)**
+
 - Pick a day on a month calendar and a time in their own zone (auto-detected, changeable). Only times between 8 AM and 9 PM local, inside a mentor's shift, at least 2 hours away and within 14 days are offered.
 - Full times are shown (dashed) and open suggestions: same day → same time on nearby days → closest good times.
 - Book with parent and child details. Then get a confirmation with the class link, Google Calendar / `.ics` export, the mentor's India time, and a **private manage link** to view or cancel.
 - Optionally create an account with the same email, verify it, and see every booking in **My bookings**.
 
 **Admin**
+
 - Dashboard: booked vs capacity per India date.
 - Bookings: search, filter, quick-look sheet, a full booking page at `/admin/bookings/:reference`, cancel. Admins who open a parent's `/booking/...` URL are sent to the admin view.
 - Parents: account status and history.
@@ -30,14 +32,14 @@ Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a 
 
 **How the hard parts are handled**
 
-| Concern | Approach |
-|---|---|
-| Time zones / DST | All instants stored in UTC; zones are IANA names; windows built per local date with Luxon, never fixed offsets. Labels never show a bare "IST" (India vs Irish). |
-| Reasonable hours | Parent window 08:00–21:00 local **and** the mentor's own shift (region-aligned shifts, including US night shifts in India; no global IST cap). |
-| Capacity | ≤ 2 confirmed trials per mentor per **India calendar date**, checked inside a locked transaction. |
-| Concurrency | One short transaction per candidate mentor with parent and mentor row locks; a Postgres `EXCLUDE` constraint makes overlapping bookings impossible; `Idempotency-Key` makes retries safe. |
-| Fair assignment | Least-loaded mentor that day, then the one with the fewest other open slots, then id. |
-| Privacy | Guest bookings are reachable only via an HMAC manage link; accounts require email verification; admin is separate; ownership failures return 404. |
+| Concern          | Approach                                                                                                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Time zones / DST | All instants stored in UTC; zones are IANA names; windows built per local date with Luxon, never fixed offsets. Labels never show a bare "IST" (India vs Irish).                          |
+| Reasonable hours | Parent window 08:00–21:00 local **and** the mentor's own shift (region-aligned shifts, including US night shifts in India; no global IST cap).                                            |
+| Capacity         | ≤ 2 confirmed trials per mentor per **India calendar date**, checked inside a locked transaction.                                                                                         |
+| Concurrency      | One short transaction per candidate mentor with parent and mentor row locks; a Postgres `EXCLUDE` constraint makes overlapping bookings impossible; `Idempotency-Key` makes retries safe. |
+| Fair assignment  | Least-loaded mentor that day, then the one with the fewest other open slots, then id.                                                                                                     |
+| Privacy          | Guest bookings are reachable only via an HMAC manage link; accounts require email verification; admin is separate; ownership failures return 404.                                         |
 
 ## Quick start
 
@@ -57,13 +59,13 @@ npm run dev                   # API on :4000, web on http://localhost:5173
 
 Open <http://localhost:5173>. See [Running the app](#running-the-app) for ports and [Database](#database) to inspect the data.
 
-| Who | Where | Login |
-|---|---|---|
-| Parent (guest) | `/book` | none |
-| Parent (verified) | `/login` | `demo.parent@example.com` / `Parent123!` |
-| Parent (unverified) | `/login` | `pending.parent@example.com` / `Pending123!` |
-| Admin | `/admin` | `admin@trialdesk.example` / `Admin123!` |
-| Emails (dev only) | `/dev/outbox` | none |
+| Who                 | Where         | Login                                        |
+| ------------------- | ------------- | -------------------------------------------- |
+| Parent (guest)      | `/book`       | none                                         |
+| Parent (verified)   | `/login`      | `demo.parent@example.com` / `Parent123!`     |
+| Parent (unverified) | `/login`      | `pending.parent@example.com` / `Pending123!` |
+| Admin               | `/admin`      | `admin@trialdesk.example` / `Admin123!`      |
+| Emails (dev only)   | `/dev/outbox` | none                                         |
 
 No real email is sent. Every confirmation, cancellation, verification and reset email lands in the **dev outbox**, where the links are clickable.
 
@@ -71,12 +73,12 @@ No real email is sent. Every confirmation, cancellation, verification and reset 
 
 `npm run dev` starts both servers together (output is prefixed `[api]` and `[web]`):
 
-| Service | URL | What it is |
-|---|---|---|
-| Web app | <http://localhost:5173> | Vite dev server (React). Proxies `/api/*` to the API, so cookies stay same-origin |
-| API | <http://localhost:4000/api> | Express server; health check at <http://localhost:4000/api/health> |
-| Dev database | `localhost:5432` | PostgreSQL 16 in Docker (`trialbooking`), data kept in a Docker volume |
-| Test database | `localhost:5433` | PostgreSQL 16 in Docker (`trialbooking_test`), in memory, rebuilt on every test run |
+| Service       | URL                         | What it is                                                                          |
+| ------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| Web app       | <http://localhost:5173>     | Vite dev server (React). Proxies `/api/*` to the API, so cookies stay same-origin   |
+| API           | <http://localhost:4000/api> | Express server; health check at <http://localhost:4000/api/health>                  |
+| Dev database  | `localhost:5432`            | PostgreSQL 16 in Docker (`trialbooking`), data kept in a Docker volume              |
+| Test database | `localhost:5433`            | PostgreSQL 16 in Docker (`trialbooking_test`), in memory, rebuilt on every test run |
 
 Run them separately when you want separate terminals:
 
@@ -100,30 +102,30 @@ Stop everything with `Ctrl+C` in the `npm run dev` terminal, then `npm run db:do
 
 ### Look at the data
 
-| Way | Command | Notes |
-|---|---|---|
-| **Prisma Studio** (browser UI) | `npm run db:studio` | Opens <http://localhost:5555>; browse and filter every table and follow relations |
-| **psql** (terminal, nothing to install) | `npm run db:psql` | `\dt` lists tables, `\d "Booking"` shows columns and constraints, `\q` quits |
-| **Desktop client** (TablePlus, DBeaver, pgAdmin, DataGrip) | connect with the details below | Use the dev database; the test one is emptied between runs |
-| **Admin console** | <http://localhost:5173/admin> | The same data through the app: bookings, parents, mentor schedules, outbox |
+| Way                                                        | Command                        | Notes                                                                             |
+| ---------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------- |
+| **Prisma Studio** (browser UI)                             | `npm run db:studio`            | Opens <http://localhost:5555>; browse and filter every table and follow relations |
+| **psql** (terminal, nothing to install)                    | `npm run db:psql`              | `\dt` lists tables, `\d "Booking"` shows columns and constraints, `\q` quits      |
+| **Desktop client** (TablePlus, DBeaver, pgAdmin, DataGrip) | connect with the details below | Use the dev database; the test one is emptied between runs                        |
+| **Admin console**                                          | <http://localhost:5173/admin>  | The same data through the app: bookings, parents, mentor schedules, outbox        |
 
-| Connection | Dev | Test |
-|---|---|---|
-| Host / port | `localhost` / `5432` | `localhost` / `5433` |
-| User / password | `postgres` / `postgres` | `postgres` / `postgres` |
-| Database | `trialbooking` | `trialbooking_test` |
-| URL | `postgresql://postgres:postgres@localhost:5432/trialbooking` | `postgresql://postgres:postgres@localhost:5433/trialbooking_test` |
+| Connection      | Dev                                                          | Test                                                              |
+| --------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Host / port     | `localhost` / `5432`                                         | `localhost` / `5433`                                              |
+| User / password | `postgres` / `postgres`                                      | `postgres` / `postgres`                                           |
+| Database        | `trialbooking`                                               | `trialbooking_test`                                               |
+| URL             | `postgresql://postgres:postgres@localhost:5432/trialbooking` | `postgresql://postgres:postgres@localhost:5433/trialbooking_test` |
 
 ### Tables
 
-| Table | Holds |
-|---|---|
-| `Mentor` | The 10 mentors: zone (`Asia/Kolkata`), shift label, daily cap (`maxDailyTrials`) |
-| `AvailabilityRule` | Each mentor's weekly shift: one row per working weekday (`weekday` 1 = Mon, minutes since local midnight) |
-| `Parent` | Everyone who booked or signed up. `passwordHash` empty = guest; `emailVerifiedAt` empty = pending |
-| `Booking` | Trials: `startUtc`/`endUtc` in UTC, `mentorLocalDate` (the India date the cap counts on), both zones, status |
-| `OutboxMessage` | Every email the app would send (booking, cancellation, verification, reset) |
-| `Session`, `AuthToken`, `AdminUser` | Sign-in sessions (hashed), verification/reset tokens (hashed), the admin account |
+| Table                               | Holds                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `Mentor`                            | The 10 mentors: zone (`Asia/Kolkata`), shift label, daily cap (`maxDailyTrials`)                             |
+| `AvailabilityRule`                  | Each mentor's weekly shift: one row per working weekday (`weekday` 1 = Mon, minutes since local midnight)    |
+| `Parent`                            | Everyone who booked or signed up. `passwordHash` empty = guest; `emailVerifiedAt` empty = pending            |
+| `Booking`                           | Trials: `startUtc`/`endUtc` in UTC, `mentorLocalDate` (the India date the cap counts on), both zones, status |
+| `OutboxMessage`                     | Every email the app would send (booking, cancellation, verification, reset)                                  |
+| `Session`, `AuthToken`, `AdminUser` | Sign-in sessions (hashed), verification/reset tokens (hashed), the admin account                             |
 
 Integrity rules live in the database, not only in code: an `EXCLUDE` constraint stops two confirmed bookings overlapping for one mentor, and `CHECK` constraints guard grades, weekdays and shift bounds (`apps/api/prisma/migrations/*_constraints`).
 
@@ -159,27 +161,27 @@ SELECT "createdAt", kind, "toEmail", subject FROM "OutboxMessage" ORDER BY "crea
 
 ### Reset, reseed and migrate
 
-| Task | Command |
-|---|---|
-| Replace all dev data with fresh demo data | `npm run db:seed` (**deletes everything in the dev database first**) |
-| Apply migrations | `npm run db:migrate` |
-| Drop and recreate the dev database from migrations | `npm run db:reset`, then `npm run db:seed` |
-| Start from a completely empty Postgres | `docker compose down -v && npm run db:up && npm run db:migrate && npm run db:seed` |
-| Change the schema | edit `apps/api/prisma/schema.prisma`, then `npm run db:migrate:dev -w apps/api -- --name <change>` |
-| Watch Postgres logs | `npm run db:logs` |
+| Task                                               | Command                                                                                            |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Replace all dev data with fresh demo data          | `npm run db:seed` (**deletes everything in the dev database first**)                               |
+| Apply migrations                                   | `npm run db:migrate`                                                                               |
+| Drop and recreate the dev database from migrations | `npm run db:reset`, then `npm run db:seed`                                                         |
+| Start from a completely empty Postgres             | `docker compose down -v && npm run db:up && npm run db:migrate && npm run db:seed`                 |
+| Change the schema                                  | edit `apps/api/prisma/schema.prisma`, then `npm run db:migrate:dev -w apps/api -- --name <change>` |
+| Watch Postgres logs                                | `npm run db:logs`                                                                                  |
 
-The seed builds its scenarios relative to *today*, so reseed if the demo data has drifted into the past.
+The seed builds its scenarios relative to _today_, so reseed if the demo data has drifted into the past.
 
 ### Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| `db: unreachable` from `/api/health`, or `P1001: Can't reach database server` | Start Docker Desktop, then `npm run db:up` |
-| `port is already allocated` on 5432 or 5433 | Another Postgres is running. Stop it, or change the left-hand port in `docker-compose.yml` and the matching URL in `.env` |
-| `The table "public.Mentor" does not exist` | Run `npm run db:migrate` |
-| Booking page shows no times | Run `npm run db:seed` (mentors come from the seed), and check the time zone isn't one where no mentor works at family-friendly hours |
-| `@prisma/client did not initialize yet` | `npx prisma generate --schema apps/api/prisma/schema.prisma` (or rerun `npm install` after approving install scripts, see Quick start) |
-| Integration tests fail to start | `npm run db:up`. The test container must be healthy on port 5433 |
+| Symptom                                                                       | Fix                                                                                                                                    |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `db: unreachable` from `/api/health`, or `P1001: Can't reach database server` | Start Docker Desktop, then `npm run db:up`                                                                                             |
+| `port is already allocated` on 5432 or 5433                                   | Another Postgres is running. Stop it, or change the left-hand port in `docker-compose.yml` and the matching URL in `.env`              |
+| `The table "public.Mentor" does not exist`                                    | Run `npm run db:migrate`                                                                                                               |
+| Booking page shows no times                                                   | Run `npm run db:seed` (mentors come from the seed), and check the time zone isn't one where no mentor works at family-friendly hours   |
+| `@prisma/client did not initialize yet`                                       | `npx prisma generate --schema apps/api/prisma/schema.prisma` (or rerun `npm install` after approving install scripts, see Quick start) |
+| Integration tests fail to start                                               | `npm run db:up`. The test container must be healthy on port 5433                                                                       |
 
 ## Tests
 
@@ -192,6 +194,7 @@ npm run build
 ```
 
 Highlights:
+
 - the PRD's per-zone coverage table as fixtures, before and after the Oct/Nov 2026 clock changes;
 - a property test (fast-check) that no slot ever falls outside the parent window or a mentor's shift;
 - **10 parents racing for the last mentor → exactly one 201, nine 409s with suggestions**;
@@ -207,12 +210,12 @@ Integration tests recreate the `*_test` database schema on each run. The setup r
 
 ## Manual test script
 
-The seed creates its scenarios relative to *today*.
+The seed creates its scenarios relative to _today_.
 
 1. **Time zones.** Open `/book`, then change the time zone (top-left) to London, then Los Angeles. Times re-render in each zone; UK weeks start on Monday, US weeks on Sunday.
 2. **Clock change.** Set `BOOKING_HORIZON_DAYS=30` in `.env` and restart. In New York, a "Clocks go back Sun 1 Nov" notice appears, and the same mentor shift shows an hour earlier after 1 Nov.
-3. **Full slot.** In New York, open *today + 2*. 9:30 AM is dashed **Full**. Click it to see same-day alternatives.
-4. **Full day.** *Today + 4* (New York) has a red dot. Opening it shows the same time on nearby days.
+3. **Full slot.** In New York, open _today + 2_. 9:30 AM is dashed **Full**. Click it to see same-day alternatives.
+4. **Full day.** _Today + 4_ (New York) has a red dot. Opening it shows the same time on nearby days.
 5. **Race.** Open the same time in two windows with different emails and submit both. One gets the confirmation; the other sees "That time was just booked" with alternatives.
 6. **Already has a trial.** Book again with an email that has an upcoming trial. You're shown the existing trial instead.
 7. **Account.** Sign up with a guest's email (e.g. `guest.parent@example.com`), verify from `/dev/outbox`, sign in. The earlier guest booking appears in My bookings.
@@ -222,18 +225,18 @@ The seed creates its scenarios relative to *today*.
 
 All settings are in `.env` (see [`.env.example`](.env.example)) and validated at startup.
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `DATABASE_URL` / `TEST_DATABASE_URL` | local docker | Dev and test databases |
-| `APP_BASE_URL` | `http://localhost:5173` | Web origin, used for links, CORS and the origin check |
-| `APP_SECRET` | dev value | HMAC key for manage links (32+ chars) |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | see table above | Seeded admin |
-| `DEV_OUTBOX_ENABLED` | `true` | Exposes `/api/dev/outbox` |
-| `MIN_NOTICE_MINUTES` / `BOOKING_HORIZON_DAYS` | `120` / `14` | Booking window |
-| `CLASS_DURATION_MINUTES` / `SLOT_STEP_MINUTES` | `60` / `30` | Class length, grid |
-| `DEFAULT_MAX_DAILY_TRIALS` | `2` | Per mentor per India date |
-| `PARENT_HOURS_START` / `PARENT_HOURS_END` | `08:00` / `21:00` | Parent-friendly window |
-| `RATE_LIMIT_ENABLED` | `true` | Booking and auth rate limits |
+| Variable                                       | Default                 | Meaning                                               |
+| ---------------------------------------------- | ----------------------- | ----------------------------------------------------- |
+| `DATABASE_URL` / `TEST_DATABASE_URL`           | local docker            | Dev and test databases                                |
+| `APP_BASE_URL`                                 | `http://localhost:5173` | Web origin, used for links, CORS and the origin check |
+| `APP_SECRET`                                   | dev value               | HMAC key for manage links (32+ chars)                 |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD`               | see table above         | Seeded admin                                          |
+| `DEV_OUTBOX_ENABLED`                           | `true`                  | Exposes `/api/dev/outbox`                             |
+| `MIN_NOTICE_MINUTES` / `BOOKING_HORIZON_DAYS`  | `120` / `14`            | Booking window                                        |
+| `CLASS_DURATION_MINUTES` / `SLOT_STEP_MINUTES` | `60` / `30`             | Class length, grid                                    |
+| `DEFAULT_MAX_DAILY_TRIALS`                     | `2`                     | Per mentor per India date                             |
+| `PARENT_HOURS_START` / `PARENT_HOURS_END`      | `08:00` / `21:00`       | Parent-friendly window                                |
+| `RATE_LIMIT_ENABLED`                           | `true`                  | Booking and auth rate limits                          |
 
 ## Architecture
 

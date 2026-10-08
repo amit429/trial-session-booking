@@ -10,11 +10,19 @@ export function AdminPage({ crumbs, children }: { crumbs: Crumb[]; children: Rea
     <>
       <div className="flex h-14 items-center border-b border-border px-5">
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground [&_svg]:size-4">
-          <Link to="/admin" className="hover:text-foreground">Admin</Link>
+          <Link to="/admin" className="hover:text-foreground">
+            Admin
+          </Link>
           {crumbs.map((c, i) => (
             <span key={c.label} className="flex items-center gap-2">
               <ChevronRight />
-              {c.to && i < crumbs.length - 1 ? <Link to={c.to} className="hover:text-foreground">{c.label}</Link> : <span className="font-medium text-foreground">{c.label}</span>}
+              {c.to && i < crumbs.length - 1 ? (
+                <Link to={c.to} className="hover:text-foreground">
+                  {c.label}
+                </Link>
+              ) : (
+                <span className="font-medium text-foreground">{c.label}</span>
+              )}
             </span>
           ))}
         </nav>
@@ -25,5 +33,8 @@ export function AdminPage({ crumbs, children }: { crumbs: Crumb[]; children: Rea
 }
 
 export const PageTitle = ({ title, children }: { title: string; children?: ReactNode }) => (
-  <div className="flex flex-col gap-1"><h1 className="text-2xl font-semibold">{title}</h1>{children && <p className="text-muted-foreground">{children}</p>}</div>
+  <div className="flex flex-col gap-1">
+    <h1 className="text-2xl font-semibold">{title}</h1>
+    {children && <p className="text-muted-foreground">{children}</p>}
+  </div>
 );

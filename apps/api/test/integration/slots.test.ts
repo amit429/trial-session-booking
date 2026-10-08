@@ -6,7 +6,10 @@ import { seedMentors } from "../helpers/factories";
 
 describe("GET /api/slots", () => {
   const { app, db } = makeTestApp({ now: "2026-10-20T14:00:00Z" });
-  beforeAll(async () => { await resetDb(); await seedMentors(db, { allWeek: true }); });
+  beforeAll(async () => {
+    await resetDb();
+    await seedMentors(db, { allWeek: true });
+  });
   afterAll(() => db.$disconnect());
 
   it("returns parent-local days with ISO instants, respecting notice", async () => {
@@ -16,7 +19,12 @@ describe("GET /api/slots", () => {
     expect(res.body.meta).toMatchObject({ today: "2026-10-20", horizonDays: 14, minNoticeMinutes: 120, classDurationMinutes: 60 });
     const [day] = res.body.days;
     expect(day.date).toBe("2026-10-20");
-    expect(day.slots[0]).toEqual({ startUtc: "2026-10-20T16:00:00.000Z", endUtc: "2026-10-20T17:00:00.000Z", status: "OPEN", availableMentors: 4 });
+    expect(day.slots[0]).toEqual({
+      startUtc: "2026-10-20T16:00:00.000Z",
+      endUtc: "2026-10-20T17:00:00.000Z",
+      status: "OPEN",
+      availableMentors: 4
+    });
   });
 
   it("defaults to 14 days from today and reports the 1 Nov clock change", async () => {
@@ -36,7 +44,10 @@ describe("GET /api/slots", () => {
 
 describe("GET /api/slots/suggestions", () => {
   const { app, db } = makeTestApp({ now: "2026-10-20T14:00:00Z" });
-  beforeAll(async () => { await resetDb(); await seedMentors(db, { allWeek: true }); });
+  beforeAll(async () => {
+    await resetDb();
+    await seedMentors(db, { allWeek: true });
+  });
   afterAll(() => db.$disconnect());
 
   it("suggests same-day times around the requested time", async () => {

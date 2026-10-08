@@ -28,8 +28,18 @@ export const isoDateField = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM
 /** An ISO-8601 UTC instant on the class grid (whole minutes, :00 or :30). */
 export const gridInstantField = z.string({ required_error: "Please pick a time from the list" }).refine(v => {
   const d = new Date(v);
-  return /Z$/.test(v) && !Number.isNaN(d.getTime()) && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0 && d.getUTCMinutes() % SLOT_STEP_MINUTES === 0;
+  return (
+    /Z$/.test(v) &&
+    !Number.isNaN(d.getTime()) &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0 &&
+    d.getUTCMinutes() % SLOT_STEP_MINUTES === 0
+  );
 }, "Please pick a time from the list");
 
 const gradeMessage = `Choose a grade between ${GRADE_MIN} and ${GRADE_MAX}`;
-export const gradeField = z.coerce.number({ invalid_type_error: gradeMessage }).int(gradeMessage).min(GRADE_MIN, gradeMessage).max(GRADE_MAX, gradeMessage);
+export const gradeField = z.coerce
+  .number({ invalid_type_error: gradeMessage })
+  .int(gradeMessage)
+  .min(GRADE_MIN, gradeMessage)
+  .max(GRADE_MAX, gradeMessage);

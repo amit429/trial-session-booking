@@ -8,7 +8,9 @@ export function NotFoundPage() {
   return (
     <PublicLayout narrow>
       <EmptyState icon={<Compass />} title="We couldn't find that page">
-        <Button asChild variant="brand"><Link to="/">Go to the home page</Link></Button>
+        <Button asChild variant="brand">
+          <Link to="/">Go to the home page</Link>
+        </Button>
       </EmptyState>
     </PublicLayout>
   );

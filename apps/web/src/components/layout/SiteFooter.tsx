@@ -10,10 +10,18 @@ export function SiteFooter() {
           <span>Free 1:1 Coding and Maths trial classes. Demo project.</span>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
-          <Link to="/book" className="hover:text-foreground">Book a trial</Link>
-          <Link to="/my-bookings" className="hover:text-foreground">My bookings</Link>
-          <Link to="/signup" className="hover:text-foreground">Create account</Link>
-          <Link to="/admin" className="hover:text-foreground">Staff sign in</Link>
+          <Link to="/book" className="hover:text-foreground">
+            Book a trial
+          </Link>
+          <Link to="/my-bookings" className="hover:text-foreground">
+            My bookings
+          </Link>
+          <Link to="/signup" className="hover:text-foreground">
+            Create account
+          </Link>
+          <Link to="/admin" className="hover:text-foreground">
+            Staff sign in
+          </Link>
         </nav>
       </div>
     </footer>
