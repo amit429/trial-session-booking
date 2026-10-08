@@ -13,7 +13,7 @@ import {
   timeOfDayGroup,
   upcomingTransitions,
   zoneAbbreviation
-} from "../src/time";
+} from "@shared/time";
 
 const NY = "America/New_York";
 const LDN = "Europe/London";

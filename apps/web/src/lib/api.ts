@@ -1,4 +1,4 @@
-import { ERROR_MESSAGES, type ErrorCode } from "@trial/shared";
+import { ERROR_MESSAGES, type ErrorCode } from "@shared";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: ErrorCode | "NETWORK", message: string, public details?: any) {

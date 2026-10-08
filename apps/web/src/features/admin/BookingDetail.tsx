@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatSlot, formatZoneLabel, type AdminBookingDto } from "@trial/shared";
+import { formatSlot, formatZoneLabel, type AdminBookingDto } from "@shared";
 import { Copy, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ZONE_NAMES, formatDayLong, formatSlot, formatTime, formatZoneLabel, normalizeZone, zoneAbbreviation, type BookingDto } from "@trial/shared";
+import { ZONE_NAMES, formatDayLong, formatSlot, formatTime, formatZoneLabel, normalizeZone, zoneAbbreviation, type BookingDto } from "@shared";
 import { CalendarDays, Check, CheckCircle2, Copy, Download, Globe, Link2, Mail, Search, ShieldCheck, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";

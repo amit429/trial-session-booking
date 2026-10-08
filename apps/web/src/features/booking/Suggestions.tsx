@@ -1,4 +1,4 @@
-import { formatClockMinutes, formatDay, formatDayLong, formatTime, zoneAbbreviation, zonedTime, type SuggestionsResponse } from "@trial/shared";
+import { formatClockMinutes, formatDay, formatDayLong, formatTime, zoneAbbreviation, zonedTime, type SuggestionsResponse } from "@shared";
 import { ArrowLeft, ArrowRight, Info, XCircle } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

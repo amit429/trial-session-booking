@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { ApiError, api } from "@/lib/api";
 import { setSession } from "@/lib/auth";
-import type { ParentDto } from "@trial/shared";
+import type { ParentDto } from "@shared";
 import { AuthCard } from "./AuthCard";
 
 export function LoginPage() {

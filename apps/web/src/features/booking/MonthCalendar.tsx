@@ -1,4 +1,4 @@
-import { zonedTime, type DaySlotsDto } from "@trial/shared";
+import { zonedTime, type DaySlotsDto } from "@shared";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CreateBookingRequest, ERROR_MESSAGES, ResetPasswordRequest, SignupRequest } from "../src";
+import { CreateBookingRequest, ERROR_MESSAGES, ResetPasswordRequest, SignupRequest } from "@shared";
 
 const valid = {
   parent: { name: "Jane Doe", email: " Jane@Example.com ", phone: "+1 555 010 2000" },

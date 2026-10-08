@@ -1,4 +1,4 @@
-import { localDate, localDayWindow } from "@trial/shared";
+import { localDate, localDayWindow } from "@shared";
 import { availableMentorsAt, type EngineBooking, type EngineConfig, type EngineMentor } from "./slotEngine";
 
 type Context = { mentors: EngineMentor[]; bookings: EngineBooking[]; config: EngineConfig; now: Date };

@@ -1,4 +1,4 @@
-import { formatDayLong, formatTime, formatZoneLabel, timeOfDayGroup, zonedTime, type DaySlotsDto, type SlotDto } from "@trial/shared";
+import { formatDayLong, formatTime, formatZoneLabel, timeOfDayGroup, zonedTime, type DaySlotsDto, type SlotDto } from "@shared";
 import { Ban } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/ui/empty";

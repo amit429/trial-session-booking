@@ -1,4 +1,4 @@
-import { CreateBookingRequest } from "@trial/shared";
+import { CreateBookingRequest } from "@shared";
 
 export type BookingForm = { name: string; email: string; phone: string; child: string; grade: string; subject: string };
 export type FormErrors = Partial<Record<keyof BookingForm, string>>;

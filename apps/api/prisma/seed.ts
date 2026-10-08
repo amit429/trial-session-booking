@@ -4,7 +4,7 @@
  * Re-running replaces all data in the development database.
  */
 import { randomUUID } from "node:crypto";
-import { addDays, localDate, zonedTime } from "@trial/shared";
+import { addDays, localDate, zonedTime } from "@shared";
 import { FixedClock } from "../src/clock";
 import { loadConfig } from "../src/config";
 import { buildContainer } from "../src/container";

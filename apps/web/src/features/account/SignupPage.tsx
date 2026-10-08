@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { SignupRequest } from "@trial/shared";
+import { SignupRequest } from "@shared";
 import { Mail } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";

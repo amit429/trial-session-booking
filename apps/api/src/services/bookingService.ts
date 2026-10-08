@@ -6,7 +6,7 @@ import {
   type AdminBookingDto,
   type BookingDto,
   type CreateBookingRequest
-} from "@trial/shared";
+} from "@shared";
 import type { Deps } from "../container";
 import { rankMentors } from "../domain/assignment";
 import { meetingSuffix, newReference } from "../domain/reference";

@@ -1,4 +1,4 @@
-import { addDays, dayWindow, expandRules, gridStarts, localDate, localDayWindow, type Interval, type WeeklyRule } from "@trial/shared";
+import { addDays, dayWindow, expandRules, gridStarts, localDate, localDayWindow, type Interval, type WeeklyRule } from "@shared";
 
 /** Pure availability engine (Technical Design §8). No I/O: callers load mentors and bookings. */
 

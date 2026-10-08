@@ -1,5 +1,5 @@
 import type { AuthTokenPurpose, Parent } from "@prisma/client";
-import type { ParentDto } from "@trial/shared";
+import type { ParentDto } from "@shared";
 import type { Deps } from "../container";
 import { hashToken, newToken } from "../domain/tokens";
 import { AppError } from "../http/errors";

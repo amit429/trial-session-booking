@@ -1,4 +1,4 @@
-import { isValidZone, normalizeZone } from "@trial/shared";
+import { isValidZone, normalizeZone } from "@shared";
 import { useCallback, useState } from "react";
 
 const KEY = "trialdesk.timezone";

@@ -1,4 +1,4 @@
-import { formatSlot } from "@trial/shared";
+import { formatSlot } from "@shared";
 import type { Prisma } from "@prisma/client";
 import type { Deps } from "../container";
 import type { Db } from "../db";

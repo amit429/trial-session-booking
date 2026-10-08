@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 const envFile = resolve(__dirname, "../../.env");
@@ -9,6 +10,7 @@ process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 process.env.NODE_ENV = "test";
 
 export default defineConfig({
+  plugins: [tsconfigPaths()],
   test: {
     globalSetup: ["./test/helpers/globalSetup.ts"],
     fileParallelism: false,

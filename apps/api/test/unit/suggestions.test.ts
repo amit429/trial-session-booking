@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayWindow, formatSlot, zonedTime } from "@trial/shared";
+import { dayWindow, formatSlot, zonedTime } from "@shared";
 import type { Day, Slot } from "../../src/domain/slotEngine";
 import { rankSuggestions } from "../../src/domain/suggestions";
 

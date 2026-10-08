@@ -1,4 +1,4 @@
-import type { OutboxDto } from "@trial/shared";
+import type { OutboxDto } from "@shared";
 import { Inbox } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";

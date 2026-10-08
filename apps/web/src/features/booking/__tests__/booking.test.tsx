@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { SuggestionsResponse } from "@trial/shared";
+import type { SuggestionsResponse } from "@shared";
 import { describe, expect, it, vi } from "vitest";
 import { Suggestions } from "../Suggestions";
 import { validateBooking } from "../validation";

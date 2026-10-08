@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localDate } from "@trial/shared";
+import { localDate } from "@shared";
 import { rankMentors } from "../../src/domain/assignment";
 import type { EngineBooking, EngineConfig, EngineMentor } from "../../src/domain/slotEngine";
 

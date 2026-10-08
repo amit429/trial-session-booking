@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { PINNED_ZONES, addDays, dayWindow, formatTime, localDate } from "@trial/shared";
+import { PINNED_ZONES, addDays, dayWindow, formatTime, localDate } from "@shared";
 import { buildSlots, type EngineBooking, type EngineConfig, type EngineMentor } from "../../src/domain/slotEngine";
 import { MENTOR_SEED, seedRules } from "../../src/seedData";
 

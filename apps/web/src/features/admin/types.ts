@@ -1,4 +1,4 @@
-import type { AccountStatus, AdminBookingDto, OutboxDto } from "@trial/shared";
+import type { AccountStatus, AdminBookingDto, OutboxDto } from "@shared";
 
 export type Dashboard = { today: string; todayCount: number; next7DaysCount: number; capacity: { istDate: string; booked: number; capacity: number }[]; fullyBookedIstDates: string[] };
 export type ParentRow = { id: string; name: string; email: string; phone: string | null; timezone: string; status: AccountStatus; bookingCount: number; upcomingCount: number };

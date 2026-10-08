@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { OutboxDto } from "@trial/shared";
+import type { OutboxDto } from "@shared";
 import { PublicLayout } from "@/components/SiteHeader";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";

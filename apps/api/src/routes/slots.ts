@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { SlotsQuery, SuggestionsQuery } from "@trial/shared";
+import { SlotsQuery, SuggestionsQuery } from "@shared";
 import type { Container } from "../container";
 import { parse } from "../http/validate";
 

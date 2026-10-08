@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ZONE_NAMES, formatDay, formatTime, zoneAbbreviation, type AdminBookingDto } from "@trial/shared";
+import { ZONE_NAMES, formatDay, formatTime, zoneAbbreviation, type AdminBookingDto } from "@shared";
 import { Copy, ExternalLink, Info, MoreHorizontal, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";

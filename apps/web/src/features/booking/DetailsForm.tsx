@@ -1,4 +1,4 @@
-import { formatSlot } from "@trial/shared";
+import { formatSlot } from "@shared";
 import { ArrowLeft, ArrowRight, Calculator, Code2, Info, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert } from "@/components/ui/alert";

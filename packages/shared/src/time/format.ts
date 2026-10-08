@@ -54,3 +54,9 @@ export function timeOfDayGroup(instant: Instant, zone: string): TimeOfDay {
   const m = dt.hour * 60 + dt.minute;
   return m < 720 ? "morning" : m < 1020 ? "afternoon" : "evening";
 }
+
+/** "19:30" → "7:30 PM". */
+export function formatHhmm(hhmm: string, h24 = false): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  return formatClockMinutes(h * 60 + m, h24);
+}

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatSlot, localClockMinutes, localDate, type BookingDto, type SlotDto, type SlotsResponse, type SuggestionsResponse } from "@trial/shared";
+import { formatSlot, localClockMinutes, localDate, type BookingDto, type SlotDto, type SlotsResponse, type SuggestionsResponse } from "@shared";
 import { Globe, Lock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";

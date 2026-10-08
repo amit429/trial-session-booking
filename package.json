@@ -28,7 +28,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.0",
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "allowScripts": {
     "@prisma/client@6.19.3": true,

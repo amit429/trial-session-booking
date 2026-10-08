@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import type { AdminDto, MeResponse, ParentDto } from "@trial/shared";
+import type { AdminDto, MeResponse, ParentDto } from "@shared";
 import { api } from "./api";
 
 export const ME_KEY = ["me"] as const;

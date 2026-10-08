@@ -1,4 +1,4 @@
-import { formatDay, zonedTime } from "@trial/shared";
+import { formatDay, zonedTime } from "@shared";
 
 const IST = "Asia/Kolkata";
 const label = (d: string) => formatDay(zonedTime(d, 720, IST).toJSDate(), IST);

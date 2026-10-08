@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDayLong, formatSlot, formatTime, zoneAbbreviation, type BookingDto } from "@trial/shared";
+import { formatDayLong, formatSlot, formatTime, zoneAbbreviation, type BookingDto } from "@shared";
 import { CalendarDays, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";

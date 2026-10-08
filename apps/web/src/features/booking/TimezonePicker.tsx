@@ -1,5 +1,5 @@
 import * as Popover from "@radix-ui/react-popover";
-import { PINNED_ZONES, ZONE_NAMES, formatOffset, formatZoneLabel, offsetMinutes } from "@trial/shared";
+import { PINNED_ZONES, ZONE_NAMES, formatOffset, formatZoneLabel, offsetMinutes } from "@shared";
 import { ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 

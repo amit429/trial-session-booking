@@ -1,5 +1,5 @@
 import { MENTOR_AVATARS } from "./mentorAvatars";
-import { formatDay, formatDayLong, formatTime, zoneAbbreviation, type TransitionDto } from "@trial/shared";
+import { formatDay, formatDayLong, formatTime, zoneAbbreviation, type TransitionDto } from "@shared";
 import { AlertTriangle, Clock, Globe, UserRound, Video } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";

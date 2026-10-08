@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { CancelRequest, CreateBookingRequest } from "@trial/shared";
+import { CancelRequest, CreateBookingRequest } from "@shared";
 import type { Request } from "express";
 import { icsFile } from "../services/calendarService";
 import type { Viewer } from "../services/bookingService";

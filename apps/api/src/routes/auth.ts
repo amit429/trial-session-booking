@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { EmailRequest, LoginRequest, ResetPasswordRequest, SignupRequest, TokenRequest, type MeResponse } from "@trial/shared";
+import { EmailRequest, LoginRequest, ResetPasswordRequest, SignupRequest, TokenRequest, type MeResponse } from "@shared";
 import type { Container } from "../container";
 import { ADMIN_COOKIE, PARENT_COOKIE, clearSessionCookie, setSessionCookie } from "../http/cookies";
 import { limiter } from "../http/rateLimit";

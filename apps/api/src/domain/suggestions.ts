@@ -1,4 +1,4 @@
-import { formatClockMinutes, formatDay, localClockMinutes, type Transition } from "@trial/shared";
+import { formatClockMinutes, formatDay, localClockMinutes, type Transition } from "@shared";
 import type { Day, Slot } from "./slotEngine";
 
 export type SuggestionStrategy = "SAME_DAY" | "SAME_TIME" | "NEAREST" | "NONE";

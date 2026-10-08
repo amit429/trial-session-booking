@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
-import { ERROR_MESSAGES, type ErrorCode } from "@trial/shared";
+import { ERROR_MESSAGES, type ErrorCode } from "@shared";
 import { ZodError } from "zod";
 
 export class AppError extends Error {

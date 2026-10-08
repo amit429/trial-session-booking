@@ -1,4 +1,4 @@
-import { upcomingTransitions, type SuggestionsResponse } from "@trial/shared";
+import { upcomingTransitions, type SuggestionsResponse } from "@shared";
 import type { Deps } from "../container";
 import { rankSuggestions } from "../domain/suggestions";
 import { toSlotDto, type SlotService } from "./slotService";

@@ -1,1 +1,19 @@
-{ "extends": "../../tsconfig.base.json", "compilerOptions": { "types": [] }, "include": ["src", "test"] }
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [],
+    "paths": {
+      "@shared": [
+        "./src/index.ts"
+      ],
+      "@shared/*": [
+        "./src/*"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "test",
+    "vitest.config.ts"
+  ]
+}

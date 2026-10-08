@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDay, formatDayLong, formatSlot, formatTime, formatZoneLabel, zonedTime, type AdminBookingDto, type OutboxDto } from "@trial/shared";
+import { formatDay, formatDayLong, formatSlot, formatTime, formatZoneLabel, zonedTime, type AdminBookingDto, type OutboxDto } from "@shared";
 import { CalendarDays, Lock, Search, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -15,7 +15,7 @@ import { OutboxList } from "@/features/dev/OutboxList";
 import { Busy, CardGridSkeleton, ChartSkeleton, MessagesSkeleton, StatsSkeleton } from "@/components/skeletons";
 import { ApiError, api } from "@/lib/api";
 import { setSession } from "@/lib/auth";
-import type { AdminDto } from "@trial/shared";
+import type { AdminDto } from "@shared";
 import { cn } from "@/lib/utils";
 import { AdminPage, PageTitle } from "./AdminLayout";
 import { AccountBadge, BookingsTable, TableSkeleton } from "./BookingsTable";
