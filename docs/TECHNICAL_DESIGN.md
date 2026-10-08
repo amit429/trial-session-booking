@@ -711,18 +711,20 @@ selectTime ──open slot──▶ details ──submit──▶ submitting
 
 ### 12.3 Components
 
-| Component                                                                                                               | Responsibility                                                                                                                |
-| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `TimezoneBar`, `DstBanner`, `DayStrip`, `SlotGrid`, `SlotButton`, `SelectedSlotCard`, `BookingForm`, `SuggestionsPanel` | Booking flow (badges: Open ≥ 3, Few left 1–2, Full, No classes; Full slots muted + "Full" tag; strategy headlines per PRD §8) |
-| `ConfirmationCard`, `CopyLink`, `AddToCalendar`, `CreateAccountPrompt`                                                  | Confirmation; the prompt appears for guests                                                                                   |
-| `SignupPage` … `ResetPasswordPage`                                                                                      | Forms with shared schemas; success copy per PRD §11; in dev, a "Open dev outbox" link under "Check your email"                |
-| `MyBookingsPage`                                                                                                        | Tabs Upcoming / Past & cancelled; cards with cancel                                                                           |
-| `AdminLayout`                                                                                                           | Sidebar: Dashboard, Bookings, Parents, Mentors, Outbox; admin name + sign out                                                 |
-| `DashboardPage`                                                                                                         | Tiles (today, next 7 days) + capacity bar per IST date (booked / capacity)                                                    |
-| `BookingsPage`                                                                                                          | Filters (date range, status, mentor, search) + table + cancel dialog; times "IST · parent-local"                              |
-| `ParentsPage`, `ParentDetailPage`                                                                                       | Table with status badges; detail with bookings                                                                                |
-| `MentorsPage`, `MentorDetailPage`                                                                                       | Table with shift + today's load; detail with weekly shift + schedule by IST date (`CapacityMeter`)                            |
-| `OutboxPage`, `DevOutboxPage`                                                                                           | Message list, links clickable                                                                                                 |
+| Where                           | Components                                                                                                                 | Responsibility                                                                                            |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `features/landing`              | `Hero` (+ live next-times card), `HowItWorks`, `Subjects`, `Highlights`, `Faq`, `FinalCta`                                 | Home page; CTAs to book, sign in or sign up                                                               |
+| `features/booking`              | `InfoPane`, `TimezonePicker`, `MonthCalendar`, `TimesPane`, `Suggestions`, `DetailsForm`; `BookPage`                       | Three-pane booker: info + zone, month calendar (availability dots), day times; suggestions; details form  |
+| `features/manage-booking`       | `BookingPage`, `BookingSkeleton`                                                                                           | Confirmation / manage via private link: times in both zones, mentor, link, calendar export, cancel        |
+| `features/my-bookings`          | `MyBookingsPage`                                                                                                           | Tabs Upcoming / Past and cancelled; view and cancel                                                       |
+| `features/auth`                 | `AuthCard`; `SignupPage`, `LoginPage`, `VerifyEmailPage`, `ForgotPasswordPage`, `ResetPasswordPage`                        | Forms validated with shared schemas; "Check your email" states link to the dev outbox                     |
+| `features/admin`                | `AdminLayout` (sidebar), `AdminPage`, `StatCard`, `CapacityChart`, `BookingsTable`, `BookingFacts`, `SearchInput`; 9 pages | Dashboard, bookings (filters, quick-look sheet, detail page, cancel), parents, mentors + schedule, outbox |
+| `features/dev`                  | `DevOutboxPage`                                                                                                            | Outbox in development                                                                                     |
+| `components/booking`            | `StatusBadge`, `DateBox`, `CopyField`, `AccountBadge`, `MessageBody`, `OutboxList`                                         | Booking UI shared by several features                                                                     |
+| `components/layout`             | `SiteHeader`, `SiteFooter`, `PublicLayout`, `Logo`                                                                         | Public page chrome; header adapts to guest / parent                                                       |
+| `components/feedback`, `guards` | `GlobalProgress`, skeletons, `EmptyState`; `RequireParent`, `RequireAdmin`                                                 | Loading and empty states; route guards that wait for the session check                                    |
+
+Screenshots of each screen are in the [README](../README.md#screenshots).
 
 Tables use shadcn `Table` with simple server-side pagination; no table library.
 

@@ -147,6 +147,16 @@ Notable moments during the build:
 - **Landing page** at `/`: hero with book / sign in / sign up, a live card of the next open times in the visitor's zone, how it works, subjects (preselecting the subject in booking), FAQ and a closing call to action.
 - While fixing a lint warning it briefly broke calendar escaping, then added a unit test that pins RFC 5545 escaping so that can't regress.
 
+## 9. Screenshots in the README
+
+> **Me:** Please update the readme and PRD and techincal docs if required and also please add all the screen shots of the Portal and all the screens and outcomes in the readme neetly , the server is already running
+
+**Agent:**
+
+- Scripted headless Chrome (DevTools protocol, New York zone, light theme) to drive the running app like a user: book as a guest, hit a full time and a full day, trigger validation and the one-trial rule, sign up with the same email, verify from the dev outbox, sign in, reset a password, cancel from the private link, and walk the whole admin console. Plus London, dark mode and phone widths.
+- Saved 45 screenshots to `docs/screenshots/` and added a captioned gallery to the README, grouped by journey, with the outcome each screen shows.
+- Brought the docs up to date: the PRD journey now starts at the home page, the technical design's component table matches the real feature folders, and the README's manual test script starts with the home page.
+
 ---
 
 ## Raw session export

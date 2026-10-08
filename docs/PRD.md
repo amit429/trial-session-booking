@@ -60,7 +60,9 @@ Scale: **10 mentors**, **~20 parents/day**. Capacity is 10 × 2 = **20 trials/da
 
 ```mermaid
 flowchart LR
-  A[Open /book] --> B[Time zone auto-detected]
+  H0[Home page /<br/>next open times in your zone] -- Book a free trial --> A[/book]
+  H0 -- Sign in / Create account --> L
+  A --> B[Time zone auto-detected]
   B --> C[Pick day] --> D[Pick time]
   D -- Full slot / day --> H
   D -- Open --> E[Details: parent + child]
@@ -73,7 +75,9 @@ flowchart LR
   L --> M[Verify email via link] --> N[Sign in → My bookings]
 ```
 
-Signed-in parents get the booking form pre-filled with their name and email.
+Signed-in parents get the booking form pre-filled with their name and email. Choosing a subject card on the home page opens `/book` with that subject already selected.
+
+Screenshots of every step are in the [README](../README.md#screenshots).
 
 ### 5.2 Admin
 

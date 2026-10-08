@@ -4,6 +4,10 @@ Parents in the US, UK and Ireland book a free 1:1 trial class. A free mentor in 
 
 Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a placeholder brand.
 
+<img src="docs/screenshots/01-landing.png" alt="TrialDesk home page" width="100%">
+
+<sub>More screens: [Screenshots](#screenshots).</sub>
+
 |                        |                                                                                                            |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Product spec           | [`docs/PRD.md`](docs/PRD.md)                                                                               |
@@ -12,11 +16,13 @@ Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a 
 | Clickable UI prototype | [`docs/ui-prototype.html`](docs/ui-prototype.html) (open in a browser)                                     |
 | Implementation plan    | [`docs/superpowers/plans/2026-10-08-trial-booking.md`](docs/superpowers/plans/2026-10-08-trial-booking.md) |
 | AI transcript          | [`TRANSCRIPT.md`](TRANSCRIPT.md)                                                                           |
+| Screenshots            | [Screenshots](#screenshots) ([`docs/screenshots/`](docs/screenshots/))                                     |
 
 ## What it does
 
 **Parents (no account needed)**
 
+- Start on the home page (`/`): what the free trial is, the next open times in their own zone, and buttons to book, sign in or create an account.
 - Pick a day on a month calendar and a time in their own zone (auto-detected, changeable). Only times between 8 AM and 9 PM local, inside a mentor's shift, at least 2 hours away and within 14 days are offered.
 - Full times are shown (dashed) and open suggestions: same day → same time on nearby days → closest good times.
 - Book with parent and child details. Then get a confirmation with the class link, Google Calendar / `.ics` export, the mentor's India time, and a **private manage link** to view or cancel.
@@ -40,6 +46,170 @@ Built for the Codeyoung Senior Full Stack Engineer assignment. "TrialDesk" is a 
 | Concurrency      | One short transaction per candidate mentor with parent and mentor row locks; a Postgres `EXCLUDE` constraint makes overlapping bookings impossible; `Idempotency-Key` makes retries safe. |
 | Fair assignment  | Least-loaded mentor that day, then the one with the fewest other open slots, then id.                                                                                                     |
 | Privacy          | Guest bookings are reachable only via an HMAC manage link; accounts require email verification; admin is separate; ownership failures return 404.                                         |
+
+## Screenshots
+
+Captured from the running app (seeded data, browser in New York unless noted) with headless Chrome. Every image is in [`docs/screenshots/`](docs/screenshots/).
+
+### Home page
+
+The first page a visitor sees: what the trial is, the ways in (book, sign in, create an account) and the **next open times in the visitor's own zone**, loaded live.
+
+<img src="docs/screenshots/01-landing.png" alt="Landing page" width="100%">
+
+### Booking a trial (guest, no account)
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/02-book-pick-time.png" alt="Pick a time" width="100%"><br><b>Pick a time</b><br><sub>Month calendar with availability dots; times for the chosen day in the parent's zone (detected: Eastern Time). Morning / Afternoon groups, 12h/24h toggle.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/05-book-details.png" alt="Your details" width="100%"><br><b>Your details</b><br><sub>The chosen time stays pinned on the left with “Change time”. Parent, child, grade and subject.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/07-confirmation.png" alt="Confirmation" width="100%"><br><b>Confirmation</b><br><sub>Parent's time and the mentor's India time, assigned mentor, class link, Google / .ics calendar, reference and a private manage link. Guests are invited to create an account.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/09-book-london.png" alt="Same calendar, London family" width="100%"><br><b>Same calendar, London family</b><br><sub>Times re-render for UK time (BST) and the week starts on Monday: afternoon and after-school evening slots from the UK-shift mentors.</sub></td>
+</tr>
+</table>
+
+### When a time can't be booked
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/03-book-full-time-suggestions.png" alt="A full time → same-day alternatives" width="100%"><br><b>A full time → same-day alternatives</b><br><sub>Seeded full slot (9:00 AM). “9:00 AM is taken” with the nearest open times that day, one click to pick.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/04-book-full-day.png" alt="A fully booked day → same time on nearby days" width="100%"><br><b>A fully booked day → same time on nearby days</b><br><sub>Red-dot day. The cascade falls through to the same local time on the nearest days that have it.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/06-book-validation.png" alt="Validation" width="100%"><br><b>Validation</b><br><sub>Shared zod schema on client and server; every invalid field is flagged and the first one is focused.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/08-book-active-trial-exists.png" alt="One upcoming trial per family" width="100%"><br><b>One upcoming trial per family</b><br><sub>A second booking with the same email shows the existing trial instead of a dead end; form kept.</sub></td>
+</tr>
+</table>
+
+### Accounts (optional)
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/10-signup.png" alt="Create an account" width="100%"><br><b>Create an account</b><br><sub>Optional. Use the email you booked with.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/11-signup-check-email.png" alt="Check your email" width="100%"><br><b>Check your email</b><br><sub>Same answer for new and existing emails (no account enumeration).</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/12-dev-outbox.png" alt="Dev outbox" width="100%"><br><b>Dev outbox</b><br><sub>No real email is sent; verification, reset and booking emails land here with clickable links.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/13-email-verified.png" alt="Email verified" width="100%"><br><b>Email verified</b><br><sub>Single-use link, valid 24 hours.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/14-login.png" alt="Sign in" width="100%"><br><b>Sign in</b><br><sub>Email and password; link to reset.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/15-login-wrong-password.png" alt="Wrong password" width="100%"><br><b>Wrong password</b><br><sub>One generic message for unknown email or wrong password. Rate-limited.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/17-login-unverified.png" alt="Not verified yet" width="100%"><br><b>Not verified yet</b><br><sub>Correct password but unverified: prompt to verify, with “Send a new link”.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/16-my-bookings-after-signup.png" alt="My bookings after sign-up" width="100%"><br><b>My bookings after sign-up</b><br><sub>The guest booking made before signing up appears once the email is verified.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/18-forgot-password.png" alt="Forgot password" width="100%"><br><b>Forgot password</b><br><sub>Request a reset link.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/19-forgot-password-sent.png" alt="Reset link sent" width="100%"><br><b>Reset link sent</b><br><sub>Same response whether or not the account exists.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/20-reset-password.png" alt="Set a new password" width="100%"><br><b>Set a new password</b><br><sub>Valid 1 hour; signs out every other session.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/21-reset-link-expired.png" alt="Expired or used link" width="100%"><br><b>Expired or used link</b><br><sub>Clear way forward: request a new link.</sub></td>
+</tr>
+</table>
+
+### My bookings (signed in)
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/22-my-bookings-upcoming.png" alt="My bookings: upcoming" width="100%"><br><b>My bookings: upcoming</b><br><sub>Verified demo parent (London). View or cancel.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/23-my-bookings-past.png" alt="My bookings: past and cancelled" width="100%"><br><b>My bookings: past and cancelled</b><br><sub>Completed and cancelled trials.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/24-account-menu.png" alt="Account menu" width="100%"><br><b>Account menu</b><br><sub>Signed-in header: Book a trial, avatar menu with My bookings and Sign out.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/25-landing-signed-in.png" alt="Home page, signed in" width="100%"><br><b>Home page, signed in</b><br><sub>Hero swaps “Sign in” for “My bookings”.</sub></td>
+</tr>
+</table>
+
+### Managing and cancelling
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/26-cancel-confirm.png" alt="Cancel from the private link" width="100%"><br><b>Cancel from the private link</b><br><sub>No account needed. Confirm before cancelling.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/27-booking-cancelled.png" alt="Cancelled" width="100%"><br><b>Cancelled</b><br><sub>The time is free again for other families; parent and mentor are notified (see the outbox).</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/28-booking-not-found.png" alt="Wrong or missing token" width="100%"><br><b>Wrong or missing token</b><br><sub>Returns “not found”, never another family's booking.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/41-not-found.png" alt="Unknown page" width="100%"><br><b>Unknown page</b><br><sub>Friendly 404 with a way home.</sub></td>
+</tr>
+</table>
+
+### Admin console
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/30-admin-login.png" alt="Admin sign-in" width="100%"><br><b>Admin sign-in</b><br><sub>Separate session from parents; parent cookies never unlock admin.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/31-admin-dashboard.png" alt="Dashboard" width="100%"><br><b>Dashboard</b><br><sub>Trials today and next 7 days, capacity used, fully booked days, and booked vs capacity per India date.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/32-admin-bookings.png" alt="Bookings" width="100%"><br><b>Bookings</b><br><sub>Search and filter by time, status and mentor. India time first, the parent's time alongside.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/33-admin-booking-sheet.png" alt="Quick look" width="100%"><br><b>Quick look</b><br><sub>Side sheet with facts and every message sent for the booking.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/34-admin-booking-detail.png" alt="Booking page" width="100%"><br><b>Booking page</b><br><sub>Full detail at /admin/bookings/:reference, with copy link and cancel.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/35-admin-cancel-dialog.png" alt="Admin cancel" width="100%"><br><b>Admin cancel</b><br><sub>Confirms first; parent and mentor are told it was cancelled by the team.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/36-admin-parents.png" alt="Parents" width="100%"><br><b>Parents</b><br><sub>Account status (Guest / Pending / Verified) and booking counts.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/37-admin-parent-detail.png" alt="Parent detail" width="100%"><br><b>Parent detail</b><br><sub>Every booking for that email.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/38-admin-mentors.png" alt="Mentors" width="100%"><br><b>Mentors</b><br><sub>Region-aligned shift, today's load (n / 2) and day off.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/39-admin-mentor-schedule.png" alt="Mentor schedule" width="100%"><br><b>Mentor schedule</b><br><sub>Weekly shift and the next 14 India dates with each class and the parent's local time; red bar = 2 / 2.</sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/40-admin-outbox.png" alt="Outbox" width="100%"><br><b>Outbox</b><br><sub>Every email the system would send.</sub></td>
+<td width="50%"></td>
+</tr>
+</table>
+
+### Dark mode and phones
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/screenshots/42-landing-dark.png" alt="Dark mode" width="100%"><br><b>Dark mode</b><br><sub>Follows the system setting.</sub></td>
+<td width="50%" valign="top"><img src="docs/screenshots/43-book-dark.png" alt="Booking in dark mode" width="100%"><br><b>Booking in dark mode</b><br><sub></sub></td>
+</tr>
+</table>
+<table>
+<tr>
+<td width="33%" valign="top"><img src="docs/screenshots/50-mobile-landing.png" alt="Home on a phone" width="100%"><br><b>Home on a phone</b><br><sub>390 px wide.</sub></td>
+<td width="33%" valign="top"><img src="docs/screenshots/51-mobile-book.png" alt="Booking on a phone" width="100%"><br><b>Booking on a phone</b><br><sub>Panels stack: info, calendar, times.</sub></td>
+<td width="33%" valign="top"><img src="docs/screenshots/52-mobile-admin-login.png" alt="Admin sign-in on a phone" width="100%"><br><b>Admin sign-in on a phone</b><br><sub></sub></td>
+</tr>
+</table>
 
 ## Quick start
 
@@ -214,14 +384,15 @@ Integration tests recreate the `*_test` database schema on each run. The setup r
 
 The seed creates its scenarios relative to _today_.
 
-1. **Time zones.** Open `/book`, then change the time zone (top-left) to London, then Los Angeles. Times re-render in each zone; UK weeks start on Monday, US weeks on Sunday.
-2. **Clock change.** Set `BOOKING_HORIZON_DAYS=30` in `.env` and restart. In New York, a "Clocks go back Sun 1 Nov" notice appears, and the same mentor shift shows an hour earlier after 1 Nov.
-3. **Full slot.** In New York, open _today + 2_. 9:30 AM is dashed **Full**. Click it to see same-day alternatives.
-4. **Full day.** _Today + 4_ (New York) has a red dot. Opening it shows the same time on nearby days.
-5. **Race.** Open the same time in two windows with different emails and submit both. One gets the confirmation; the other sees "That time was just booked" with alternatives.
-6. **Already has a trial.** Book again with an email that has an upcoming trial. You're shown the existing trial instead.
-7. **Account.** Sign up with a guest's email (e.g. `guest.parent@example.com`), verify from `/dev/outbox`, sign in. The earlier guest booking appears in My bookings.
-8. **Admin.** At `/admin/mentors`, one UK-shift mentor is at 2 / 2 for tomorrow's India date. Cancel a booking from `/admin/bookings`. The parent and mentor messages appear in the outbox, and the time is bookable again.
+1. **Home page.** Open `/`. The hero card lists the next open times in your zone; “Book a free trial” and the subject cards lead to `/book` (the subject cards preselect Coding or Maths).
+2. **Time zones.** Open `/book`, then change the time zone (top-left) to London, then Los Angeles. Times re-render in each zone; UK weeks start on Monday, US weeks on Sunday.
+3. **Clock change.** Set `BOOKING_HORIZON_DAYS=30` in `.env` and restart. In New York, a "Clocks go back Sun 1 Nov" notice appears, and the same mentor shift shows an hour earlier after 1 Nov.
+4. **Full slot.** In New York, open _today + 2_. 9:30 AM is dashed **Full**. Click it to see same-day alternatives.
+5. **Full day.** _Today + 4_ (New York) has a red dot. Opening it shows the same time on nearby days.
+6. **Race.** Open the same time in two windows with different emails and submit both. One gets the confirmation; the other sees "That time was just booked" with alternatives.
+7. **Already has a trial.** Book again with an email that has an upcoming trial. You're shown the existing trial instead.
+8. **Account.** Sign up with a guest's email (e.g. `guest.parent@example.com`), verify from `/dev/outbox`, sign in. The earlier guest booking appears in My bookings.
+9. **Admin.** At `/admin/mentors`, one UK-shift mentor is at 2 / 2 for tomorrow's India date. Cancel a booking from `/admin/bookings`. The parent and mentor messages appear in the outbox, and the time is bookable again.
 
 ## Configuration
 
